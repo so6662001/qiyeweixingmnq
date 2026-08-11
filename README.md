@@ -35,8 +35,10 @@ bash scripts/run.sh
 
 高保真 HTML 效果图（静态预览）：
 
-- 文件：`docs/mockups/wecom-simulator-hifi.html`（可直接用浏览器打开）
-- 服务内访问：http://127.0.0.1:8000/mockups/wecom-simulator-hifi.html
+- 索引：`docs/mockups/index.html` → http://127.0.0.1:8000/mockups/
+- 会话：`docs/mockups/wecom-simulator-hifi.html`
+- 群聊：`docs/mockups/wecom-group-hifi.html` → http://127.0.0.1:8000/mockups/wecom-group-hifi.html
+- 朋友圈：`docs/mockups/wecom-moments-hifi.html` → http://127.0.0.1:8000/mockups/wecom-moments-hifi.html
 
 打包运行：
 

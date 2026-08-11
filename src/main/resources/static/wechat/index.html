@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>个人微信模拟器 · WeChat Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,700;1,9..40,500&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <script>
+      window.__SIMULATOR__ = {
+        product: "wechat",
+        apiBase: "/api/wechat",
+        wsPath: "/ws/wechat",
+        privateUserId: "friend001",
+        privateUserName: "好友小陈",
+        groupUserId: "friend002",
+        groupUserName: "群友小周",
+        authorId: "me001",
+        authorName: "我",
+        leadUserId: "friend003",
+        leadUserName: "朋友小李",
+        recognitionPlaceholder: "模拟个人微信语音转文字（本地假数据）",
+        webhookHint: "入站消息将 POST 到下方地址（个人微信风格 JSON，非官方协议）。",
+        brandName: "个微模拟器",
+        brandTag: "好友 · 群聊 · 朋友圈",
+        chatTitle: "个人微信模拟器",
+        homeHref: "/",
+      };
+    </script>
+  </head>
+  <body class="product-wechat">
+    <div class="app-shell">
+      <aside class="side-panel" aria-label="配置与接口">
+        <div class="brand-block">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <h1 class="brand-name">个微模拟器</h1>
+            <p class="brand-tag">好友 · 群聊 · 朋友圈</p>
+            <a class="home-link" href="/">切换版本</a>
+          </div>
+        </div>
+
+        <section class="side-section">
+          <h2>会话</h2>
+          <p class="muted">Session: <code id="sessionId">—</code></p>
+          <button type="button" class="btn ghost" id="btnClear">清空会话与朋友圈</button>
+        </section>
+
+        <section class="side-section">
+          <h2>演示助手</h2>
+          <label class="toggle">
+            <input type="checkbox" id="demoBotEnabled" checked />
+            <span>收到消息后自动文字回复</span>
+          </label>
+        </section>
+
+        <section class="side-section">
+          <h2>Webhook 回调</h2>
+          <p class="muted">入站消息将 POST 到下方地址（个人微信风格 JSON，非官方协议）。</p>
+          <input
+            id="webhookUrl"
+            class="input"
+            type="url"
+            placeholder="http://127.0.0.1:9000/callback"
+          />
+          <label class="toggle">
+            <input type="checkbox" id="webhookEnabled" />
+            <span>启用 Webhook</span>
+          </label>
+          <button type="button" class="btn secondary" id="btnSaveWebhook">保存 Webhook</button>
+        </section>
+
+        <section class="side-section">
+          <h2>CRM / 线索接口</h2>
+          <p class="muted">朋友圈点赞/评论可同步到你的线索系统（可选）。</p>
+          <input
+            id="crmUrl"
+            class="input"
+            type="url"
+            placeholder="http://127.0.0.1:9100/crm/leads"
+          />
+          <input
+            id="crmAuth"
+            class="input"
+            type="text"
+            placeholder="可选 Authorization，如 Bearer xxx"
+            style="margin-top: 8px"
+          />
+          <label class="toggle">
+            <input type="checkbox" id="crmEnabled" />
+            <span>启用 CRM 同步</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="crmAutoSync" checked />
+            <span>互动后自动同步</span>
+          </label>
+          <button type="button" class="btn secondary" id="btnSaveCrm">保存 CRM 配置</button>
+          <button type="button" class="btn primary" id="btnSyncCrm" style="margin-top: 8px">
+            立即同步未写入线索
+          </button>
+          <p class="muted" id="crmHint" style="margin-top: 8px"></p>
+        </section>
+
+        <section class="side-section">
+          <h2>主动文字回复</h2>
+          <p class="muted">模拟助手发消息：<code>POST /api/wechat/reply/text</code></p>
+          <textarea
+            id="manualReply"
+            class="input textarea"
+            rows="3"
+            placeholder="输入要回复给好友的文字…"
+          ></textarea>
+          <button type="button" class="btn primary" id="btnManualReply">发送回复</button>
+        </section>
+
+        <section class="side-section api-hints">
+          <h2>联调接口</h2>
+          <ul>
+            <li><code>POST /api/wechat/messages/text</code> 文字</li>
+            <li><code>POST /api/wechat/messages/voice|image|file</code></li>
+            <li><code>POST /api/wechat/reply/text</code> 回复</li>
+            <li><code>GET /api/wechat/groups</code> 群列表</li>
+            <li><code>POST /api/wechat/moments</code> 发朋友圈</li>
+            <li><code>WS /ws/wechat</code> 实时事件</li>
+          </ul>
+        </section>
+      </aside>
+
+      <main class="chat-stage">
+        <header class="chat-header">
+          <div>
+            <p class="chat-title">个人微信模拟器</p>
+            <p class="chat-sub" id="connStatus">连接中…</p>
+          </div>
+          <div class="header-right">
+            <div class="view-tabs" role="tablist">
+              <button type="button" class="tab active" data-view="chat" id="tabChat">会话</button>
+              <button type="button" class="tab" data-view="moments" id="tabMoments">朋友圈</button>
+            </div>
+            <div class="header-meta">
+              <span class="dot" id="liveDot"></span>
+              <span>实时</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="view-panel active" id="viewChat">
+          <div class="chat-scope-bar">
+            <div class="view-tabs" role="tablist">
+              <button type="button" class="tab active" id="scopePrivate">私聊</button>
+              <button type="button" class="tab" id="scopeGroup">群聊</button>
+            </div>
+            <select id="groupSelect" class="input scope-select" disabled>
+              <option value="group001">同学聚会群</option>
+            </select>
+            <span class="muted" id="scopeHint">当前：私聊 friend001</span>
+          </div>
+          <div class="chat-scroll" id="chatScroll" aria-live="polite"></div>
+          <footer class="composer">
+            <div id="replyBar" class="reply-bar hidden">
+              <div>
+                <strong>回复</strong>
+                <span id="replyPreview">—</span>
+              </div>
+              <button type="button" class="icon-btn" id="btnCancelReply">取消</button>
+            </div>
+            <div class="composer-tools">
+              <button type="button" class="icon-btn" id="btnPickVoice">语音</button>
+              <input id="voiceFile" type="file" accept="audio/*,.webm,.wav,.mp3,.ogg,.amr" hidden />
+              <button type="button" class="icon-btn record" id="btnRecord">录音</button>
+              <button type="button" class="icon-btn" id="btnPickChatImage">图片</button>
+              <input id="chatImageFile" type="file" accept="image/*" hidden />
+              <button type="button" class="icon-btn" id="btnPickChatFile">文件</button>
+              <input id="chatFile" type="file" hidden />
+              <span class="record-hint" id="recordHint"></span>
+            </div>
+            <form id="textForm" class="composer-form">
+              <textarea
+                id="textInput"
+                class="composer-input"
+                rows="1"
+                placeholder="输入文字；群聊可先点消息「回复」指定某人"
+                required
+              ></textarea>
+              <button type="submit" class="btn send" id="btnSend">发送</button>
+            </form>
+            <label class="recog-row">
+              <span>语音转文字（可选）</span>
+              <input
+                id="voiceRecognition"
+                class="input"
+                type="text"
+                placeholder="模拟个人微信语音转文字（本地假数据）"
+              />
+            </label>
+          </footer>
+        </section>
+
+        <section class="view-panel" id="viewMoments">
+          <div class="moments-layout">
+            <div class="moment-composer">
+              <h3>发朋友圈</h3>
+              <p class="muted">上传图片 + 填写文案，可选附带方案说明。</p>
+              <label class="recog-row">
+                <span>文案</span>
+                <textarea
+                  id="momentContent"
+                  class="input textarea"
+                  rows="2"
+                  placeholder="例如：周末去爬山，天气真好"
+                ></textarea>
+              </label>
+              <label class="recog-row">
+                <span>方案 / 备注（可选，可同步到线索系统）</span>
+                <textarea
+                  id="momentPlan"
+                  class="input textarea"
+                  rows="2"
+                  placeholder="例如：活动报名说明"
+                ></textarea>
+              </label>
+              <div class="composer-tools">
+                <button type="button" class="icon-btn" id="btnPickImage">选择图片</button>
+                <input id="momentImage" type="file" accept="image/*" hidden />
+                <span class="record-hint" id="momentImageName">未选择图片</span>
+                <button type="button" class="btn send" id="btnPublishMoment">发布</button>
+              </div>
+            </div>
+
+            <div class="moments-feed" id="momentsFeed"></div>
+
+            <div class="interactions-panel">
+              <div class="interactions-head">
+                <h3>动态（点赞 / 评论）</h3>
+                <button type="button" class="icon-btn" id="btnRefreshInteractions">刷新</button>
+              </div>
+              <div id="interactionsList" class="interactions-list"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>微信模拟器 · 双版本入口</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #f3f7fb;
+        --soft: rgba(226, 236, 248, 0.82);
+        --font: "Noto Sans SC", "Sora", sans-serif;
+        --display: "Sora", "Noto Sans SC", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        color: var(--ink);
+        background:
+          radial-gradient(1100px 560px at 8% -12%, rgba(31, 111, 235, 0.42), transparent 55%),
+          radial-gradient(900px 480px at 92% 0%, rgba(7, 193, 96, 0.34), transparent 52%),
+          linear-gradient(155deg, #0b1628, #12233b 48%, #17324f);
+        display: grid;
+        place-items: center;
+        padding: 28px 18px;
+      }
+      .hero {
+        width: min(920px, 100%);
+        animation: rise 0.55s ease both;
+      }
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: none; }
+      }
+      .brand {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(2.4rem, 5vw, 3.5rem);
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+      }
+      .lead {
+        margin: 14px 0 0;
+        max-width: 36rem;
+        color: var(--soft);
+        font-size: 1.05rem;
+        line-height: 1.65;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 34px;
+      }
+      a.card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        padding: 24px;
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(248, 251, 255, 0.08);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+        transition: transform 0.18s ease, background 0.18s ease;
+        min-height: 210px;
+      }
+      a.card:hover {
+        transform: translateY(-4px);
+        background: rgba(248, 251, 255, 0.13);
+      }
+      .kicker {
+        display: inline-block;
+        margin-bottom: 12px;
+        font-size: 0.74rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-family: var(--display);
+        font-weight: 700;
+      }
+      .wecom .kicker { color: #8ec5ff; }
+      .wechat .kicker { color: #7dffa8; }
+      a.card h2 {
+        margin: 0 0 10px;
+        font-size: 1.45rem;
+      }
+      a.card p {
+        margin: 0;
+        color: var(--soft);
+        line-height: 1.55;
+        font-size: 0.95rem;
+      }
+      .foot {
+        margin-top: 22px;
+        color: rgba(220, 232, 248, 0.65);
+        font-size: 0.88rem;
+      }
+      .foot a { color: #b7d4ff; }
+    </style>
+  </head>
+  <body>
+    <main class="hero">
+      <h1 class="brand">微信模拟器</h1>
+      <p class="lead">
+        同一套本地联调服务，提供两个独立版本：企业微信与个人微信。会话、朋友圈与媒体数据互相隔离。
+      </p>
+      <div class="grid">
+        <a class="card wecom" href="/wecom/">
+          <span class="kicker">WeCom</span>
+          <h2>企业微信模拟器</h2>
+          <p>私聊 / 群聊、文字语音图片文件、朋友圈与 CRM 线索同步；回调载荷为企业微信风格。</p>
+        </a>
+        <a class="card wechat" href="/wechat/">
+          <span class="kicker">WeChat</span>
+          <h2>个人微信模拟器</h2>
+          <p>好友私聊 / 群聊、朋友圈互动与本地 Webhook；回调载荷为个人微信风格假实现，便于联调。</p>
+        </a>
+      </div>
+      <p class="foot">
+        效果图预览：<a href="/mockups/">/mockups/</a>
+        · API：<code>/api/*</code>（企微）与 <code>/api/wechat/*</code>（个微）
+      </p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+package com.wecom.simulator.web;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wecom.simulator.model.ProductChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+
+import java.io.IOException;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Component
+public class RealtimeHub {
+
+    private static final Logger log = LoggerFactory.getLogger(RealtimeHub.class);
+
+    private final Map<ProductChannel, Set<WebSocketSession>> sessionsByChannel = new EnumMap<>(ProductChannel.class);
+    private final ObjectMapper objectMapper;
+
+    public RealtimeHub(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        for (ProductChannel channel : ProductChannel.values()) {
+            sessionsByChannel.put(channel, ConcurrentHashMap.newKeySet());
+        }
+    }
+
+    public void register(ProductChannel channel, WebSocketSession session) {
+        sessionsByChannel.get(channel).add(session);
+    }
+
+    public void unregister(ProductChannel channel, WebSocketSession session) {
+        sessionsByChannel.get(channel).remove(session);
+    }
+
+    public void broadcast(ProductChannel channel, Map<String, ?> event) {
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(event);
+        } catch (IOException e) {
+            log.warn("serialize websocket event failed", e);
+            return;
+        }
+        TextMessage message = new TextMessage(json);
+        Set<WebSocketSession> sessions = sessionsByChannel.get(channel);
+        for (WebSocketSession session : sessions) {
+            if (!session.isOpen()) {
+                sessions.remove(session);
+                continue;
+            }
+            try {
+                synchronized (session) {
+                    session.sendMessage(message);
+                }
+            } catch (IOException e) {
+                log.debug("websocket send failed, drop session {}", session.getId());
+                sessions.remove(session);
+                try {
+                    session.close();
+                } catch (IOException ignored) {
+                    // ignore
+                }
+            }
+        }
+    }
+}

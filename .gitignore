@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+data/voices/*
+!data/voices/.gitkeep
+.DS_Store
+*.log
+.env

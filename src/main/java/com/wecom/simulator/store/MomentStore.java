@@ -6,8 +6,8 @@ import com.wecom.simulator.model.MomentInteraction;
 import com.wecom.simulator.model.MomentInteractionType;
 import com.wecom.simulator.model.MomentLike;
 import com.wecom.simulator.model.MomentPost;
+import com.wecom.simulator.model.ProductChannel;
 import com.wecom.simulator.web.RealtimeHub;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,10 +16,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-@Component
 public class MomentStore {
 
     private final RealtimeHub realtimeHub;
+    private final ProductChannel channel;
     private final List<MomentPost> posts = new CopyOnWriteArrayList<>();
     private final List<MomentInteraction> interactions = new CopyOnWriteArrayList<>();
 
@@ -28,8 +28,13 @@ public class MomentStore {
     private volatile boolean crmAutoSync = true;
     private volatile String crmAuthHeader;
 
-    public MomentStore(RealtimeHub realtimeHub) {
+    public MomentStore(RealtimeHub realtimeHub, ProductChannel channel) {
         this.realtimeHub = realtimeHub;
+        this.channel = channel;
+    }
+
+    public ProductChannel getChannel() {
+        return channel;
     }
 
     public List<MomentPost> listPosts() {
@@ -44,7 +49,7 @@ public class MomentStore {
 
     public MomentPost addPost(MomentPost post) {
         posts.add(0, post);
-        realtimeHub.broadcast(Map.of("type", "moment", "moment", post));
+        realtimeHub.broadcast(channel, Map.of("type", "moment", "moment", post));
         return post;
     }
 
@@ -63,7 +68,7 @@ public class MomentStore {
         MomentInteraction interaction = baseInteraction(post, MomentInteractionType.LIKE, userId, userName);
         interaction.setContent("点赞");
         interactions.add(interaction);
-        realtimeHub.broadcast(Map.of(
+        realtimeHub.broadcast(channel, Map.of(
                 "type", "moment_interaction",
                 "interaction", interaction,
                 "moment", post
@@ -83,7 +88,7 @@ public class MomentStore {
         MomentInteraction interaction = baseInteraction(post, MomentInteractionType.COMMENT, userId, userName);
         interaction.setContent(content);
         interactions.add(interaction);
-        realtimeHub.broadcast(Map.of(
+        realtimeHub.broadcast(channel, Map.of(
                 "type", "moment_interaction",
                 "interaction", interaction,
                 "moment", post
@@ -114,7 +119,7 @@ public class MomentStore {
     public void clear() {
         posts.clear();
         interactions.clear();
-        realtimeHub.broadcast(Map.of("type", "moments_cleared"));
+        realtimeHub.broadcast(channel, Map.of("type", "moments_cleared"));
     }
 
     public CrmConfigState crmSnapshot() {

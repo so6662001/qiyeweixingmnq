@@ -5,21 +5,19 @@ import com.wecom.simulator.model.Message;
 import com.wecom.simulator.model.MessageType;
 import com.wecom.simulator.model.SenderRole;
 import com.wecom.simulator.store.MessageStore;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
-@Service
 public class DemoBotService {
 
     private final MessageStore store;
-    private final MessageService messageService;
+    private final Supplier<MessageService> messageServiceSupplier;
 
-    public DemoBotService(MessageStore store, @Lazy MessageService messageService) {
+    public DemoBotService(MessageStore store, Supplier<MessageService> messageServiceSupplier) {
         this.store = store;
-        this.messageService = messageService;
+        this.messageServiceSupplier = messageServiceSupplier;
     }
 
     public Message maybeAutoReply(Message message) {
@@ -30,6 +28,7 @@ public class DemoBotService {
             return null;
         }
 
+        MessageService messageService = messageServiceSupplier.get();
         String content;
         if (message.getMsgtype() == MessageType.TEXT) {
             content = "【收到文字】" + message.getContent();

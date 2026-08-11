@@ -1,18 +1,27 @@
-# 企业微信模拟器（Java）
+# 微信模拟器（Java）· 企微 + 个微双版本
 
-基于 **Spring Boot 3 / Java 21** 的本地企业微信会话模拟器：可发送/获取**文字**与**语音**消息，并通过 API **文字回复**；支持**朋友圈**发帖（图片+方案）、读取点赞/评论，并将动态同步到 **CRM 线索接口**。
+基于 **Spring Boot 3 / Java 21** 的本地联调模拟器，提供两个互相隔离的版本：
 
-## 功能
+| 版本 | UI | API 前缀 | WebSocket |
+|------|----|----------|-----------|
+| 企业微信 | http://127.0.0.1:8000/wecom/ | `/api` | `/ws` |
+| 个人微信 | http://127.0.0.1:8000/wechat/ | `/api/wechat` | `/ws/wechat` |
+
+入口页：http://127.0.0.1:8000 （选择版本）
+
+> 个人微信侧为**本地假实现**，不对接真实个微协议；回调 JSON 仅用于联调。
+
+## 功能（两套版本均具备）
 
 - 聊天界面发送文字 / 语音 / 图片 / 文件
 - **私聊 + 群聊**：群内可回复指定人、@提及；消息可按 `chat_type` / `group_id` 过滤
-- 录音或上传语音，获取 `media_id`、下载地址与识别文本（Recognition）
-- `POST /api/reply/text` 模拟应用主动文字回复（支持群内指定回复对象）
-- 可选 Webhook：入站消息以企业微信风格 JSON 回调到你的服务
-- 内置演示 Bot（回声/语音确认），可开关
-- WebSocket 实时刷新会话
-- **朋友圈**：上传图片 + 文案/方案自动发帖；模拟点赞/评论；读取动态
-- **CRM 线索同步**：将点赞/评论 POST 到指定线索 API（支持自动/手动同步）
+- 录音或上传语音，获取 `media_id`、下载地址与识别文本
+- `POST …/reply/text` 模拟主动文字回复（支持群内指定回复对象）
+- 可选 Webhook：企微通道为企业微信风格 JSON；个微通道为个人微信风格 JSON（无 AgentID）
+- 内置演示 Bot / 微信助手，可开关
+- WebSocket 按通道隔离实时刷新
+- **朋友圈**：上传图片 + 文案/方案发帖；点赞/评论；可选 CRM 线索同步
+- 会话、媒体目录互相隔离（企微：`data/*`；个微：`data/wechat/*`）
 
 ## 环境
 
@@ -31,14 +40,16 @@ mvn spring-boot:run
 bash scripts/run.sh
 ```
 
-默认仅监听 `127.0.0.1:8000`。打开 http://127.0.0.1:8000
+默认仅监听 `127.0.0.1:8000`。打开 http://127.0.0.1:8000 选择版本：
+
+- 企业微信：http://127.0.0.1:8000/wecom/
+- 个人微信：http://127.0.0.1:8000/wechat/
 
 高保真 HTML 效果图（静态预览）：
 
 - 索引：`docs/mockups/index.html` → http://127.0.0.1:8000/mockups/
-- 会话：`docs/mockups/wecom-simulator-hifi.html`
-- 群聊：`docs/mockups/wecom-group-hifi.html` → http://127.0.0.1:8000/mockups/wecom-group-hifi.html
-- 朋友圈：`docs/mockups/wecom-moments-hifi.html` → http://127.0.0.1:8000/mockups/wecom-moments-hifi.html
+- 企微会话 / 群聊 / 朋友圈：`wecom-*-hifi.html`
+- 个微会话 / 群聊 / 朋友圈：`wechat-*-hifi.html`
 
 打包运行：
 
@@ -48,6 +59,8 @@ java -jar target/wecom-simulator-1.0.0.jar
 ```
 
 ## 核心 API
+
+企微使用下表路径；个人微信在前缀前加 `/wechat`，例如 `POST /api/wechat/messages/text`、`GET /api/wechat/moments`。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -187,11 +200,12 @@ curl -s http://127.0.0.1:8000/api/moments/crm/sync -X POST
 ## 项目结构
 
 ```
-src/main/java/com/wecom/simulator/   Spring Boot 服务
-src/main/resources/static/           聊天模拟器 UI
-src/test/java/                       API 测试
-examples/EchoBot.java                Java 联调示例
-data/voices/                         上传的语音文件
+src/main/java/com/wecom/simulator/   Spring Boot 服务（双通道 ChannelRuntime）
+src/main/resources/static/           入口 + /wecom + /wechat UI
+src/test/java/                       API 测试（含个微隔离用例）
+examples/EchoBot.java                Java 联调示例（默认企微 /api）
+data/voices|files|moments            企微媒体
+data/wechat/*                         个微媒体
 ```
 
 ## 测试
@@ -206,4 +220,5 @@ mvn test
 - Webhook 默认仅允许回环地址（`localhost` / `127.0.0.1` / `::1`），禁止链路本地与云元数据地址；如需 Docker/私网回调，设置 `wecom.simulator.webhook.allow-private-network=true`
 - 语音上传扩展名白名单，禁止路径穿越；`media_id` 仅接受十六进制
 - 清空会话会同步删除 `data/voices` 下语音文件；单文件上限 5MB，文件数上限可配
-- 本项目仍是**本地联调模拟器**，不做企微加解密/签名校验，请勿直接暴露到公网
+- 本项目仍是**本地联调模拟器**，不做企微/个微官方加解密或协议对接，请勿直接暴露到公网
+- 个人微信版本仅提供本地假数据与假回调，**不能**连接真实微信客户端或服务号

@@ -15,7 +15,7 @@
     <artifactId>wecom-simulator</artifactId>
     <version>1.0.0</version>
     <name>wecom-simulator</name>
-    <description>企业微信模拟器：文字/语音获取与文字回复</description>
+    <description>微信模拟器（企业微信 + 个人微信双版本）：文字/语音/图片/文件与朋友圈联调</description>
 
     <properties>
         <java.version>21</java.version>

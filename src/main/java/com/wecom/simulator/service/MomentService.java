@@ -2,10 +2,9 @@ package com.wecom.simulator.service;
 
 import com.wecom.simulator.model.MomentInteraction;
 import com.wecom.simulator.model.MomentPost;
+import com.wecom.simulator.model.ProductChannel;
 import com.wecom.simulator.security.SafeIds;
 import com.wecom.simulator.store.MomentStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -17,23 +16,24 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-@Service
 public class MomentService {
 
     private final MomentStore momentStore;
     private final CrmLeadSyncService crmLeadSyncService;
+    private final ProductChannel channel;
     private final Path momentImageDir;
     private final long maxMomentImages;
 
     public MomentService(
             MomentStore momentStore,
             CrmLeadSyncService crmLeadSyncService,
-            @Value("${wecom.simulator.moment-image-dir:data/moments}") String momentImageDir,
-            @Value("${wecom.simulator.max-moment-images:200}") long maxMomentImages
+            ProductChannel channel,
+            long maxMomentImages
     ) throws IOException {
         this.momentStore = momentStore;
         this.crmLeadSyncService = crmLeadSyncService;
-        this.momentImageDir = Path.of(momentImageDir).toAbsolutePath().normalize();
+        this.channel = channel;
+        this.momentImageDir = Path.of(channel.getMomentImageDir()).toAbsolutePath().normalize();
         this.maxMomentImages = maxMomentImages;
         Files.createDirectories(this.momentImageDir);
     }
@@ -86,7 +86,7 @@ public class MomentService {
         post.setContent(content.trim());
         post.setPlan(planText);
         post.setImageMediaId(mediaId);
-        post.setImageUrl("/api/moments/media/" + mediaId);
+        post.setImageUrl(channel.getApiBasePath() + "/moments/media/" + mediaId);
         post.setCreateTime(System.currentTimeMillis() / 1000);
         return momentStore.addPost(post);
     }

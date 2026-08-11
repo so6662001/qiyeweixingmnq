@@ -5,11 +5,10 @@ import com.wecom.simulator.model.ChatGroup;
 import com.wecom.simulator.model.ChatType;
 import com.wecom.simulator.model.Message;
 import com.wecom.simulator.model.MessageType;
+import com.wecom.simulator.model.ProductChannel;
 import com.wecom.simulator.model.SenderRole;
 import com.wecom.simulator.security.SafeIds;
 import com.wecom.simulator.store.MessageStore;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -24,11 +23,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@Service
 public class MessageService {
 
     private final MessageStore store;
     private final InboundPostProcessor inboundPostProcessor;
+    private final ProductChannel channel;
     private final Path voiceDir;
     private final Path fileDir;
     private final long maxMediaFiles;
@@ -36,17 +35,21 @@ public class MessageService {
     public MessageService(
             MessageStore store,
             InboundPostProcessor inboundPostProcessor,
-            @Value("${wecom.simulator.voice-dir:data/voices}") String voiceDir,
-            @Value("${wecom.simulator.file-dir:data/files}") String fileDir,
-            @Value("${wecom.simulator.max-voice-files:200}") long maxMediaFiles
+            ProductChannel channel,
+            long maxMediaFiles
     ) throws IOException {
         this.store = store;
         this.inboundPostProcessor = inboundPostProcessor;
-        this.voiceDir = Path.of(voiceDir).toAbsolutePath().normalize();
-        this.fileDir = Path.of(fileDir).toAbsolutePath().normalize();
+        this.channel = channel;
+        this.voiceDir = Path.of(channel.getVoiceDir()).toAbsolutePath().normalize();
+        this.fileDir = Path.of(channel.getFileDir()).toAbsolutePath().normalize();
         this.maxMediaFiles = maxMediaFiles;
         Files.createDirectories(this.voiceDir);
         Files.createDirectories(this.fileDir);
+    }
+
+    private String mediaUrl(String mediaId) {
+        return channel.getApiBasePath() + "/media/" + mediaId;
     }
 
     public Message sendText(String content, InboundChatOptions options) {
@@ -76,7 +79,7 @@ public class MessageService {
 
         Message message = buildBaseInbound(MessageType.VOICE, options);
         message.setMediaId(media.mediaId());
-        message.setVoiceUrl("/api/media/" + media.mediaId());
+        message.setVoiceUrl(mediaUrl(media.mediaId()));
         message.setVoiceDurationMs(durationMs);
         message.setRecognition(recog);
         message.setContent(recog);
@@ -97,7 +100,7 @@ public class MessageService {
         ), "图片");
         Message message = buildBaseInbound(MessageType.IMAGE, options);
         message.setMediaId(media.mediaId());
-        message.setImageUrl("/api/media/" + media.mediaId());
+        message.setImageUrl(mediaUrl(media.mediaId()));
         message.setFileName(media.originalName());
         message.setFileSize(media.size());
         message.setContent("[图片] " + media.originalName());
@@ -119,7 +122,7 @@ public class MessageService {
         StoredMedia media = storeUpload(file, fileDir, ext, "文件");
         Message message = buildBaseInbound(MessageType.FILE, options);
         message.setMediaId(media.mediaId());
-        message.setFileUrl("/api/media/" + media.mediaId());
+        message.setFileUrl(mediaUrl(media.mediaId()));
         message.setFileName(media.originalName());
         message.setFileSize(media.size());
         message.setContent("[文件] " + media.originalName());
@@ -153,7 +156,7 @@ public class MessageService {
         msg.setMsgtype(MessageType.TEXT);
         msg.setRole(SenderRole.BOT);
         msg.setFromUser("bot");
-        msg.setFromUserName("应用机器人");
+        msg.setFromUserName(channel.getBotDisplayName());
         msg.setAgentId(agentId == null || agentId.isBlank() ? "1000001" : agentId);
         msg.setContent(content.trim());
         msg.setChatType(chatType);
@@ -186,7 +189,7 @@ public class MessageService {
                 target = store.list(null, SenderRole.USER, null, ChatType.PRIVATE, null).stream()
                         .reduce((a, b) -> b)
                         .map(Message::getFromUser)
-                        .orElse("user001");
+                        .orElse(channel.isWechat() ? "friend001" : "user001");
             }
             if (!SafeIds.isSafeToken(target)) {
                 throw new IllegalArgumentException("to_user 非法");

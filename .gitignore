@@ -19,3 +19,10 @@ data/moments/*
 
 data/files/*
 !data/files/.gitkeep
+
+data/wechat/voices/*
+!data/wechat/voices/.gitkeep
+data/wechat/files/*
+!data/wechat/files/.gitkeep
+data/wechat/moments/*
+!data/wechat/moments/.gitkeep

@@ -2,30 +2,33 @@ package com.wecom.simulator.service;
 
 import com.wecom.simulator.model.Message;
 import com.wecom.simulator.store.MessageStore;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Service
 public class InboundPostProcessor {
 
     private final WebhookDispatcher webhookDispatcher;
     private final DemoBotService demoBotService;
     private final MessageStore store;
+    private final AsyncJobs asyncJobs;
 
     public InboundPostProcessor(
             WebhookDispatcher webhookDispatcher,
             DemoBotService demoBotService,
-            MessageStore store
+            MessageStore store,
+            AsyncJobs asyncJobs
     ) {
         this.webhookDispatcher = webhookDispatcher;
         this.demoBotService = demoBotService;
         this.store = store;
+        this.asyncJobs = asyncJobs;
     }
 
-    @Async
     public void process(Message message) {
+        asyncJobs.submit(() -> processSync(message));
+    }
+
+    private void processSync(Message message) {
         Map<String, Object> webhookResult = webhookDispatcher.dispatchInbound(message);
         if (webhookResult != null) {
             store.broadcastEvent(Map.of(

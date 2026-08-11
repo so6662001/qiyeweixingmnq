@@ -3,226 +3,129 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>企微模拟器 · WeCom Simulator</title>
+    <title>微信模拟器 · 双版本入口</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,700;1,9..40,500&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      :root {
+        --ink: #f3f7fb;
+        --soft: rgba(226, 236, 248, 0.82);
+        --font: "Noto Sans SC", "Sora", sans-serif;
+        --display: "Sora", "Noto Sans SC", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        color: var(--ink);
+        background:
+          radial-gradient(1100px 560px at 8% -12%, rgba(31, 111, 235, 0.42), transparent 55%),
+          radial-gradient(900px 480px at 92% 0%, rgba(7, 193, 96, 0.34), transparent 52%),
+          linear-gradient(155deg, #0b1628, #12233b 48%, #17324f);
+        display: grid;
+        place-items: center;
+        padding: 28px 18px;
+      }
+      .hero {
+        width: min(920px, 100%);
+        animation: rise 0.55s ease both;
+      }
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: none; }
+      }
+      .brand {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(2.4rem, 5vw, 3.5rem);
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+      }
+      .lead {
+        margin: 14px 0 0;
+        max-width: 36rem;
+        color: var(--soft);
+        font-size: 1.05rem;
+        line-height: 1.65;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-top: 34px;
+      }
+      a.card {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        padding: 24px;
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(248, 251, 255, 0.08);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+        transition: transform 0.18s ease, background 0.18s ease;
+        min-height: 210px;
+      }
+      a.card:hover {
+        transform: translateY(-4px);
+        background: rgba(248, 251, 255, 0.13);
+      }
+      .kicker {
+        display: inline-block;
+        margin-bottom: 12px;
+        font-size: 0.74rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-family: var(--display);
+        font-weight: 700;
+      }
+      .wecom .kicker { color: #8ec5ff; }
+      .wechat .kicker { color: #7dffa8; }
+      a.card h2 {
+        margin: 0 0 10px;
+        font-size: 1.45rem;
+      }
+      a.card p {
+        margin: 0;
+        color: var(--soft);
+        line-height: 1.55;
+        font-size: 0.95rem;
+      }
+      .foot {
+        margin-top: 22px;
+        color: rgba(220, 232, 248, 0.65);
+        font-size: 0.88rem;
+      }
+      .foot a { color: #b7d4ff; }
+    </style>
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="side-panel" aria-label="配置与接口">
-        <div class="brand-block">
-          <div class="brand-mark" aria-hidden="true"></div>
-          <div>
-            <h1 class="brand-name">企微模拟器</h1>
-            <p class="brand-tag">会话 · 朋友圈 · CRM 线索</p>
-          </div>
-        </div>
-
-        <section class="side-section">
-          <h2>会话</h2>
-          <p class="muted">Session: <code id="sessionId">—</code></p>
-          <button type="button" class="btn ghost" id="btnClear">清空会话与朋友圈</button>
-        </section>
-
-        <section class="side-section">
-          <h2>演示 Bot</h2>
-          <label class="toggle">
-            <input type="checkbox" id="demoBotEnabled" checked />
-            <span>收到消息后自动文字回复</span>
-          </label>
-        </section>
-
-        <section class="side-section">
-          <h2>Webhook 回调</h2>
-          <p class="muted">入站文字/语音将 POST 到下方地址（企业微信风格 JSON）。</p>
-          <input
-            id="webhookUrl"
-            class="input"
-            type="url"
-            placeholder="http://127.0.0.1:9000/callback"
-          />
-          <label class="toggle">
-            <input type="checkbox" id="webhookEnabled" />
-            <span>启用 Webhook</span>
-          </label>
-          <button type="button" class="btn secondary" id="btnSaveWebhook">保存 Webhook</button>
-        </section>
-
-        <section class="side-section">
-          <h2>CRM 线索接口</h2>
-          <p class="muted">朋友圈点赞/评论将写入该 API（线索系统）。</p>
-          <input
-            id="crmUrl"
-            class="input"
-            type="url"
-            placeholder="http://127.0.0.1:9100/crm/leads"
-          />
-          <input
-            id="crmAuth"
-            class="input"
-            type="text"
-            placeholder="可选 Authorization，如 Bearer xxx"
-            style="margin-top: 8px"
-          />
-          <label class="toggle">
-            <input type="checkbox" id="crmEnabled" />
-            <span>启用 CRM 同步</span>
-          </label>
-          <label class="toggle">
-            <input type="checkbox" id="crmAutoSync" checked />
-            <span>互动后自动同步</span>
-          </label>
-          <button type="button" class="btn secondary" id="btnSaveCrm">保存 CRM 配置</button>
-          <button type="button" class="btn primary" id="btnSyncCrm" style="margin-top: 8px">
-            立即同步未写入线索
-          </button>
-          <p class="muted" id="crmHint" style="margin-top: 8px"></p>
-        </section>
-
-        <section class="side-section">
-          <h2>主动文字回复</h2>
-          <p class="muted">模拟应用发消息 API：<code>POST /api/reply/text</code></p>
-          <textarea
-            id="manualReply"
-            class="input textarea"
-            rows="3"
-            placeholder="输入要回复给用户的文字…"
-          ></textarea>
-          <button type="button" class="btn primary" id="btnManualReply">发送回复</button>
-        </section>
-
-        <section class="side-section api-hints">
-          <h2>联调接口</h2>
-          <ul>
-            <li><code>POST /api/messages/text</code> 文字（私聊/群）</li>
-            <li><code>POST /api/messages/voice|image|file</code> 多媒体</li>
-            <li><code>POST /api/reply/text</code> 回复（可指定人）</li>
-            <li><code>GET /api/groups</code> 群列表</li>
-            <li><code>POST /api/moments</code> 发朋友圈</li>
-            <li><code>POST /api/moments/crm/sync</code> 写入 CRM</li>
-          </ul>
-        </section>
-      </aside>
-
-      <main class="chat-stage">
-        <header class="chat-header">
-          <div>
-            <p class="chat-title">企业微信模拟器</p>
-            <p class="chat-sub" id="connStatus">连接中…</p>
-          </div>
-          <div class="header-right">
-            <div class="view-tabs" role="tablist">
-              <button type="button" class="tab active" data-view="chat" id="tabChat">会话</button>
-              <button type="button" class="tab" data-view="moments" id="tabMoments">朋友圈</button>
-            </div>
-            <div class="header-meta">
-              <span class="dot" id="liveDot"></span>
-              <span>实时</span>
-            </div>
-          </div>
-        </header>
-
-        <section class="view-panel active" id="viewChat">
-          <div class="chat-scope-bar">
-            <div class="view-tabs" role="tablist">
-              <button type="button" class="tab active" id="scopePrivate">私聊</button>
-              <button type="button" class="tab" id="scopeGroup">群聊</button>
-            </div>
-            <select id="groupSelect" class="input scope-select" disabled>
-              <option value="group001">销售协作群</option>
-            </select>
-            <span class="muted" id="scopeHint">当前：私聊 user001</span>
-          </div>
-          <div class="chat-scroll" id="chatScroll" aria-live="polite"></div>
-          <footer class="composer">
-            <div id="replyBar" class="reply-bar hidden">
-              <div>
-                <strong>回复</strong>
-                <span id="replyPreview">—</span>
-              </div>
-              <button type="button" class="icon-btn" id="btnCancelReply">取消</button>
-            </div>
-            <div class="composer-tools">
-              <button type="button" class="icon-btn" id="btnPickVoice">语音</button>
-              <input id="voiceFile" type="file" accept="audio/*,.webm,.wav,.mp3,.ogg,.amr" hidden />
-              <button type="button" class="icon-btn record" id="btnRecord">录音</button>
-              <button type="button" class="icon-btn" id="btnPickChatImage">图片</button>
-              <input id="chatImageFile" type="file" accept="image/*" hidden />
-              <button type="button" class="icon-btn" id="btnPickChatFile">文件</button>
-              <input id="chatFile" type="file" hidden />
-              <span class="record-hint" id="recordHint"></span>
-            </div>
-            <form id="textForm" class="composer-form">
-              <textarea
-                id="textInput"
-                class="composer-input"
-                rows="1"
-                placeholder="输入文字；群聊可先点消息「回复」指定某人"
-                required
-              ></textarea>
-              <button type="submit" class="btn send" id="btnSend">发送</button>
-            </form>
-            <label class="recog-row">
-              <span>语音识别文本（可选）</span>
-              <input
-                id="voiceRecognition"
-                class="input"
-                type="text"
-                placeholder="模拟企业微信 Recognition 字段"
-              />
-            </label>
-          </footer>
-        </section>
-
-        <section class="view-panel" id="viewMoments">
-          <div class="moments-layout">
-            <div class="moment-composer">
-              <h3>发布朋友圈</h3>
-              <p class="muted">上传图片 + 填写文案/方案，自动发朋友圈。</p>
-              <label class="recog-row">
-                <span>文案</span>
-                <textarea
-                  id="momentContent"
-                  class="input textarea"
-                  rows="2"
-                  placeholder="例如：本周限时优惠，欢迎到店体验"
-                ></textarea>
-              </label>
-              <label class="recog-row">
-                <span>方案（可选，会随线索同步到 CRM）</span>
-                <textarea
-                  id="momentPlan"
-                  class="input textarea"
-                  rows="2"
-                  placeholder="例如：春季获客方案 A · 目标线索 50"
-                ></textarea>
-              </label>
-              <div class="composer-tools">
-                <button type="button" class="icon-btn" id="btnPickImage">选择图片</button>
-                <input id="momentImage" type="file" accept="image/*" hidden />
-                <span class="record-hint" id="momentImageName">未选择图片</span>
-                <button type="button" class="btn send" id="btnPublishMoment">发布</button>
-              </div>
-            </div>
-
-            <div class="moments-feed" id="momentsFeed"></div>
-
-            <div class="interactions-panel">
-              <div class="interactions-head">
-                <h3>动态（点赞 / 评论）</h3>
-                <button type="button" class="icon-btn" id="btnRefreshInteractions">刷新</button>
-              </div>
-              <div id="interactionsList" class="interactions-list"></div>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
-    <script src="/app.js" type="module"></script>
+    <main class="hero">
+      <h1 class="brand">微信模拟器</h1>
+      <p class="lead">
+        同一套本地联调服务，提供两个独立版本：企业微信与个人微信。会话、朋友圈与媒体数据互相隔离。
+      </p>
+      <div class="grid">
+        <a class="card wecom" href="/wecom/">
+          <span class="kicker">WeCom</span>
+          <h2>企业微信模拟器</h2>
+          <p>私聊 / 群聊、文字语音图片文件、朋友圈与 CRM 线索同步；回调载荷为企业微信风格。</p>
+        </a>
+        <a class="card wechat" href="/wechat/">
+          <span class="kicker">WeChat</span>
+          <h2>个人微信模拟器</h2>
+          <p>好友私聊 / 群聊、朋友圈互动与本地 Webhook；回调载荷为个人微信风格假实现，便于联调。</p>
+        </a>
+      </div>
+      <p class="foot">
+        效果图预览：<a href="/mockups/">/mockups/</a>
+        · API：<code>/api/*</code>（企微）与 <code>/api/wechat/*</code>（个微）
+      </p>
+    </main>
   </body>
 </html>

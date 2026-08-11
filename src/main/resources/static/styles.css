@@ -120,6 +120,35 @@ code {
   font-size: 0.9rem;
 }
 
+.home-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+
+.home-link:hover {
+  text-decoration: underline;
+}
+
+body.product-wechat {
+  --bg-0: #0d1f18;
+  --bg-1: #123025;
+  --bg-2: #184334;
+  --accent: #07c160;
+  --accent-2: #1f8f5f;
+  --user-bubble: #07c160;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(7, 193, 96, 0.34), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(34, 120, 90, 0.28), transparent 50%),
+    linear-gradient(160deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+}
+
+body.product-wechat .brand-mark {
+  background: linear-gradient(145deg, #2adf7c, #07c160 55%, #0a8f4a);
+}
+
 .side-section {
   padding: 14px 20px 6px;
   border-top: 1px solid var(--line);

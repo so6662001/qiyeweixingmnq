@@ -9,6 +9,7 @@ import java.util.List;
 public class SessionState {
 
     private String sessionId;
+    private String product;
     private List<Message> messages = new ArrayList<>();
     private List<ChatGroup> groups = new ArrayList<>();
     private String webhookUrl;
@@ -21,6 +22,14 @@ public class SessionState {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public String getProduct() {
+        return product;
+    }
+
+    public void setProduct(String product) {
+        this.product = product;
     }
 
     public List<Message> getMessages() {

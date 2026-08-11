@@ -1,7 +1,9 @@
 package com.wecom.simulator.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wecom.simulator.store.MessageStore;
+import com.wecom.simulator.model.ProductChannel;
+import com.wecom.simulator.runtime.ChannelRuntime;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -13,26 +15,34 @@ import java.util.Map;
 @Component
 public class SimulatorWebSocketHandler extends TextWebSocketHandler {
 
+    public static final String ATTR_CHANNEL = "productChannel";
+
     private final RealtimeHub realtimeHub;
-    private final MessageStore messageStore;
+    private final ChannelRuntime wecomRuntime;
+    private final ChannelRuntime wechatRuntime;
     private final ObjectMapper objectMapper;
 
     public SimulatorWebSocketHandler(
             RealtimeHub realtimeHub,
-            MessageStore messageStore,
+            ChannelRuntime wecomRuntime,
+            @Qualifier("wechatRuntime") ChannelRuntime wechatRuntime,
             ObjectMapper objectMapper
     ) {
         this.realtimeHub = realtimeHub;
-        this.messageStore = messageStore;
+        this.wecomRuntime = wecomRuntime;
+        this.wechatRuntime = wechatRuntime;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        realtimeHub.register(session);
+        ProductChannel channel = resolveChannel(session);
+        session.getAttributes().put(ATTR_CHANNEL, channel);
+        realtimeHub.register(channel, session);
+        ChannelRuntime runtime = channel == ProductChannel.WECHAT ? wechatRuntime : wecomRuntime;
         String payload = objectMapper.writeValueAsString(Map.of(
                 "type", "snapshot",
-                "session", messageStore.snapshot()
+                "session", runtime.getMessageStore().snapshot()
         ));
         session.sendMessage(new TextMessage(payload));
     }
@@ -44,6 +54,18 @@ public class SimulatorWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-        realtimeHub.unregister(session);
+        ProductChannel channel = (ProductChannel) session.getAttributes().get(ATTR_CHANNEL);
+        if (channel == null) {
+            channel = ProductChannel.WECOM;
+        }
+        realtimeHub.unregister(channel, session);
+    }
+
+    private static ProductChannel resolveChannel(WebSocketSession session) {
+        String path = session.getUri() == null ? "" : session.getUri().getPath();
+        if (path != null && path.startsWith("/ws/wechat")) {
+            return ProductChannel.WECHAT;
+        }
+        return ProductChannel.WECOM;
     }
 }

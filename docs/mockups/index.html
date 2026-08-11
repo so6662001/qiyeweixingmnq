@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>企微模拟器 · 高保真效果图索引</title>
+    <title>微信模拟器 · 高保真效果图索引</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -22,7 +22,7 @@
         margin: 0; min-height: 100vh; font-family: var(--font); color: var(--ink);
         background:
           radial-gradient(1000px 500px at 10% -10%, rgba(31,111,235,.4), transparent 55%),
-          radial-gradient(800px 420px at 90% 0%, rgba(15,138,107,.28), transparent 50%),
+          radial-gradient(800px 420px at 90% 0%, rgba(7,193,96,.3), transparent 50%),
           linear-gradient(155deg, #0b1628, #12233b 45%, #183153);
         padding: 48px 22px;
       }
@@ -31,10 +31,14 @@
         margin: 0; font-family: var(--display); font-size: clamp(2.2rem, 4vw, 3rem);
         letter-spacing: -.03em;
       }
+      h2.section {
+        margin: 36px 0 0; font-size: 1.15rem; letter-spacing: .04em; color: #9ec6ff;
+        font-family: var(--display); text-transform: uppercase;
+      }
       p { color: var(--soft); line-height: 1.6; }
       .grid {
         display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 16px; margin-top: 28px;
+        gap: 16px; margin-top: 16px;
       }
       a.card {
         display: block; text-decoration: none; color: inherit;
@@ -48,29 +52,60 @@
       a.card p { margin: 0; font-size: .92rem; }
       .kicker {
         display: inline-block; margin-bottom: 10px; font-size: .75rem; letter-spacing: .08em;
-        text-transform: uppercase; color: #8ec5ff; font-family: var(--display); font-weight: 700;
+        text-transform: uppercase; font-family: var(--display); font-weight: 700;
       }
+      .wecom .kicker { color: #8ec5ff; }
+      .wechat .kicker { color: #7dffa8; }
+      .live { margin-top: 28px; font-size: .92rem; }
+      .live a { color: #b7d4ff; }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <h1>企微模拟器</h1>
-      <p>高保真 HTML 效果图索引：会话、群聊、朋友圈三套界面，可直接在浏览器打开预览。</p>
+      <h1>微信模拟器效果图</h1>
+      <p>高保真 HTML 预览：企业微信与个人微信两套版本，覆盖会话、群聊、朋友圈。</p>
+      <p class="live">
+        可运行界面：
+        <a href="/">版本入口</a> ·
+        <a href="/wecom/">企微模拟器</a> ·
+        <a href="/wechat/">个微模拟器</a>
+      </p>
+
+      <h2 class="section">企业微信</h2>
       <div class="grid">
-        <a class="card" href="./wecom-simulator-hifi.html">
-          <span class="kicker">Chat</span>
+        <a class="card wecom" href="./wecom-simulator-hifi.html">
+          <span class="kicker">WeCom · Chat</span>
           <h2>会话效果图</h2>
           <p>文字 / 语音收发、演示 Bot、Webhook、主动文字回复。</p>
         </a>
-        <a class="card" href="./wecom-group-hifi.html">
-          <span class="kicker">Group</span>
+        <a class="card wecom" href="./wecom-group-hifi.html">
+          <span class="kicker">WeCom · Group</span>
           <h2>群聊效果图</h2>
           <p>群内文字 / 语音 / 图片 / 文件，以及回复指定人、@提及。</p>
         </a>
-        <a class="card" href="./wecom-moments-hifi.html">
-          <span class="kicker">Moments</span>
+        <a class="card wecom" href="./wecom-moments-hifi.html">
+          <span class="kicker">WeCom · Moments</span>
           <h2>朋友圈效果图</h2>
           <p>图片+方案发帖、点赞/评论动态，以及 CRM 线索同步。</p>
+        </a>
+      </div>
+
+      <h2 class="section">个人微信</h2>
+      <div class="grid">
+        <a class="card wechat" href="./wechat-simulator-hifi.html">
+          <span class="kicker">WeChat · Chat</span>
+          <h2>会话效果图</h2>
+          <p>好友私聊、微信助手回复、个人微信风格 Webhook 联调。</p>
+        </a>
+        <a class="card wechat" href="./wechat-group-hifi.html">
+          <span class="kicker">WeChat · Group</span>
+          <h2>群聊效果图</h2>
+          <p>同学聚会群内多媒体消息与回复指定人。</p>
+        </a>
+        <a class="card wechat" href="./wechat-moments-hifi.html">
+          <span class="kicker">WeChat · Moments</span>
+          <h2>朋友圈效果图</h2>
+          <p>发朋友圈、点赞评论，可选同步到线索系统。</p>
         </a>
       </div>
     </div>

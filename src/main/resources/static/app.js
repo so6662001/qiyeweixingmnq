@@ -1,5 +1,20 @@
 const $ = (id) => document.getElementById(id);
 
+const cfg = {
+  product: "wecom",
+  apiBase: "/api",
+  wsPath: "/ws",
+  privateUserId: "user001",
+  privateUserName: "用户甲",
+  groupUserId: "user002",
+  groupUserName: "群成员乙",
+  authorId: "seller001",
+  authorName: "销售顾问",
+  leadUserId: "lead001",
+  leadUserName: "潜在客户甲",
+  ...(window.__SIMULATOR__ || {}),
+};
+
 const state = {
   messages: [],
   groups: [],
@@ -14,6 +29,11 @@ const state = {
   groupId: "group001",
   replyTo: null,
 };
+
+function apiUrl(path) {
+  if (!path.startsWith("/")) path = "/" + path;
+  return cfg.apiBase + path;
+}
 
 function fmtTime(ts) {
   const d = new Date(ts * 1000);
@@ -121,7 +141,7 @@ function updateScopeUi() {
     const g = state.groups.find((x) => x.group_id === state.groupId);
     $("scopeHint").textContent = `当前：群聊 ${g?.name || state.groupId}`;
   } else {
-    $("scopeHint").textContent = "当前：私聊 user001";
+    $("scopeHint").textContent = `当前：私聊 ${cfg.privateUserId}`;
   }
   renderReplyBar();
   renderMessages();
@@ -152,8 +172,8 @@ function renderReplyBar() {
 function chatPayloadExtras() {
   const extras = {
     chat_type: state.chatType,
-    from_user: state.chatType === "group" ? "user002" : "user001",
-    from_user_name: state.chatType === "group" ? "群成员乙" : "用户甲",
+    from_user: state.chatType === "group" ? cfg.groupUserId : cfg.privateUserId,
+    from_user_name: state.chatType === "group" ? cfg.groupUserName : cfg.privateUserName,
     agent_id: "1000001",
   };
   if (state.chatType === "group") extras.group_id = state.groupId;
@@ -194,8 +214,8 @@ function renderMoments() {
           <div class="like-list">👍 ${likes}</div>
           <div class="comment-list">${comments}</div>
           <div class="moment-actions">
-            <input class="input like-user" type="text" value="lead001" placeholder="user_id" />
-            <input class="input like-name" type="text" value="潜在客户甲" placeholder="昵称" />
+            <input class="input like-user" type="text" value="${escapeHtml(cfg.leadUserId)}" placeholder="user_id" />
+            <input class="input like-name" type="text" value="${escapeHtml(cfg.leadUserName)}" placeholder="昵称" />
             <button type="button" class="icon-btn btn-like">点赞</button>
             <input class="input comment-text" type="text" placeholder="写评论，如：多少钱？" />
             <button type="button" class="icon-btn btn-comment">评论</button>
@@ -275,25 +295,25 @@ async function api(path, options = {}) {
 }
 
 async function refreshSession() {
-  const session = await api("/api/session");
+  const session = await api(apiUrl("/session"));
   applySession(session);
 }
 
 async function refreshCrmConfig() {
-  const cfg = await api("/api/moments/crm/config");
-  $("crmUrl").value = cfg.url || "";
-  $("crmEnabled").checked = !!cfg.enabled;
-  $("crmAutoSync").checked = cfg.auto_sync !== false;
-  $("crmHint").textContent = cfg.auth_configured ? "已配置 Authorization" : "";
+  const crm = await api(apiUrl("/moments/crm/config"));
+  $("crmUrl").value = crm.url || "";
+  $("crmEnabled").checked = !!crm.enabled;
+  $("crmAutoSync").checked = crm.auto_sync !== false;
+  $("crmHint").textContent = crm.auth_configured ? "已配置 Authorization" : "";
 }
 
 async function refreshMoments() {
-  state.moments = await api("/api/moments");
+  state.moments = await api(apiUrl("/moments"));
   renderMoments();
 }
 
 async function refreshInteractions() {
-  state.interactions = await api("/api/moments/interactions");
+  state.interactions = await api(apiUrl("/moments/interactions"));
   renderInteractions();
 }
 
@@ -304,7 +324,7 @@ function setConn(online, text) {
 
 function connectWs() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${proto}://${location.host}/ws`);
+  const ws = new WebSocket(`${proto}://${location.host}${cfg.wsPath}`);
 
   ws.addEventListener("open", () => setConn(true, "WebSocket 已连接"));
   ws.addEventListener("close", () => {
@@ -346,7 +366,7 @@ function connectWs() {
 
 async function sendText(content) {
   const body = { content, ...chatPayloadExtras() };
-  await api("/api/messages/text", {
+  await api(apiUrl("/messages/text"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -362,7 +382,7 @@ async function uploadVoice(blob, filename, durationMs) {
   const recognition = $("voiceRecognition").value.trim();
   if (recognition) fd.append("recognition", recognition);
   if (durationMs != null) fd.append("duration_ms", String(durationMs));
-  await api("/api/messages/voice", { method: "POST", body: fd });
+  await api(apiUrl("/messages/voice"), { method: "POST", body: fd });
   state.replyTo = null;
   renderReplyBar();
 }
@@ -465,7 +485,7 @@ function bindEvents() {
     const file = $("chatImageFile").files?.[0];
     if (!file) return;
     try {
-      await uploadChatMedia("/api/messages/image", file);
+      await uploadChatMedia(apiUrl("/messages/image"), file);
       $("recordHint").textContent = `已发送图片 ${file.name}`;
     } catch (err) {
       alert(err.message || String(err));
@@ -478,7 +498,7 @@ function bindEvents() {
     const file = $("chatFile").files?.[0];
     if (!file) return;
     try {
-      await uploadChatMedia("/api/messages/file", file);
+      await uploadChatMedia(apiUrl("/messages/file"), file);
       $("recordHint").textContent = `已发送文件 ${file.name}`;
     } catch (err) {
       alert(err.message || String(err));
@@ -534,7 +554,7 @@ function bindEvents() {
   });
 
   $("btnClear").addEventListener("click", async () => {
-    await api("/api/session", { method: "DELETE" });
+    await api(apiUrl("/session"), { method: "DELETE" });
     state.moments = [];
     state.interactions = [];
     renderMoments();
@@ -542,7 +562,7 @@ function bindEvents() {
   });
 
   $("demoBotEnabled").addEventListener("change", async () => {
-    await api("/api/config/demo-bot", {
+    await api(apiUrl("/config/demo-bot"), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ enabled: $("demoBotEnabled").checked }),
@@ -550,7 +570,7 @@ function bindEvents() {
   });
 
   $("btnSaveWebhook").addEventListener("click", async () => {
-    await api("/api/config/webhook", {
+    await api(apiUrl("/config/webhook"), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -563,7 +583,7 @@ function bindEvents() {
 
   $("btnSaveCrm").addEventListener("click", async () => {
     try {
-      const cfg = await api("/api/moments/crm/config", {
+      const crm = await api(apiUrl("/moments/crm/config"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -573,7 +593,7 @@ function bindEvents() {
           auth_header: $("crmAuth").value.trim() || null,
         }),
       });
-      $("crmHint").textContent = cfg.enabled ? "CRM 配置已保存并启用" : "CRM 配置已保存（未启用）";
+      $("crmHint").textContent = crm.enabled ? "CRM 配置已保存并启用" : "CRM 配置已保存（未启用）";
     } catch (err) {
       alert(err.message || String(err));
     }
@@ -581,7 +601,7 @@ function bindEvents() {
 
   $("btnSyncCrm").addEventListener("click", async () => {
     try {
-      const result = await api("/api/moments/crm/sync", { method: "POST" });
+      const result = await api(apiUrl("/moments/crm/sync"), { method: "POST" });
       $("crmHint").textContent = `同步完成：成功 ${result.success} / 失败 ${result.failed}`;
       await refreshInteractions();
     } catch (err) {
@@ -605,10 +625,10 @@ function bindEvents() {
         payload.mention_user_ids = [state.replyTo.user];
       }
     } else {
-      payload.to_user = "user001";
+      payload.to_user = cfg.privateUserId;
       if (state.replyTo) payload.reply_to_msgid = state.replyTo.msgid;
     }
-    await api("/api/reply/text", {
+    await api(apiUrl("/reply/text"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -640,10 +660,10 @@ function bindEvents() {
     fd.append("image", state.momentImageFile, state.momentImageFile.name);
     fd.append("content", content);
     if (plan) fd.append("plan", plan);
-    fd.append("author_id", "seller001");
-    fd.append("author_name", "销售顾问");
+    fd.append("author_id", cfg.authorId);
+    fd.append("author_name", cfg.authorName);
     try {
-      await api("/api/moments", { method: "POST", body: fd });
+      await api(apiUrl("/moments"), { method: "POST", body: fd });
       $("momentContent").value = "";
       $("momentPlan").value = "";
       $("momentImage").value = "";
@@ -661,9 +681,9 @@ function bindEvents() {
     const momentId = card.dataset.id;
     try {
       if (e.target.classList.contains("btn-like")) {
-        const userId = card.querySelector(".like-user").value.trim() || "lead001";
-        const userName = card.querySelector(".like-name").value.trim() || "潜在客户甲";
-        await api(`/api/moments/${momentId}/likes`, {
+        const userId = card.querySelector(".like-user").value.trim() || cfg.leadUserId;
+        const userName = card.querySelector(".like-name").value.trim() || cfg.leadUserName;
+        await api(apiUrl(`/moments/${momentId}/likes`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user_id: userId, user_name: userName }),
@@ -672,14 +692,14 @@ function bindEvents() {
         await refreshInteractions();
       }
       if (e.target.classList.contains("btn-comment")) {
-        const userId = card.querySelector(".like-user").value.trim() || "lead001";
-        const userName = card.querySelector(".like-name").value.trim() || "潜在客户甲";
+        const userId = card.querySelector(".like-user").value.trim() || cfg.leadUserId;
+        const userName = card.querySelector(".like-name").value.trim() || cfg.leadUserName;
         const content = card.querySelector(".comment-text").value.trim();
         if (!content) {
           alert("请输入评论");
           return;
         }
-        await api(`/api/moments/${momentId}/comments`, {
+        await api(apiUrl(`/moments/${momentId}/comments`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ user_id: userId, user_name: userName, content }),
@@ -697,7 +717,7 @@ function bindEvents() {
 }
 
 async function refreshGroups() {
-  state.groups = await api("/api/groups");
+  state.groups = await api(apiUrl("/groups"));
   renderGroups();
   updateScopeUi();
 }

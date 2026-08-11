@@ -12,6 +12,7 @@ spring:
 
 wecom:
   simulator:
+    # 企微通道目录（个人微信使用 data/wechat/*，见 ProductChannel）
     voice-dir: data/voices
     file-dir: data/files
     moment-image-dir: data/moments

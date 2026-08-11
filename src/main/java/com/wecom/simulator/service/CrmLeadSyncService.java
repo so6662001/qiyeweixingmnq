@@ -2,14 +2,13 @@ package com.wecom.simulator.service;
 
 import com.wecom.simulator.dto.CrmSyncResult;
 import com.wecom.simulator.model.MomentInteraction;
+import com.wecom.simulator.model.ProductChannel;
 import com.wecom.simulator.store.MomentStore;
 import com.wecom.simulator.web.RealtimeHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.net.http.HttpClient;
@@ -18,18 +17,26 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
 public class CrmLeadSyncService {
 
     private static final Logger log = LoggerFactory.getLogger(CrmLeadSyncService.class);
 
     private final MomentStore momentStore;
     private final RealtimeHub realtimeHub;
+    private final ProductChannel channel;
+    private final AsyncJobs asyncJobs;
     private final RestClient restClient;
 
-    public CrmLeadSyncService(MomentStore momentStore, RealtimeHub realtimeHub) {
+    public CrmLeadSyncService(
+            MomentStore momentStore,
+            RealtimeHub realtimeHub,
+            ProductChannel channel,
+            AsyncJobs asyncJobs
+    ) {
         this.momentStore = momentStore;
         this.realtimeHub = realtimeHub;
+        this.channel = channel;
+        this.asyncJobs = asyncJobs;
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NEVER)
@@ -41,7 +48,8 @@ public class CrmLeadSyncService {
 
     public Map<String, Object> toCrmLeadPayload(MomentInteraction interaction) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("source", "wecom_moment");
+        payload.put("source", channel.getCrmSource());
+        payload.put("product", channel.getId());
         payload.put("lead_type", "moment_" + interaction.getType().getValue());
         payload.put("interaction_id", interaction.getInteractionId());
         payload.put("interaction_type", interaction.getType().getValue());
@@ -77,20 +85,21 @@ public class CrmLeadSyncService {
         }
         result.setSuccess(success);
         result.setFailed(failed);
-        realtimeHub.broadcast(Map.of("type", "crm_sync_result", "result", result));
+        realtimeHub.broadcast(channel, Map.of("type", "crm_sync_result", "result", result));
         return result;
     }
 
-    @Async
     public void maybeAutoSync(MomentInteraction interaction) {
-        if (!momentStore.isCrmEnabled() || !momentStore.isCrmAutoSync()) {
-            return;
-        }
-        if (momentStore.getCrmUrl() == null || momentStore.getCrmUrl().isBlank()) {
-            return;
-        }
-        pushOne(interaction);
-        realtimeHub.broadcast(Map.of("type", "crm_sync_item", "interaction", interaction));
+        asyncJobs.submit(() -> {
+            if (!momentStore.isCrmEnabled() || !momentStore.isCrmAutoSync()) {
+                return;
+            }
+            if (momentStore.getCrmUrl() == null || momentStore.getCrmUrl().isBlank()) {
+                return;
+            }
+            pushOne(interaction);
+            realtimeHub.broadcast(channel, Map.of("type", "crm_sync_item", "interaction", interaction));
+        });
     }
 
     private boolean pushOne(MomentInteraction interaction) {
@@ -113,7 +122,8 @@ public class CrmLeadSyncService {
             interaction.setSyncedToCrm(ok);
             interaction.setCrmSyncResult("HTTP " + code + (body.isBlank() ? "" : (": " + body)));
             log.info(
-                    "CRM sync interaction={} status={} ok={}",
+                    "CRM sync product={} interaction={} status={} ok={}",
+                    channel.getId(),
                     interaction.getInteractionId(),
                     code,
                     ok
@@ -126,7 +136,7 @@ public class CrmLeadSyncService {
                 msg = msg.substring(0, 300);
             }
             interaction.setCrmSyncResult("ERROR: " + msg);
-            log.warn("CRM sync failed interaction={}: {}", interaction.getInteractionId(), msg);
+            log.warn("CRM sync failed product={} interaction={}: {}", channel.getId(), interaction.getInteractionId(), msg);
             return false;
         }
     }

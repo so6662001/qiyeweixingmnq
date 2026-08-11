@@ -5,11 +5,9 @@ import com.wecom.simulator.model.ChatGroup;
 import com.wecom.simulator.model.ChatType;
 import com.wecom.simulator.model.Message;
 import com.wecom.simulator.model.MessageType;
+import com.wecom.simulator.model.ProductChannel;
 import com.wecom.simulator.model.SenderRole;
 import com.wecom.simulator.web.RealtimeHub;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,10 +18,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-@Component
 public class MessageStore {
 
     private final RealtimeHub realtimeHub;
+    private final ProductChannel channel;
     private final List<Message> messages = new CopyOnWriteArrayList<>();
     private final Map<String, ChatGroup> groups = new ConcurrentHashMap<>();
     private volatile String sessionId = shortId();
@@ -33,28 +31,40 @@ public class MessageStore {
 
     public MessageStore(
             RealtimeHub realtimeHub,
-            @Value("${wecom.simulator.demo-bot-enabled:true}") boolean demoBotEnabled
+            ProductChannel channel,
+            boolean demoBotEnabled
     ) {
         this.realtimeHub = realtimeHub;
+        this.channel = channel;
         this.demoBotEnabled = demoBotEnabled;
+        seedDefaultGroup();
     }
 
-    @PostConstruct
-    void seedDefaultGroup() {
-        if (!groups.containsKey("group001")) {
+    private void seedDefaultGroup() {
+        String groupId = channel.getDefaultGroupId();
+        if (!groups.containsKey(groupId)) {
             ChatGroup group = new ChatGroup();
-            group.setGroupId("group001");
-            group.setName("销售协作群");
-            group.setOwnerId("seller001");
-            group.setMemberIds(new ArrayList<>(List.of("user001", "user002", "seller001", "bot")));
+            group.setGroupId(groupId);
+            group.setName(channel.getDefaultGroupName());
+            group.setOwnerId(channel.isWechat() ? "me001" : "seller001");
+            if (channel.isWechat()) {
+                group.setMemberIds(new ArrayList<>(List.of("friend001", "friend002", "me001", "bot")));
+            } else {
+                group.setMemberIds(new ArrayList<>(List.of("user001", "user002", "seller001", "bot")));
+            }
             group.setCreateTime(System.currentTimeMillis() / 1000);
             groups.put(group.getGroupId(), group);
         }
     }
 
+    public ProductChannel getChannel() {
+        return channel;
+    }
+
     public SessionState snapshot() {
         SessionState state = new SessionState();
         state.setSessionId(sessionId);
+        state.setProduct(channel.getId());
         state.setMessages(new ArrayList<>(messages));
         state.setGroups(listGroups());
         state.setWebhookUrl(webhookUrl);
@@ -73,7 +83,7 @@ public class MessageStore {
 
     public ChatGroup createGroup(ChatGroup group) {
         groups.put(group.getGroupId(), group);
-        realtimeHub.broadcast(Map.of("type", "group", "group", group));
+        realtimeHub.broadcast(channel, Map.of("type", "group", "group", group));
         return group;
     }
 
@@ -92,7 +102,7 @@ public class MessageStore {
     public void clear() {
         messages.clear();
         sessionId = shortId();
-        realtimeHub.broadcast(Map.of(
+        realtimeHub.broadcast(channel, Map.of(
                 "type", "cleared",
                 "session_id", sessionId
         ));
@@ -155,7 +165,7 @@ public class MessageStore {
     }
 
     public void broadcastEvent(Map<String, Object> event) {
-        realtimeHub.broadcast(event);
+        realtimeHub.broadcast(channel, event);
     }
 
     public static String newId() {
@@ -185,7 +195,7 @@ public class MessageStore {
     }
 
     private void broadcastMessage(Message msg) {
-        realtimeHub.broadcast(Map.of(
+        realtimeHub.broadcast(channel, Map.of(
                 "type", "message",
                 "message", msg
         ));

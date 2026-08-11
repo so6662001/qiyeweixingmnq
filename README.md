@@ -4,9 +4,10 @@
 
 ## 功能
 
-- 聊天界面发送文字消息
+- 聊天界面发送文字 / 语音 / 图片 / 文件
+- **私聊 + 群聊**：群内可回复指定人、@提及；消息可按 `chat_type` / `group_id` 过滤
 - 录音或上传语音，获取 `media_id`、下载地址与识别文本（Recognition）
-- `POST /api/reply/text` 模拟应用主动文字回复
+- `POST /api/reply/text` 模拟应用主动文字回复（支持群内指定回复对象）
 - 可选 Webhook：入站消息以企业微信风格 JSON 回调到你的服务
 - 内置演示 Bot（回声/语音确认），可开关
 - WebSocket 实时刷新会话
@@ -48,12 +49,16 @@ java -jar target/wecom-simulator-1.0.0.jar
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/messages/text` | 用户发送文字 |
-| POST | `/api/messages/voice` | 用户上传语音（multipart） |
-| GET | `/api/messages` | 拉取消息列表（可按类型/角色过滤） |
+| POST | `/api/messages/text` | 发送文字（私聊/群聊，可 reply_to_user） |
+| POST | `/api/messages/voice` | 上传语音（multipart，支持群聊） |
+| POST | `/api/messages/image` | 上传图片（multipart，支持群聊） |
+| POST | `/api/messages/file` | 上传文件（multipart，支持群聊） |
+| GET | `/api/messages` | 拉取消息（`chat_type`/`group_id`/类型/角色） |
+| GET | `/api/groups` | 群列表 |
+| POST | `/api/groups` | 创建群 |
 | GET | `/api/messages/{msgid}` | 获取单条消息 |
 | GET | `/api/messages/{msgid}/callback` | 查看企微风格回调 JSON |
-| POST | `/api/reply/text` | 应用文字回复 |
+| POST | `/api/reply/text` | 应用文字回复（群内可指定人） |
 | GET | `/api/media/{media_id}` | 下载语音文件 |
 | PUT | `/api/config/webhook` | 配置入站 Webhook |
 | PUT | `/api/config/demo-bot` | 开关演示 Bot |
@@ -89,6 +94,34 @@ curl -s http://127.0.0.1:8000/api/messages/voice \
 curl -s http://127.0.0.1:8000/api/reply/text \
   -H 'Content-Type: application/json' \
   -d '{"content":"好的，已记录","to_user":"user001","agent_id":"1000001"}'
+```
+
+### 群聊文字 + 回复指定人
+
+```bash
+curl -s http://127.0.0.1:8000/api/messages/text \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "content":"@user002 请看这份资料",
+    "chat_type":"group",
+    "group_id":"group001",
+    "from_user":"seller001",
+    "reply_to_user":"user002",
+    "mention_user_ids":["user002"]
+  }'
+
+curl -s http://127.0.0.1:8000/api/reply/text \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "content":"@user002 已收到",
+    "chat_type":"group",
+    "group_id":"group001",
+    "reply_to_user":"user002",
+    "mention_user_ids":["user002"]
+  }'
+
+# 按群拉取
+curl -s 'http://127.0.0.1:8000/api/messages?chat_type=group&group_id=group001'
 ```
 
 ### 拉取入站消息（Java 业务侧轮询）

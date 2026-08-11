@@ -16,3 +16,6 @@ data/voices/*
 data/moments/*
 !data/moments/.gitkeep
 *.class
+
+data/files/*
+!data/files/.gitkeep

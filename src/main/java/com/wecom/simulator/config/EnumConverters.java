@@ -1,5 +1,6 @@
 package com.wecom.simulator.config;
 
+import com.wecom.simulator.model.ChatType;
 import com.wecom.simulator.model.MessageType;
 import com.wecom.simulator.model.SenderRole;
 import org.springframework.core.convert.converter.Converter;
@@ -8,6 +9,17 @@ import org.springframework.stereotype.Component;
 public final class EnumConverters {
 
     private EnumConverters() {
+    }
+
+    @Component
+    public static class StringToChatType implements Converter<String, ChatType> {
+        @Override
+        public ChatType convert(String source) {
+            if (source == null || source.isBlank()) {
+                return null;
+            }
+            return ChatType.from(source);
+        }
     }
 
     @Component

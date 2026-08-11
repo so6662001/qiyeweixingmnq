@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 
 const state = {
   messages: [],
+  groups: [],
   moments: [],
   interactions: [],
   mediaRecorder: null,
@@ -9,6 +10,9 @@ const state = {
   recording: false,
   recordStartedAt: 0,
   momentImageFile: null,
+  chatType: "private",
+  groupId: "group001",
+  replyTo: null,
 };
 
 function fmtTime(ts) {
@@ -24,18 +28,28 @@ function escapeHtml(str) {
     .replaceAll('"', "&quot;");
 }
 
+function visibleMessages() {
+  return state.messages.filter((m) => {
+    if (state.chatType === "group") {
+      return m.chat_type === "group" && m.group_id === state.groupId;
+    }
+    return !m.chat_type || m.chat_type === "private";
+  });
+}
+
 function renderMessages() {
   const root = $("chatScroll");
-  if (!state.messages.length) {
+  const list = visibleMessages();
+  if (!list.length) {
     root.innerHTML = `
       <div class="empty-state">
-        <strong>从这里开始联调</strong>
-        发送文字或语音；切换到「朋友圈」可发布图片方案并同步 CRM 线索。
+        <strong>${state.chatType === "group" ? "群聊联调" : "私聊联调"}</strong>
+        支持文字 / 语音 / 图片 / 文件；群聊可点「回复」指定某人。
       </div>`;
     return;
   }
 
-  root.innerHTML = state.messages
+  root.innerHTML = list
     .map((m) => {
       const role = m.role === "user" ? "user" : m.role === "bot" ? "bot" : "system";
       let body = "";
@@ -47,20 +61,116 @@ function renderMessages() {
             <div>${escapeHtml(m.recognition || m.content || "")}</div>
             <div class="msg-meta">media_id: ${escapeHtml(m.media_id || "")}</div>
           </div>`;
+      } else if (m.msgtype === "image") {
+        body = `
+          <div>🖼 图片消息</div>
+          <img class="media-thumb" src="${escapeHtml(m.image_url || "")}" alt="图片" />
+          <div class="msg-meta">media_id: ${escapeHtml(m.media_id || "")}</div>`;
+      } else if (m.msgtype === "file") {
+        body = `
+          <div>📎 文件消息</div>
+          <a class="file-link" href="${escapeHtml(m.file_url || "")}" target="_blank" rel="noreferrer">
+            ${escapeHtml(m.file_name || "下载文件")}
+          </a>
+          <div class="msg-meta">size: ${escapeHtml(String(m.file_size ?? ""))} · media_id: ${escapeHtml(m.media_id || "")}</div>`;
       } else {
         body = escapeHtml(m.content || "");
       }
+
+      const quote =
+        m.reply_to_user || m.reply_to_content
+          ? `<div class="quote">回复 ${escapeHtml(m.reply_to_user_name || m.reply_to_user || "")}
+              ${m.reply_to_content ? `：${escapeHtml(m.reply_to_content)}` : ""}</div>`
+          : "";
+      const mentions =
+        m.mention_user_ids && m.mention_user_ids.length
+          ? `<div class="msg-meta">@ ${escapeHtml(m.mention_user_ids.join(" "))}</div>`
+          : "";
+      const scope =
+        m.chat_type === "group"
+          ? `群:${escapeHtml(m.group_name || m.group_id || "")}`
+          : "私聊";
+
       return `
-        <div class="msg-row ${role}">
+        <div class="msg-row ${role}" data-msgid="${escapeHtml(m.msgid)}">
           <div class="bubble">
+            ${quote}
             ${body}
-            <div class="msg-meta">${escapeHtml(m.from_user)} · ${fmtTime(m.create_time)} · ${escapeHtml(m.msgtype)}</div>
+            ${mentions}
+            <div class="msg-meta">${escapeHtml(m.from_user_name || m.from_user)} · ${fmtTime(m.create_time)} · ${escapeHtml(m.msgtype)} · ${scope}</div>
+            <div class="bubble-actions">
+              <button type="button" class="icon-btn btn-reply-msg"
+                data-msgid="${escapeHtml(m.msgid)}"
+                data-user="${escapeHtml(m.from_user)}"
+                data-name="${escapeHtml(m.from_user_name || m.from_user)}"
+                data-content="${escapeHtml(m.content || m.file_name || m.msgtype)}">回复此人</button>
+            </div>
           </div>
         </div>`;
     })
     .join("");
 
   root.scrollTop = root.scrollHeight;
+}
+
+function updateScopeUi() {
+  $("scopePrivate").classList.toggle("active", state.chatType === "private");
+  $("scopeGroup").classList.toggle("active", state.chatType === "group");
+  $("groupSelect").disabled = state.chatType !== "group";
+  if (state.chatType === "group") {
+    const g = state.groups.find((x) => x.group_id === state.groupId);
+    $("scopeHint").textContent = `当前：群聊 ${g?.name || state.groupId}`;
+  } else {
+    $("scopeHint").textContent = "当前：私聊 user001";
+  }
+  renderReplyBar();
+  renderMessages();
+}
+
+function renderGroups() {
+  const select = $("groupSelect");
+  if (!state.groups.length) return;
+  select.innerHTML = state.groups
+    .map((g) => `<option value="${escapeHtml(g.group_id)}">${escapeHtml(g.name)} (${escapeHtml(g.group_id)})</option>`)
+    .join("");
+  if (!state.groups.some((g) => g.group_id === state.groupId)) {
+    state.groupId = state.groups[0].group_id;
+  }
+  select.value = state.groupId;
+}
+
+function renderReplyBar() {
+  const bar = $("replyBar");
+  if (!state.replyTo) {
+    bar.classList.add("hidden");
+    return;
+  }
+  bar.classList.remove("hidden");
+  $("replyPreview").textContent = `${state.replyTo.name}：${state.replyTo.content || ""}`;
+}
+
+function chatPayloadExtras() {
+  const extras = {
+    chat_type: state.chatType,
+    from_user: state.chatType === "group" ? "user002" : "user001",
+    from_user_name: state.chatType === "group" ? "群成员乙" : "用户甲",
+    agent_id: "1000001",
+  };
+  if (state.chatType === "group") extras.group_id = state.groupId;
+  if (state.replyTo) {
+    extras.reply_to_msgid = state.replyTo.msgid;
+    extras.reply_to_user = state.replyTo.user;
+    extras.mention_user_ids = [state.replyTo.user];
+  }
+  return extras;
+}
+
+function appendChatFormData(fd) {
+  const extras = chatPayloadExtras();
+  Object.entries(extras).forEach(([k, v]) => {
+    if (Array.isArray(v)) fd.append(k, v.join(","));
+    else if (v != null) fd.append(k, v);
+  });
 }
 
 function renderMoments() {
@@ -128,7 +238,9 @@ function applySession(session) {
   $("webhookEnabled").checked = !!session.webhook_enabled;
   $("webhookUrl").value = session.webhook_url || "";
   state.messages = session.messages || [];
-  renderMessages();
+  state.groups = session.groups || state.groups || [];
+  renderGroups();
+  updateScopeUi();
 }
 
 function upsertMessage(message) {
@@ -233,22 +345,35 @@ function connectWs() {
 }
 
 async function sendText(content) {
+  const body = { content, ...chatPayloadExtras() };
   await api("/api/messages/text", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content, from_user: "user001", agent_id: "1000001" }),
+    body: JSON.stringify(body),
   });
+  state.replyTo = null;
+  renderReplyBar();
 }
 
 async function uploadVoice(blob, filename, durationMs) {
   const fd = new FormData();
   fd.append("file", blob, filename);
-  fd.append("from_user", "user001");
-  fd.append("agent_id", "1000001");
+  appendChatFormData(fd);
   const recognition = $("voiceRecognition").value.trim();
   if (recognition) fd.append("recognition", recognition);
   if (durationMs != null) fd.append("duration_ms", String(durationMs));
   await api("/api/messages/voice", { method: "POST", body: fd });
+  state.replyTo = null;
+  renderReplyBar();
+}
+
+async function uploadChatMedia(path, file) {
+  const fd = new FormData();
+  fd.append("file", file, file.name);
+  appendChatFormData(fd);
+  await api(path, { method: "POST", body: fd });
+  state.replyTo = null;
+  renderReplyBar();
 }
 
 async function startRecording() {
@@ -307,6 +432,60 @@ function switchView(view) {
 function bindEvents() {
   $("tabChat").addEventListener("click", () => switchView("chat"));
   $("tabMoments").addEventListener("click", () => switchView("moments"));
+
+  $("scopePrivate").addEventListener("click", () => {
+    state.chatType = "private";
+    updateScopeUi();
+  });
+  $("scopeGroup").addEventListener("click", () => {
+    state.chatType = "group";
+    updateScopeUi();
+  });
+  $("groupSelect").addEventListener("change", () => {
+    state.groupId = $("groupSelect").value;
+    updateScopeUi();
+  });
+  $("btnCancelReply").addEventListener("click", () => {
+    state.replyTo = null;
+    renderReplyBar();
+  });
+  $("chatScroll").addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-reply-msg");
+    if (!btn) return;
+    state.replyTo = {
+      msgid: btn.dataset.msgid,
+      user: btn.dataset.user,
+      name: btn.dataset.name,
+      content: btn.dataset.content,
+    };
+    renderReplyBar();
+  });
+  $("btnPickChatImage").addEventListener("click", () => $("chatImageFile").click());
+  $("chatImageFile").addEventListener("change", async () => {
+    const file = $("chatImageFile").files?.[0];
+    if (!file) return;
+    try {
+      await uploadChatMedia("/api/messages/image", file);
+      $("recordHint").textContent = `已发送图片 ${file.name}`;
+    } catch (err) {
+      alert(err.message || String(err));
+    } finally {
+      $("chatImageFile").value = "";
+    }
+  });
+  $("btnPickChatFile").addEventListener("click", () => $("chatFile").click());
+  $("chatFile").addEventListener("change", async () => {
+    const file = $("chatFile").files?.[0];
+    if (!file) return;
+    try {
+      await uploadChatMedia("/api/messages/file", file);
+      $("recordHint").textContent = `已发送文件 ${file.name}`;
+    } catch (err) {
+      alert(err.message || String(err));
+    } finally {
+      $("chatFile").value = "";
+    }
+  });
 
   $("textForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -413,12 +592,30 @@ function bindEvents() {
   $("btnManualReply").addEventListener("click", async () => {
     const content = $("manualReply").value.trim();
     if (!content) return;
+    const payload = {
+      content,
+      agent_id: "1000001",
+      chat_type: state.chatType,
+    };
+    if (state.chatType === "group") {
+      payload.group_id = state.groupId;
+      if (state.replyTo) {
+        payload.reply_to_user = state.replyTo.user;
+        payload.reply_to_msgid = state.replyTo.msgid;
+        payload.mention_user_ids = [state.replyTo.user];
+      }
+    } else {
+      payload.to_user = "user001";
+      if (state.replyTo) payload.reply_to_msgid = state.replyTo.msgid;
+    }
     await api("/api/reply/text", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, to_user: "user001", agent_id: "1000001" }),
+      body: JSON.stringify(payload),
     });
     $("manualReply").value = "";
+    state.replyTo = null;
+    renderReplyBar();
   });
 
   $("btnPickImage").addEventListener("click", () => $("momentImage").click());
@@ -499,7 +696,14 @@ function bindEvents() {
   $("btnRefreshInteractions").addEventListener("click", () => refreshInteractions().catch(console.error));
 }
 
+async function refreshGroups() {
+  state.groups = await api("/api/groups");
+  renderGroups();
+  updateScopeUi();
+}
+
 bindEvents();
 refreshSession().catch(console.error);
+refreshGroups().catch(console.error);
 refreshCrmConfig().catch(console.error);
 connectWs();

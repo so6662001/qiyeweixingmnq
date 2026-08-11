@@ -1,5 +1,6 @@
 package com.wecom.simulator.dto;
 
+import com.wecom.simulator.model.ChatGroup;
 import com.wecom.simulator.model.Message;
 
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ public class SessionState {
 
     private String sessionId;
     private List<Message> messages = new ArrayList<>();
+    private List<ChatGroup> groups = new ArrayList<>();
     private String webhookUrl;
     private boolean webhookEnabled;
     private boolean demoBotEnabled;
@@ -27,6 +29,14 @@ public class SessionState {
 
     public void setMessages(List<Message> messages) {
         this.messages = messages;
+    }
+
+    public List<ChatGroup> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<ChatGroup> groups) {
+        this.groups = groups;
     }
 
     public String getWebhookUrl() {

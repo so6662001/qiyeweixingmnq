@@ -99,11 +99,11 @@
         <section class="side-section api-hints">
           <h2>联调接口</h2>
           <ul>
-            <li><code>POST /api/messages/text</code> 发送文字</li>
-            <li><code>POST /api/messages/voice</code> 上传语音</li>
-            <li><code>POST /api/reply/text</code> 文字回复</li>
+            <li><code>POST /api/messages/text</code> 文字（私聊/群）</li>
+            <li><code>POST /api/messages/voice|image|file</code> 多媒体</li>
+            <li><code>POST /api/reply/text</code> 回复（可指定人）</li>
+            <li><code>GET /api/groups</code> 群列表</li>
             <li><code>POST /api/moments</code> 发朋友圈</li>
-            <li><code>GET /api/moments/interactions</code> 读动态</li>
             <li><code>POST /api/moments/crm/sync</code> 写入 CRM</li>
           </ul>
         </section>
@@ -128,16 +128,33 @@
         </header>
 
         <section class="view-panel active" id="viewChat">
+          <div class="chat-scope-bar">
+            <div class="view-tabs" role="tablist">
+              <button type="button" class="tab active" id="scopePrivate">私聊</button>
+              <button type="button" class="tab" id="scopeGroup">群聊</button>
+            </div>
+            <select id="groupSelect" class="input scope-select" disabled>
+              <option value="group001">销售协作群</option>
+            </select>
+            <span class="muted" id="scopeHint">当前：私聊 user001</span>
+          </div>
           <div class="chat-scroll" id="chatScroll" aria-live="polite"></div>
           <footer class="composer">
+            <div id="replyBar" class="reply-bar hidden">
+              <div>
+                <strong>回复</strong>
+                <span id="replyPreview">—</span>
+              </div>
+              <button type="button" class="icon-btn" id="btnCancelReply">取消</button>
+            </div>
             <div class="composer-tools">
-              <button type="button" class="icon-btn" id="btnPickVoice" title="上传语音文件">
-                上传语音
-              </button>
+              <button type="button" class="icon-btn" id="btnPickVoice">语音</button>
               <input id="voiceFile" type="file" accept="audio/*,.webm,.wav,.mp3,.ogg,.amr" hidden />
-              <button type="button" class="icon-btn record" id="btnRecord" title="点击录音">
-                录音
-              </button>
+              <button type="button" class="icon-btn record" id="btnRecord">录音</button>
+              <button type="button" class="icon-btn" id="btnPickChatImage">图片</button>
+              <input id="chatImageFile" type="file" accept="image/*" hidden />
+              <button type="button" class="icon-btn" id="btnPickChatFile">文件</button>
+              <input id="chatFile" type="file" hidden />
               <span class="record-hint" id="recordHint"></span>
             </div>
             <form id="textForm" class="composer-form">
@@ -145,7 +162,7 @@
                 id="textInput"
                 class="composer-input"
                 rows="1"
-                placeholder="输入文字消息，Enter 发送，Shift+Enter 换行"
+                placeholder="输入文字；群聊可先点消息「回复」指定某人"
                 required
               ></textarea>
               <button type="submit" class="btn send" id="btnSend">发送</button>

@@ -1,5 +1,6 @@
 package com.wecom.simulator.service;
 
+import com.wecom.simulator.model.ChatType;
 import com.wecom.simulator.model.Message;
 import com.wecom.simulator.model.MessageType;
 import com.wecom.simulator.store.MessageStore;
@@ -42,6 +43,22 @@ public class WebhookDispatcher {
         base.put("MsgId", message.getMsgid());
         base.put("AgentID", message.getAgentId());
         base.put("MsgType", message.getMsgtype().getValue());
+        base.put("ChatType", message.getChatType() == null ? ChatType.PRIVATE.getValue() : message.getChatType().getValue());
+        if (message.getChatType() == ChatType.GROUP) {
+            base.put("GroupId", message.getGroupId());
+            base.put("GroupName", message.getGroupName());
+        }
+        if (message.getReplyToMsgid() != null) {
+            base.put("ReplyToMsgId", message.getReplyToMsgid());
+        }
+        if (message.getReplyToUser() != null) {
+            base.put("ReplyToUser", message.getReplyToUser());
+            base.put("ReplyToUserName", message.getReplyToUserName());
+            base.put("ReplyToContent", message.getReplyToContent());
+        }
+        if (message.getMentionUserIds() != null && !message.getMentionUserIds().isEmpty()) {
+            base.put("MentionUserIds", message.getMentionUserIds());
+        }
 
         if (message.getMsgtype() == MessageType.TEXT) {
             base.put("Content", message.getContent() == null ? "" : message.getContent());
@@ -54,6 +71,15 @@ public class WebhookDispatcher {
             if (message.getVoiceDurationMs() != null) {
                 base.put("VoiceDurationMs", message.getVoiceDurationMs());
             }
+        } else if (message.getMsgtype() == MessageType.IMAGE) {
+            base.put("MediaId", message.getMediaId() == null ? "" : message.getMediaId());
+            base.put("PicUrl", message.getImageUrl() == null ? "" : message.getImageUrl());
+            base.put("FileName", message.getFileName() == null ? "" : message.getFileName());
+        } else if (message.getMsgtype() == MessageType.FILE) {
+            base.put("MediaId", message.getMediaId() == null ? "" : message.getMediaId());
+            base.put("FileUrl", message.getFileUrl() == null ? "" : message.getFileUrl());
+            base.put("FileName", message.getFileName() == null ? "" : message.getFileName());
+            base.put("FileSize", message.getFileSize() == null ? 0 : message.getFileSize());
         }
         return base;
     }

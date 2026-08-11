@@ -1,17 +1,16 @@
 package com.wecom.simulator.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReplyTextRequest {
+/**
+ * 私聊/群聊公共上下文：会话类型、群、回复指定人、@提及。
+ */
+public class ChatContextRequest {
 
-    @NotBlank
-    @Size(max = 4000)
-    private String content;
-
+    /** private | group，默认 private */
     @Size(max = 16)
     private String chatType = "private";
 
@@ -19,26 +18,23 @@ public class ReplyTextRequest {
     private String groupId;
 
     @Size(max = 64)
-    private String toUser;
+    private String fromUser = "user001";
 
-    /** 群内回复指定的人 */
     @Size(max = 64)
-    private String replyToUser;
+    private String fromUserName;
 
     @Size(max = 32)
     private String agentId = "1000001";
 
+    /** 回复某条消息 */
+    @Size(max = 64)
     private String replyToMsgid;
 
+    /** 群内回复指定的人（可与 reply_to_msgid 同时使用） */
+    @Size(max = 64)
+    private String replyToUser;
+
     private List<String> mentionUserIds = new ArrayList<>();
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
 
     public String getChatType() {
         return chatType;
@@ -56,20 +52,20 @@ public class ReplyTextRequest {
         this.groupId = groupId;
     }
 
-    public String getToUser() {
-        return toUser;
+    public String getFromUser() {
+        return fromUser;
     }
 
-    public void setToUser(String toUser) {
-        this.toUser = toUser;
+    public void setFromUser(String fromUser) {
+        this.fromUser = fromUser;
     }
 
-    public String getReplyToUser() {
-        return replyToUser;
+    public String getFromUserName() {
+        return fromUserName;
     }
 
-    public void setReplyToUser(String replyToUser) {
-        this.replyToUser = replyToUser;
+    public void setFromUserName(String fromUserName) {
+        this.fromUserName = fromUserName;
     }
 
     public String getAgentId() {
@@ -86,6 +82,14 @@ public class ReplyTextRequest {
 
     public void setReplyToMsgid(String replyToMsgid) {
         this.replyToMsgid = replyToMsgid;
+    }
+
+    public String getReplyToUser() {
+        return replyToUser;
+    }
+
+    public void setReplyToUser(String replyToUser) {
+        this.replyToUser = replyToUser;
     }
 
     public List<String> getMentionUserIds() {

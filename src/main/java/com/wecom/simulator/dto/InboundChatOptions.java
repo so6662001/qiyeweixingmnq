@@ -1,44 +1,18 @@
 package com.wecom.simulator.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReplyTextRequest {
+public class InboundChatOptions {
 
-    @NotBlank
-    @Size(max = 4000)
-    private String content;
-
-    @Size(max = 16)
     private String chatType = "private";
-
-    @Size(max = 64)
     private String groupId;
-
-    @Size(max = 64)
-    private String toUser;
-
-    /** 群内回复指定的人 */
-    @Size(max = 64)
-    private String replyToUser;
-
-    @Size(max = 32)
+    private String fromUser = "user001";
+    private String fromUserName;
     private String agentId = "1000001";
-
     private String replyToMsgid;
-
+    private String replyToUser;
     private List<String> mentionUserIds = new ArrayList<>();
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
 
     public String getChatType() {
         return chatType;
@@ -56,20 +30,20 @@ public class ReplyTextRequest {
         this.groupId = groupId;
     }
 
-    public String getToUser() {
-        return toUser;
+    public String getFromUser() {
+        return fromUser;
     }
 
-    public void setToUser(String toUser) {
-        this.toUser = toUser;
+    public void setFromUser(String fromUser) {
+        this.fromUser = fromUser;
     }
 
-    public String getReplyToUser() {
-        return replyToUser;
+    public String getFromUserName() {
+        return fromUserName;
     }
 
-    public void setReplyToUser(String replyToUser) {
-        this.replyToUser = replyToUser;
+    public void setFromUserName(String fromUserName) {
+        this.fromUserName = fromUserName;
     }
 
     public String getAgentId() {
@@ -86,6 +60,14 @@ public class ReplyTextRequest {
 
     public void setReplyToMsgid(String replyToMsgid) {
         this.replyToMsgid = replyToMsgid;
+    }
+
+    public String getReplyToUser() {
+        return replyToUser;
+    }
+
+    public void setReplyToUser(String replyToUser) {
+        this.replyToUser = replyToUser;
     }
 
     public List<String> getMentionUserIds() {

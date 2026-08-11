@@ -13,6 +13,7 @@ spring:
 wecom:
   simulator:
     voice-dir: data/voices
+    file-dir: data/files
     moment-image-dir: data/moments
     demo-bot-enabled: true
     max-voice-files: 200

@@ -1,10 +1,13 @@
 package com.wecom.simulator.store;
 
 import com.wecom.simulator.dto.SessionState;
+import com.wecom.simulator.model.ChatGroup;
+import com.wecom.simulator.model.ChatType;
 import com.wecom.simulator.model.Message;
 import com.wecom.simulator.model.MessageType;
 import com.wecom.simulator.model.SenderRole;
 import com.wecom.simulator.web.RealtimeHub;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
@@ -21,6 +25,7 @@ public class MessageStore {
 
     private final RealtimeHub realtimeHub;
     private final List<Message> messages = new CopyOnWriteArrayList<>();
+    private final Map<String, ChatGroup> groups = new ConcurrentHashMap<>();
     private volatile String sessionId = shortId();
     private volatile String webhookUrl;
     private volatile boolean webhookEnabled;
@@ -34,73 +39,51 @@ public class MessageStore {
         this.demoBotEnabled = demoBotEnabled;
     }
 
+    @PostConstruct
+    void seedDefaultGroup() {
+        if (!groups.containsKey("group001")) {
+            ChatGroup group = new ChatGroup();
+            group.setGroupId("group001");
+            group.setName("销售协作群");
+            group.setOwnerId("seller001");
+            group.setMemberIds(new ArrayList<>(List.of("user001", "user002", "seller001", "bot")));
+            group.setCreateTime(System.currentTimeMillis() / 1000);
+            groups.put(group.getGroupId(), group);
+        }
+    }
+
     public SessionState snapshot() {
         SessionState state = new SessionState();
         state.setSessionId(sessionId);
         state.setMessages(new ArrayList<>(messages));
+        state.setGroups(listGroups());
         state.setWebhookUrl(webhookUrl);
         state.setWebhookEnabled(webhookEnabled);
         state.setDemoBotEnabled(demoBotEnabled);
         return state;
     }
 
-    public Message addTextFromUser(String content, String fromUser, String agentId) {
-        Message msg = baseUserMessage(MessageType.TEXT, fromUser, agentId);
-        msg.setContent(content);
-        Map<String, Object> raw = msg.getRaw();
-        raw.put("MsgType", "text");
-        raw.put("Content", content);
-        raw.put("FromUserName", fromUser);
-        raw.put("AgentID", agentId);
+    public List<ChatGroup> listGroups() {
+        return new ArrayList<>(groups.values());
+    }
+
+    public Optional<ChatGroup> findGroup(String groupId) {
+        return Optional.ofNullable(groups.get(groupId));
+    }
+
+    public ChatGroup createGroup(ChatGroup group) {
+        groups.put(group.getGroupId(), group);
+        realtimeHub.broadcast(Map.of("type", "group", "group", group));
+        return group;
+    }
+
+    public Message addInbound(Message msg) {
         messages.add(msg);
         broadcastMessage(msg);
         return msg;
     }
 
-    public Message addVoiceFromUser(
-            String mediaId,
-            String voiceUrl,
-            String fromUser,
-            String agentId,
-            Integer durationMs,
-            String recognition,
-            String format
-    ) {
-        Message msg = baseUserMessage(MessageType.VOICE, fromUser, agentId);
-        msg.setMediaId(mediaId);
-        msg.setVoiceUrl(voiceUrl);
-        msg.setVoiceDurationMs(durationMs);
-        msg.setRecognition(recognition);
-        msg.setContent(recognition);
-        Map<String, Object> raw = msg.getRaw();
-        raw.put("MsgType", "voice");
-        raw.put("MediaId", mediaId);
-        raw.put("Format", format == null || format.isBlank() ? "webm" : format);
-        raw.put("Recognition", recognition == null ? "" : recognition);
-        raw.put("FromUserName", fromUser);
-        raw.put("AgentID", agentId);
-        messages.add(msg);
-        broadcastMessage(msg);
-        return msg;
-    }
-
-    public Message addBotReply(String content, String toUser, String agentId, String replyToMsgid) {
-        Message msg = new Message();
-        msg.setMsgid(UUID.randomUUID().toString().replace("-", ""));
-        msg.setMsgtype(MessageType.TEXT);
-        msg.setRole(SenderRole.BOT);
-        msg.setFromUser("bot");
-        msg.setToUser(toUser);
-        msg.setAgentId(agentId);
-        msg.setContent(content);
-        msg.setCreateTime(System.currentTimeMillis() / 1000);
-        Map<String, Object> raw = new LinkedHashMap<>();
-        raw.put("msgtype", "text");
-        raw.put("touser", toUser);
-        raw.put("agentid", agentId);
-        raw.put("text", Map.of("content", content));
-        raw.put("reply_to_msgid", replyToMsgid);
-        msg.setRaw(raw);
+    public Message addBotReply(Message msg) {
         messages.add(msg);
         broadcastMessage(msg);
         return msg;
@@ -119,7 +102,13 @@ public class MessageStore {
         return messages.stream().filter(m -> m.getMsgid().equals(msgid)).findFirst();
     }
 
-    public List<Message> list(MessageType msgtype, SenderRole role, String afterMsgid) {
+    public List<Message> list(
+            MessageType msgtype,
+            SenderRole role,
+            String afterMsgid,
+            ChatType chatType,
+            String groupId
+    ) {
         List<Message> items = new ArrayList<>(messages);
         if (afterMsgid != null && !afterMsgid.isBlank()) {
             int idx = -1;
@@ -136,6 +125,8 @@ public class MessageStore {
         return items.stream()
                 .filter(m -> msgtype == null || m.getMsgtype() == msgtype)
                 .filter(m -> role == null || m.getRole() == role)
+                .filter(m -> chatType == null || m.getChatType() == chatType)
+                .filter(m -> groupId == null || groupId.isBlank() || groupId.equals(m.getGroupId()))
                 .toList();
     }
 
@@ -167,16 +158,30 @@ public class MessageStore {
         realtimeHub.broadcast(event);
     }
 
-    private Message baseUserMessage(MessageType type, String fromUser, String agentId) {
-        Message msg = new Message();
-        msg.setMsgid(UUID.randomUUID().toString().replace("-", ""));
-        msg.setMsgtype(type);
-        msg.setRole(SenderRole.USER);
-        msg.setFromUser(fromUser);
-        msg.setAgentId(agentId);
-        msg.setCreateTime(System.currentTimeMillis() / 1000);
-        msg.setRaw(new LinkedHashMap<>());
-        return msg;
+    public static String newId() {
+        return UUID.randomUUID().toString().replace("-", "");
+    }
+
+    public static Map<String, Object> baseRaw(Message msg) {
+        Map<String, Object> raw = new LinkedHashMap<>();
+        raw.put("MsgType", msg.getMsgtype().getValue());
+        raw.put("FromUserName", msg.getFromUser());
+        raw.put("AgentID", msg.getAgentId());
+        raw.put("ChatType", msg.getChatType().getValue());
+        if (msg.getGroupId() != null) {
+            raw.put("GroupId", msg.getGroupId());
+            raw.put("GroupName", msg.getGroupName());
+        }
+        if (msg.getReplyToMsgid() != null) {
+            raw.put("ReplyToMsgId", msg.getReplyToMsgid());
+        }
+        if (msg.getReplyToUser() != null) {
+            raw.put("ReplyToUser", msg.getReplyToUser());
+        }
+        if (msg.getMentionUserIds() != null && !msg.getMentionUserIds().isEmpty()) {
+            raw.put("MentionUserIds", msg.getMentionUserIds());
+        }
+        return raw;
     }
 
     private void broadcastMessage(Message msg) {

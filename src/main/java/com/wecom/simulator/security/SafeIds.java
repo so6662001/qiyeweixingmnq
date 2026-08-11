@@ -15,6 +15,12 @@ public final class SafeIds {
     private static final Set<String> ALLOWED_IMAGE_EXT = Set.of(
             "jpg", "jpeg", "png", "gif", "webp", "bmp"
     );
+    private static final Set<String> ALLOWED_FILE_EXT = Set.of(
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+            "txt", "csv", "zip", "rar", "7z", "md", "json", "xml",
+            "jpg", "jpeg", "png", "gif", "webp", "bmp",
+            "mp3", "wav", "mp4", "mov"
+    );
 
     private SafeIds() {
     }
@@ -37,6 +43,10 @@ public final class SafeIds {
 
     public static String normalizeImageExtension(String originalFilename) {
         return normalizeExtension(originalFilename, ALLOWED_IMAGE_EXT, "jpg");
+    }
+
+    public static String normalizeGenericFileExtension(String originalFilename) {
+        return normalizeExtension(originalFilename, ALLOWED_FILE_EXT, "bin");
     }
 
     private static String normalizeExtension(

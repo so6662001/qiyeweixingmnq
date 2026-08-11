@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum MessageType {
     TEXT("text"),
     VOICE("voice"),
+    IMAGE("image"),
+    FILE("file"),
     EVENT("event");
 
     private final String value;

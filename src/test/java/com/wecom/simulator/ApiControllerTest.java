@@ -210,7 +210,7 @@ class ApiControllerTest {
 
         boolean found = false;
         for (int i = 0; i < 40; i++) {
-            if (store.list(null, com.wecom.simulator.model.SenderRole.BOT, null).stream()
+            if (store.list(null, com.wecom.simulator.model.SenderRole.BOT, null, null, null).stream()
                     .anyMatch(m -> m.getContent() != null && m.getContent().contains("自动回复测试"))) {
                 found = true;
                 break;

@@ -25,6 +25,14 @@ class SafeIdsTest {
     }
 
     @Test
+    void normalizeImageExtension() {
+        assertThat(SafeIds.normalizeImageExtension("promo.PNG")).isEqualTo("png");
+        assertThat(SafeIds.normalizeImageExtension("a.png/../../tmp/x")).isEqualTo("jpg");
+        assertThat(SafeIds.normalizeImageExtension("file.exe")).isEqualTo("jpg");
+        assertThat(SafeIds.isSafeDisplayName("潜在客户甲")).isTrue();
+    }
+
+    @Test
     void sanitizeRecognitionTruncates() {
         String longText = "x".repeat(1500);
         assertThat(SafeIds.sanitizeRecognition(longText, "a.wav")).hasSize(1000);

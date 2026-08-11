@@ -12,3 +12,7 @@ data/voices/*
 .DS_Store
 *.log
 .env
+
+data/moments/*
+!data/moments/.gitkeep
+*.class

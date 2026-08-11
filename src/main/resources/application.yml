@@ -13,8 +13,10 @@ spring:
 wecom:
   simulator:
     voice-dir: data/voices
+    moment-image-dir: data/moments
     demo-bot-enabled: true
     max-voice-files: 200
+    max-moment-images: 200
     webhook:
       # 本地联调默认仅允许回环；若需回调到 Docker/局域网服务再开启
       allow-private-network: false

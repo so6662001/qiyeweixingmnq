@@ -8,8 +8,12 @@ public final class SafeIds {
 
     private static final Pattern HEX_ID = Pattern.compile("^[a-fA-F0-9]{8,64}$");
     private static final Pattern SAFE_TOKEN = Pattern.compile("^[A-Za-z0-9_\\-.]{1,64}$");
+    private static final Pattern SAFE_DISPLAY_NAME = Pattern.compile("^[\\p{L}\\p{N}_\\-\\.\\s]{1,64}$");
     private static final Set<String> ALLOWED_AUDIO_EXT = Set.of(
             "webm", "wav", "mp3", "ogg", "amr", "m4a", "aac", "opus"
+    );
+    private static final Set<String> ALLOWED_IMAGE_EXT = Set.of(
+            "jpg", "jpeg", "png", "gif", "webp", "bmp"
     );
 
     private SafeIds() {
@@ -23,7 +27,23 @@ public final class SafeIds {
         return value != null && SAFE_TOKEN.matcher(value).matches();
     }
 
+    public static boolean isSafeDisplayName(String value) {
+        return value != null && SAFE_DISPLAY_NAME.matcher(value).matches();
+    }
+
     public static String normalizeAudioExtension(String originalFilename) {
+        return normalizeExtension(originalFilename, ALLOWED_AUDIO_EXT, "webm");
+    }
+
+    public static String normalizeImageExtension(String originalFilename) {
+        return normalizeExtension(originalFilename, ALLOWED_IMAGE_EXT, "jpg");
+    }
+
+    private static String normalizeExtension(
+            String originalFilename,
+            Set<String> allowed,
+            String fallback
+    ) {
         String name = originalFilename == null ? "" : originalFilename;
         // 只取纯文件名，避免路径段
         int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
@@ -32,11 +52,11 @@ public final class SafeIds {
         }
         int dot = name.lastIndexOf('.');
         if (dot < 0 || dot == name.length() - 1) {
-            return "webm";
+            return fallback;
         }
         String ext = name.substring(dot + 1).toLowerCase(Locale.ROOT);
-        if (!ALLOWED_AUDIO_EXT.contains(ext)) {
-            return "webm";
+        if (!allowed.contains(ext)) {
+            return fallback;
         }
         return ext;
     }

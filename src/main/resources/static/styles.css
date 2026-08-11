@@ -250,6 +250,49 @@ code {
   font-size: 0.85rem;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.view-tabs {
+  display: flex;
+  gap: 6px;
+  background: #e8f0fb;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.tab {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 7px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #fff;
+  color: var(--accent);
+  box-shadow: 0 2px 8px rgba(19, 35, 58, 0.08);
+}
+
+.view-panel {
+  display: none;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.view-panel.active {
+  display: flex;
+}
+
 .header-meta {
   display: flex;
   align-items: center;
@@ -420,6 +463,107 @@ code {
   color: var(--ink-soft);
 }
 
+.moments-layout {
+  flex: 1;
+  overflow: auto;
+  padding: 18px 20px 24px;
+  display: grid;
+  gap: 16px;
+  background: linear-gradient(180deg, #eef3f9 0%, #e7eef7 100%);
+}
+
+.moment-composer,
+.interactions-panel,
+.moment-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+  animation: rise 0.4s ease both;
+}
+
+.moment-composer h3,
+.interactions-panel h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.moments-feed {
+  display: grid;
+  gap: 12px;
+}
+
+.moment-card img {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 10px 0;
+  background: #dfe8f3;
+}
+
+.moment-card .plan {
+  margin: 0 0 8px;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+.moment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.moment-actions .input {
+  max-width: 220px;
+}
+
+.like-list,
+.comment-list {
+  margin-top: 10px;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.interactions-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.interactions-list {
+  display: grid;
+  gap: 8px;
+}
+
+.interaction-item {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f5f8fc;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.interaction-item .tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8f0fb;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.interaction-item .tag.synced {
+  background: rgba(15, 138, 107, 0.12);
+  color: var(--accent-2);
+}
+
 @media (max-width: 900px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -432,5 +576,11 @@ code {
 
   .side-panel {
     order: 2;
+  }
+
+  .header-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
   }
 }

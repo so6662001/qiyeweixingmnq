@@ -2,10 +2,13 @@ const $ = (id) => document.getElementById(id);
 
 const state = {
   messages: [],
+  moments: [],
+  interactions: [],
   mediaRecorder: null,
   chunks: [],
   recording: false,
   recordStartedAt: 0,
+  momentImageFile: null,
 };
 
 function fmtTime(ts) {
@@ -14,7 +17,7 @@ function fmtTime(ts) {
 }
 
 function escapeHtml(str) {
-  return String(str)
+  return String(str ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -27,7 +30,7 @@ function renderMessages() {
     root.innerHTML = `
       <div class="empty-state">
         <strong>从这里开始联调</strong>
-        发送文字或语音；左侧可开启演示 Bot / Webhook，或用 API 主动回复。
+        发送文字或语音；切换到「朋友圈」可发布图片方案并同步 CRM 线索。
       </div>`;
     return;
   }
@@ -60,6 +63,65 @@ function renderMessages() {
   root.scrollTop = root.scrollHeight;
 }
 
+function renderMoments() {
+  const root = $("momentsFeed");
+  if (!state.moments.length) {
+    root.innerHTML = `<div class="empty-state" style="margin: 4vh auto"><strong>还没有朋友圈</strong>上传图片并填写文案/方案后发布。</div>`;
+    return;
+  }
+  root.innerHTML = state.moments
+    .map((m) => {
+      const likes = (m.likes || []).map((l) => escapeHtml(l.user_name)).join("、") || "暂无";
+      const comments = (m.comments || [])
+        .map((c) => `<div><strong>${escapeHtml(c.user_name)}</strong>：${escapeHtml(c.content)}</div>`)
+        .join("") || "<div>暂无评论</div>";
+      return `
+        <article class="moment-card" data-id="${escapeHtml(m.moment_id)}">
+          <div><strong>${escapeHtml(m.author_name)}</strong> · ${fmtTime(m.create_time)}</div>
+          <div style="margin-top:8px;white-space:pre-wrap">${escapeHtml(m.content)}</div>
+          ${m.plan ? `<p class="plan">方案：${escapeHtml(m.plan)}</p>` : ""}
+          <img src="${escapeHtml(m.image_url)}" alt="朋友圈图片" />
+          <div class="like-list">👍 ${likes}</div>
+          <div class="comment-list">${comments}</div>
+          <div class="moment-actions">
+            <input class="input like-user" type="text" value="lead001" placeholder="user_id" />
+            <input class="input like-name" type="text" value="潜在客户甲" placeholder="昵称" />
+            <button type="button" class="icon-btn btn-like">点赞</button>
+            <input class="input comment-text" type="text" placeholder="写评论，如：多少钱？" />
+            <button type="button" class="icon-btn btn-comment">评论</button>
+          </div>
+        </article>`;
+    })
+    .join("");
+}
+
+function renderInteractions() {
+  const root = $("interactionsList");
+  if (!state.interactions.length) {
+    root.innerHTML = `<p class="muted">暂无点赞/评论动态</p>`;
+    return;
+  }
+  root.innerHTML = state.interactions
+    .slice()
+    .reverse()
+    .map((i) => {
+      const synced = i.synced_to_crm
+        ? `<span class="tag synced">已写入 CRM</span>`
+        : `<span class="tag">未同步</span>`;
+      return `
+        <div class="interaction-item">
+          ${synced}
+          <span class="tag">${escapeHtml(i.type)}</span>
+          <strong>${escapeHtml(i.user_name)}</strong>
+          （${escapeHtml(i.user_id)}）
+          · ${escapeHtml(i.content || "")}
+          <div class="msg-meta">moment: ${escapeHtml(i.moment_id)} · ${fmtTime(i.create_time)}
+          ${i.crm_sync_result ? ` · ${escapeHtml(i.crm_sync_result)}` : ""}</div>
+        </div>`;
+    })
+    .join("");
+}
+
 function applySession(session) {
   $("sessionId").textContent = session.session_id || "—";
   $("demoBotEnabled").checked = !!session.demo_bot_enabled;
@@ -76,6 +138,20 @@ function upsertMessage(message) {
   renderMessages();
 }
 
+function upsertMoment(moment) {
+  const idx = state.moments.findIndex((m) => m.moment_id === moment.moment_id);
+  if (idx >= 0) state.moments[idx] = moment;
+  else state.moments.unshift(moment);
+  renderMoments();
+}
+
+function upsertInteraction(interaction) {
+  const idx = state.interactions.findIndex((i) => i.interaction_id === interaction.interaction_id);
+  if (idx >= 0) state.interactions[idx] = interaction;
+  else state.interactions.push(interaction);
+  renderInteractions();
+}
+
 async function api(path, options = {}) {
   const resp = await fetch(path, options);
   if (!resp.ok) {
@@ -89,6 +165,24 @@ async function api(path, options = {}) {
 async function refreshSession() {
   const session = await api("/api/session");
   applySession(session);
+}
+
+async function refreshCrmConfig() {
+  const cfg = await api("/api/moments/crm/config");
+  $("crmUrl").value = cfg.url || "";
+  $("crmEnabled").checked = !!cfg.enabled;
+  $("crmAutoSync").checked = cfg.auto_sync !== false;
+  $("crmHint").textContent = cfg.auth_configured ? "已配置 Authorization" : "";
+}
+
+async function refreshMoments() {
+  state.moments = await api("/api/moments");
+  renderMoments();
+}
+
+async function refreshInteractions() {
+  state.interactions = await api("/api/moments/interactions");
+  renderInteractions();
 }
 
 function setConn(online, text) {
@@ -115,6 +209,21 @@ function connectWs() {
       state.messages = [];
       $("sessionId").textContent = data.session_id || "—";
       renderMessages();
+    } else if (data.type === "moment" && data.moment) {
+      upsertMoment(data.moment);
+    } else if (data.type === "moment_interaction") {
+      if (data.moment) upsertMoment(data.moment);
+      if (data.interaction) upsertInteraction(data.interaction);
+    } else if (data.type === "moments_cleared") {
+      state.moments = [];
+      state.interactions = [];
+      renderMoments();
+      renderInteractions();
+    } else if (data.type === "crm_sync_item" && data.interaction) {
+      upsertInteraction(data.interaction);
+    } else if (data.type === "crm_sync_result" && data.result?.items) {
+      data.result.items.forEach(upsertInteraction);
+      $("crmHint").textContent = `同步完成：成功 ${data.result.success} / 失败 ${data.result.failed}`;
     }
   });
 
@@ -184,7 +293,21 @@ function stopRecording() {
   state.mediaRecorder = null;
 }
 
+function switchView(view) {
+  $("tabChat").classList.toggle("active", view === "chat");
+  $("tabMoments").classList.toggle("active", view === "moments");
+  $("viewChat").classList.toggle("active", view === "chat");
+  $("viewMoments").classList.toggle("active", view === "moments");
+  if (view === "moments") {
+    refreshMoments().catch(console.error);
+    refreshInteractions().catch(console.error);
+  }
+}
+
 function bindEvents() {
+  $("tabChat").addEventListener("click", () => switchView("chat"));
+  $("tabMoments").addEventListener("click", () => switchView("moments"));
+
   $("textForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = $("textInput");
@@ -233,6 +356,10 @@ function bindEvents() {
 
   $("btnClear").addEventListener("click", async () => {
     await api("/api/session", { method: "DELETE" });
+    state.moments = [];
+    state.interactions = [];
+    renderMoments();
+    renderInteractions();
   });
 
   $("demoBotEnabled").addEventListener("change", async () => {
@@ -255,6 +382,34 @@ function bindEvents() {
     $("recordHint").textContent = "Webhook 已保存";
   });
 
+  $("btnSaveCrm").addEventListener("click", async () => {
+    try {
+      const cfg = await api("/api/moments/crm/config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: $("crmUrl").value.trim(),
+          enabled: $("crmEnabled").checked,
+          auto_sync: $("crmAutoSync").checked,
+          auth_header: $("crmAuth").value.trim() || null,
+        }),
+      });
+      $("crmHint").textContent = cfg.enabled ? "CRM 配置已保存并启用" : "CRM 配置已保存（未启用）";
+    } catch (err) {
+      alert(err.message || String(err));
+    }
+  });
+
+  $("btnSyncCrm").addEventListener("click", async () => {
+    try {
+      const result = await api("/api/moments/crm/sync", { method: "POST" });
+      $("crmHint").textContent = `同步完成：成功 ${result.success} / 失败 ${result.failed}`;
+      await refreshInteractions();
+    } catch (err) {
+      alert(err.message || String(err));
+    }
+  });
+
   $("btnManualReply").addEventListener("click", async () => {
     const content = $("manualReply").value.trim();
     if (!content) return;
@@ -265,8 +420,86 @@ function bindEvents() {
     });
     $("manualReply").value = "";
   });
+
+  $("btnPickImage").addEventListener("click", () => $("momentImage").click());
+  $("momentImage").addEventListener("change", () => {
+    const file = $("momentImage").files?.[0] || null;
+    state.momentImageFile = file;
+    $("momentImageName").textContent = file ? file.name : "未选择图片";
+  });
+
+  $("btnPublishMoment").addEventListener("click", async () => {
+    const content = $("momentContent").value.trim();
+    const plan = $("momentPlan").value.trim();
+    if (!content) {
+      alert("请填写朋友圈文案");
+      return;
+    }
+    if (!state.momentImageFile) {
+      alert("请选择图片");
+      return;
+    }
+    const fd = new FormData();
+    fd.append("image", state.momentImageFile, state.momentImageFile.name);
+    fd.append("content", content);
+    if (plan) fd.append("plan", plan);
+    fd.append("author_id", "seller001");
+    fd.append("author_name", "销售顾问");
+    try {
+      await api("/api/moments", { method: "POST", body: fd });
+      $("momentContent").value = "";
+      $("momentPlan").value = "";
+      $("momentImage").value = "";
+      state.momentImageFile = null;
+      $("momentImageName").textContent = "未选择图片";
+      await refreshMoments();
+    } catch (err) {
+      alert(err.message || String(err));
+    }
+  });
+
+  $("momentsFeed").addEventListener("click", async (e) => {
+    const card = e.target.closest(".moment-card");
+    if (!card) return;
+    const momentId = card.dataset.id;
+    try {
+      if (e.target.classList.contains("btn-like")) {
+        const userId = card.querySelector(".like-user").value.trim() || "lead001";
+        const userName = card.querySelector(".like-name").value.trim() || "潜在客户甲";
+        await api(`/api/moments/${momentId}/likes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, user_name: userName }),
+        });
+        await refreshMoments();
+        await refreshInteractions();
+      }
+      if (e.target.classList.contains("btn-comment")) {
+        const userId = card.querySelector(".like-user").value.trim() || "lead001";
+        const userName = card.querySelector(".like-name").value.trim() || "潜在客户甲";
+        const content = card.querySelector(".comment-text").value.trim();
+        if (!content) {
+          alert("请输入评论");
+          return;
+        }
+        await api(`/api/moments/${momentId}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: userId, user_name: userName, content }),
+        });
+        card.querySelector(".comment-text").value = "";
+        await refreshMoments();
+        await refreshInteractions();
+      }
+    } catch (err) {
+      alert(err.message || String(err));
+    }
+  });
+
+  $("btnRefreshInteractions").addEventListener("click", () => refreshInteractions().catch(console.error));
 }
 
 bindEvents();
 refreshSession().catch(console.error);
+refreshCrmConfig().catch(console.error);
 connectWs();

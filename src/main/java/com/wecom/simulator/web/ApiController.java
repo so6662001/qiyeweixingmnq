@@ -12,6 +12,7 @@ import com.wecom.simulator.model.SenderRole;
 import com.wecom.simulator.security.SafeIds;
 import com.wecom.simulator.security.WebhookUrlValidator;
 import com.wecom.simulator.service.MessageService;
+import com.wecom.simulator.service.MomentService;
 import com.wecom.simulator.service.WebhookDispatcher;
 import com.wecom.simulator.store.MessageStore;
 import jakarta.validation.Valid;
@@ -47,17 +48,20 @@ public class ApiController {
 
     private final MessageStore store;
     private final MessageService messageService;
+    private final MomentService momentService;
     private final WebhookDispatcher webhookDispatcher;
     private final WebhookUrlValidator webhookUrlValidator;
 
     public ApiController(
             MessageStore store,
             MessageService messageService,
+            MomentService momentService,
             WebhookDispatcher webhookDispatcher,
             WebhookUrlValidator webhookUrlValidator
     ) {
         this.store = store;
         this.messageService = messageService;
+        this.momentService = momentService;
         this.webhookDispatcher = webhookDispatcher;
         this.webhookUrlValidator = webhookUrlValidator;
     }
@@ -77,8 +81,9 @@ public class ApiController {
         store.clear();
         try {
             messageService.clearVoiceFiles();
+            momentService.clearAll();
         } catch (IOException ex) {
-            throw new ResponseStatusException(BAD_REQUEST, "清理语音文件失败");
+            throw new ResponseStatusException(BAD_REQUEST, "清理会话媒体失败");
         }
         return ApiOk.of();
     }

@@ -30,6 +30,11 @@ bash scripts/run.sh
 
 打开 http://127.0.0.1:8000
 
+高保真 HTML 效果图（静态预览）：
+
+- 文件：`docs/mockups/wecom-simulator-hifi.html`（可直接用浏览器打开）
+- 服务内访问：http://127.0.0.1:8000/mockups/wecom-simulator-hifi.html
+
 打包运行：
 
 ```bash

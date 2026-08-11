@@ -1,0 +1,19 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: wecom-simulator
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+wecom:
+  simulator:
+    voice-dir: data/voices
+    demo-bot-enabled: true
+
+logging:
+  level:
+    com.wecom.simulator: INFO

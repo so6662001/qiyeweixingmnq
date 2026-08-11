@@ -1,6 +1,6 @@
-# 企业微信模拟器（企微模拟器）
+# 企业微信模拟器（Java）
 
-本地开发用的企业微信会话模拟器：可发送/获取**文字**与**语音**消息，并通过 API **文字回复**。适合在没有真实企微环境时联调机器人或业务后端。
+基于 **Spring Boot 3 / Java 21** 的本地企业微信会话模拟器：可发送/获取**文字**与**语音**消息，并通过 API **文字回复**。适合在没有真实企微环境时，用 Java 业务代码联调机器人或应用后端。
 
 ## 功能
 
@@ -11,14 +11,15 @@
 - 内置演示 Bot（回声/语音确认），可开关
 - WebSocket 实时刷新会话
 
+## 环境
+
+- JDK 21+
+- Maven 3.8+
+
 ## 快速启动
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-export PYTHONPATH=.
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+mvn spring-boot:run
 ```
 
 或：
@@ -28,6 +29,13 @@ bash scripts/run.sh
 ```
 
 打开 http://127.0.0.1:8000
+
+打包运行：
+
+```bash
+mvn -q -DskipTests package
+java -jar target/wecom-simulator-1.0.0.jar
+```
 
 ## 核心 API
 
@@ -69,61 +77,35 @@ curl -s http://127.0.0.1:8000/api/reply/text \
   -d '{"content":"好的，已记录","to_user":"user001","agent_id":"1000001"}'
 ```
 
-### 拉取入站消息（给业务侧轮询）
+### 拉取入站消息（Java 业务侧轮询）
 
 ```bash
-# 全部
 curl -s http://127.0.0.1:8000/api/messages
-
-# 仅语音
 curl -s 'http://127.0.0.1:8000/api/messages?msgtype=voice&role=user'
 ```
 
-## Webhook 回调示例载荷
+Java 示例轮询 Bot：
 
-文字：
-
-```json
-{
-  "ToUserName": "ww_simulator",
-  "FromUserName": "user001",
-  "CreateTime": 1710000000,
-  "MsgId": "...",
-  "AgentID": "1000001",
-  "MsgType": "text",
-  "Content": "你好"
-}
+```bash
+javac examples/EchoBot.java && java -cp examples EchoBot
 ```
 
-语音：
+## 项目结构
 
-```json
-{
-  "MsgType": "voice",
-  "MediaId": "...",
-  "Format": "webm",
-  "Recognition": "会议改到下午三点",
-  "VoiceUrl": "/api/media/..."
-}
+```
+src/main/java/com/wecom/simulator/   Spring Boot 服务
+src/main/resources/static/           聊天模拟器 UI
+src/test/java/                       API 测试
+examples/EchoBot.java                Java 联调示例
+data/voices/                         上传的语音文件
 ```
 
 ## 测试
 
 ```bash
-source .venv/bin/activate
-export PYTHONPATH=.
-pytest -q
-```
-
-## 目录
-
-```
-backend/app/     FastAPI 服务
-frontend/        聊天模拟器 UI
-tests/           API 测试
-data/voices/     上传的语音文件
+mvn test
 ```
 
 ## 说明
 
-本项目是**本地联调模拟器**，不对接真实企业微信开放平台，也不做加解密/签名校验。接口字段尽量贴近企微回调与发消息形态，方便你把现有业务代码切到模拟环境验证。
+本项目是**本地联调模拟器**，不对接真实企业微信开放平台，也不做加解密/签名校验。接口字段尽量贴近企微回调与发消息形态，方便你把现有 Java 业务代码切到模拟环境验证。

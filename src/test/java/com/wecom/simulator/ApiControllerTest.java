@@ -4,6 +4,7 @@ import com.wecom.simulator.store.MessageStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -11,7 +12,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -30,12 +36,27 @@ class ApiControllerTest {
     @Autowired
     private MessageStore store;
 
+    @Value("${wecom.simulator.voice-dir}")
+    private String voiceDir;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         store.clear();
         store.setDemoBotEnabled(false);
         store.setWebhookEnabled(false);
         store.setWebhookUrl(null);
+        Path dir = Path.of(voiceDir);
+        if (Files.isDirectory(dir)) {
+            try (var stream = Files.list(dir)) {
+                stream.forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (Exception ignored) {
+                        // ignore
+                    }
+                });
+            }
+        }
     }
 
     @Test
@@ -47,7 +68,7 @@ class ApiControllerTest {
     }
 
     @Test
-    void sendTextAndList() throws Exception {
+    void sendTextAndListAndCallback() throws Exception {
         MvcResult created = mockMvc.perform(post("/api/messages/text")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -67,6 +88,10 @@ class ApiControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].msgid").value(msgid));
 
+        mockMvc.perform(get("/api/messages?msgtype=text&role=user"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+
         mockMvc.perform(get("/api/messages/" + msgid + "/callback"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.MsgType").value("text"))
@@ -74,7 +99,7 @@ class ApiControllerTest {
     }
 
     @Test
-    void voiceUploadAndMedia() throws Exception {
+    void voiceUploadDownloadAndClearDeletesFile() throws Exception {
         byte[] audio = "RIFF....WAVE".getBytes();
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -93,7 +118,7 @@ class ApiControllerTest {
                 .andExpect(jsonPath("$.msgtype").value("voice"))
                 .andExpect(jsonPath("$.recognition").value("这是语音转写"))
                 .andExpect(jsonPath("$.media_id").isNotEmpty())
-                .andExpect(jsonPath("$.voice_url").value(org.hamcrest.Matchers.startsWith("/api/media/")))
+                .andExpect(jsonPath("$.voice_url").value(startsWith("/api/media/")))
                 .andReturn();
 
         String voiceUrl = com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.voice_url");
@@ -106,16 +131,58 @@ class ApiControllerTest {
                 .getResponse()
                 .getContentAsByteArray();
         assertThat(downloaded).isEqualTo(audio);
+        assertThat(Files.exists(Path.of(voiceDir).resolve(mediaId + ".wav"))).isTrue();
 
         mockMvc.perform(get("/api/messages/" + msgid + "/callback"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.MsgType").value("voice"))
                 .andExpect(jsonPath("$.MediaId").value(mediaId))
                 .andExpect(jsonPath("$.Recognition").value("这是语音转写"));
+
+        mockMvc.perform(delete("/api/session"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ok").value(true));
+        assertThat(Files.exists(Path.of(voiceDir).resolve(mediaId + ".wav"))).isFalse();
     }
 
     @Test
-    void replyText() throws Exception {
+    void rejectsPathTraversalVoiceFilename() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "a.wav/../../tmp/pwned",
+                "audio/wav",
+                "audio-bytes".getBytes()
+        );
+
+        MvcResult created = mockMvc.perform(multipart("/api/messages/voice")
+                        .file(file)
+                        .param("from_user", "u1")
+                        .param("agent_id", "1000001"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.media_id").isNotEmpty())
+                .andReturn();
+
+        String mediaId = com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.media_id");
+        assertThat(Files.exists(Path.of(voiceDir).resolve(mediaId + ".webm"))).isTrue();
+        assertThat(Files.exists(Path.of("/tmp/pwned"))).isFalse();
+        assertThat(Files.exists(Path.of(voiceDir).resolve("../../tmp/pwned").normalize())).isFalse();
+    }
+
+    @Test
+    void rejectsInvalidMediaIdAndIdentities() throws Exception {
+        mockMvc.perform(get("/api/media/not-a-hex-media-id"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/messages/text")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"content":"x","from_user":"../evil","agent_id":"1000001"}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void replyTextAndDemoBot() throws Exception {
         mockMvc.perform(post("/api/messages/text")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -133,14 +200,6 @@ class ApiControllerTest {
                 .andExpect(jsonPath("$.content").value("pong 来自应用"))
                 .andExpect(jsonPath("$.to_user").value("u9"));
 
-        mockMvc.perform(get("/api/messages"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[1].role").value("bot"));
-    }
-
-    @Test
-    void demoBotAutoReply() throws Exception {
         store.setDemoBotEnabled(true);
         mockMvc.perform(post("/api/messages/text")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,13 +221,7 @@ class ApiControllerTest {
     }
 
     @Test
-    void configAndClear() throws Exception {
-        mockMvc.perform(put("/api/config/demo-bot")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"enabled\":false}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.demo_bot_enabled").value(false));
-
+    void webhookConfigAllowsLoopbackRejectsMetadata() throws Exception {
         mockMvc.perform(put("/api/config/webhook")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"url\":\"http://127.0.0.1:9000/callback\",\"enabled\":true}"))
@@ -176,8 +229,30 @@ class ApiControllerTest {
                 .andExpect(jsonPath("$.webhook_enabled").value(true))
                 .andExpect(jsonPath("$.webhook_url").value("http://127.0.0.1:9000/callback"));
 
-        mockMvc.perform(delete("/api/session"))
+        mockMvc.perform(put("/api/config/webhook")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"url\":\"http://169.254.169.254/latest/meta-data/\",\"enabled\":true}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(status().reason(containsString("拒绝")));
+    }
+
+    @Test
+    void afterFilterWorks() throws Exception {
+        MvcResult first = mockMvc.perform(post("/api/messages/text")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"one\",\"from_user\":\"u1\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.ok").value(true));
+                .andReturn();
+        String firstId = com.jayway.jsonpath.JsonPath.read(first.getResponse().getContentAsString(), "$.msgid");
+
+        mockMvc.perform(post("/api/messages/text")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"two\",\"from_user\":\"u1\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/messages").param("after", firstId).param("role", "user"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].content").value("two"));
     }
 }

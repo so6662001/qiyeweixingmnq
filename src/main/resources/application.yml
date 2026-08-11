@@ -1,18 +1,24 @@
 server:
   port: 8000
+  address: 127.0.0.1
 
 spring:
   application:
     name: wecom-simulator
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 20MB
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 wecom:
   simulator:
     voice-dir: data/voices
     demo-bot-enabled: true
+    max-voice-files: 200
+    webhook:
+      # 本地联调默认仅允许回环；若需回调到 Docker/局域网服务再开启
+      allow-private-network: false
+      allowed-hosts: localhost,127.0.0.1,::1
 
 logging:
   level:

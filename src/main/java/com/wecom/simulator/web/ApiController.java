@@ -9,6 +9,8 @@ import com.wecom.simulator.dto.WebhookConfigRequest;
 import com.wecom.simulator.model.Message;
 import com.wecom.simulator.model.MessageType;
 import com.wecom.simulator.model.SenderRole;
+import com.wecom.simulator.security.SafeIds;
+import com.wecom.simulator.security.WebhookUrlValidator;
 import com.wecom.simulator.service.MessageService;
 import com.wecom.simulator.service.WebhookDispatcher;
 import com.wecom.simulator.store.MessageStore;
@@ -46,15 +48,18 @@ public class ApiController {
     private final MessageStore store;
     private final MessageService messageService;
     private final WebhookDispatcher webhookDispatcher;
+    private final WebhookUrlValidator webhookUrlValidator;
 
     public ApiController(
             MessageStore store,
             MessageService messageService,
-            WebhookDispatcher webhookDispatcher
+            WebhookDispatcher webhookDispatcher,
+            WebhookUrlValidator webhookUrlValidator
     ) {
         this.store = store;
         this.messageService = messageService;
         this.webhookDispatcher = webhookDispatcher;
+        this.webhookUrlValidator = webhookUrlValidator;
     }
 
     @GetMapping("/health")
@@ -70,12 +75,21 @@ public class ApiController {
     @DeleteMapping("/session")
     public ApiOk clearSession() {
         store.clear();
+        try {
+            messageService.clearVoiceFiles();
+        } catch (IOException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, "清理语音文件失败");
+        }
         return ApiOk.of();
     }
 
     @PostMapping("/messages/text")
     public Message sendText(@Valid @RequestBody TextMessageRequest body) {
-        return messageService.sendText(body.getContent(), body.getFromUser(), body.getAgentId());
+        try {
+            return messageService.sendText(body.getContent(), body.getFromUser(), body.getAgentId());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, ex.getMessage());
+        }
     }
 
     @PostMapping(value = "/messages/voice", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -91,7 +105,7 @@ public class ApiController {
         } catch (IllegalArgumentException ex) {
             throw new ResponseStatusException(BAD_REQUEST, ex.getMessage());
         } catch (IOException ex) {
-            throw new ResponseStatusException(BAD_REQUEST, "保存语音失败: " + ex.getMessage());
+            throw new ResponseStatusException(BAD_REQUEST, "保存语音失败");
         }
     }
 
@@ -122,19 +136,28 @@ public class ApiController {
 
     @PostMapping("/reply/text")
     public Message replyText(@Valid @RequestBody ReplyTextRequest body) {
-        return messageService.replyText(
-                body.getContent(),
-                body.getToUser(),
-                body.getAgentId(),
-                body.getReplyToMsgid()
-        );
+        try {
+            return messageService.replyText(
+                    body.getContent(),
+                    body.getToUser(),
+                    body.getAgentId(),
+                    body.getReplyToMsgid()
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, ex.getMessage());
+        }
     }
 
     @PutMapping("/config/webhook")
     public SessionState setWebhook(@Valid @RequestBody WebhookConfigRequest body) {
-        store.setWebhookUrl(body.getUrl().trim());
-        store.setWebhookEnabled(body.isEnabled());
-        return store.snapshot();
+        try {
+            String safeUrl = webhookUrlValidator.validateAndNormalize(body.getUrl());
+            store.setWebhookUrl(safeUrl);
+            store.setWebhookEnabled(body.isEnabled());
+            return store.snapshot();
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(BAD_REQUEST, ex.getMessage());
+        }
     }
 
     @PutMapping("/config/demo-bot")
@@ -145,6 +168,9 @@ public class ApiController {
 
     @GetMapping("/media/{mediaId}")
     public ResponseEntity<Resource> media(@PathVariable String mediaId) throws IOException {
+        if (!SafeIds.isMediaId(mediaId)) {
+            throw new ResponseStatusException(BAD_REQUEST, "media_id 非法");
+        }
         Path path = messageService.resolveMedia(mediaId);
         if (path == null || !Files.exists(path)) {
             throw new ResponseStatusException(NOT_FOUND, "媒体不存在");

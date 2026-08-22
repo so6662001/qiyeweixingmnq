@@ -15,7 +15,6 @@
         --brand: #2b6de5;
         --brand-deep: #1d54b8;
         --brand-soft: #e8f0ff;
-        --nav: #163a6b;
         --ink: #1a2332;
         --ink-soft: #5b6b7c;
         --line: #e3e9f2;
@@ -24,7 +23,6 @@
         --ok: #1a9f5c;
         --warn: #c98512;
         --danger: #d14343;
-        --wx-green: #07c160;
         --font: "Noto Sans SC", "Sora", sans-serif;
         --display: "Sora", "Noto Sans SC", sans-serif;
       }
@@ -34,12 +32,11 @@
 
       .app {
         display: grid;
-        grid-template-columns: 64px 280px minmax(0, 1fr) 380px;
+        grid-template-columns: 64px minmax(0, 1fr);
         height: 100vh;
-        min-width: 1100px;
+        min-width: 1080px;
       }
 
-      /* 左侧导航 */
       .rail {
         background: linear-gradient(180deg, #1a4578, #12325a);
         color: #d7e6ff;
@@ -47,788 +44,720 @@
         flex-direction: column;
         align-items: center;
         padding: 14px 0;
-        gap: 6px;
+        gap: 4px;
       }
 
       .rail .logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
+        width: 40px; height: 40px; border-radius: 12px;
         background: linear-gradient(145deg, #4a8af5, #2b6de5);
-        display: grid;
-        place-items: center;
-        font-family: var(--display);
-        font-weight: 700;
-        font-size: 0.72rem;
-        color: #fff;
-        margin-bottom: 12px;
+        display: grid; place-items: center;
+        font-family: var(--display); font-weight: 700; font-size: 0.72rem; color: #fff;
+        margin-bottom: 10px;
       }
 
       .rail button {
-        width: 52px;
-        border: none;
-        background: transparent;
-        color: #a9c3e8;
-        border-radius: 12px;
-        padding: 10px 4px;
-        font: inherit;
-        font-size: 0.62rem;
-        cursor: pointer;
+        width: 52px; border: none; background: transparent; color: #a9c3e8;
+        border-radius: 12px; padding: 10px 4px; font: inherit; font-size: 0.62rem; cursor: pointer;
       }
 
-      .rail button.active, .rail button:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
+      .rail button.active, .rail button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+      .rail .ico { display: block; font-size: 1.05rem; margin-bottom: 3px; }
+
+      .module { display: none; height: 100%; min-height: 0; }
+      .module.active { display: grid; }
+
+      /* —— 客服模块：会话 | 聊天 | 右侧 —— */
+      #mod-service {
+        grid-template-columns: 260px minmax(0, 1fr) 320px;
       }
 
-      .rail .ico {
-        display: block;
-        font-size: 1.05rem;
-        margin-bottom: 4px;
-      }
-
-      /* 会话列表 */
-      .sessions {
+      .sessions, .chat, .right, .page {
         background: var(--panel);
-        border-right: 1px solid var(--line);
+        min-height: 0;
         display: flex;
         flex-direction: column;
-        min-height: 0;
       }
 
-      .sessions .hd {
-        padding: 14px 14px 10px;
+      .sessions { border-right: 1px solid var(--line); }
+      .right { border-left: 1px solid var(--line); }
+      .chat { background: #f3f6fb; }
+
+      .hd {
+        padding: 12px 14px;
         border-bottom: 1px solid var(--line);
+        flex-shrink: 0;
       }
 
-      .sessions .hd h1 {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 700;
-      }
-
-      .sessions .hd .seller {
-        margin-top: 4px;
-        font-size: 0.75rem;
-        color: var(--ink-soft);
-      }
+      .hd h1 { margin: 0; font-size: 1rem; }
+      .hd .sub { margin-top: 3px; font-size: 0.74rem; color: var(--ink-soft); }
 
       .filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--line);
+        display: flex; flex-wrap: wrap; gap: 6px;
+        padding: 8px 10px; border-bottom: 1px solid var(--line); flex-shrink: 0;
       }
 
       .chip {
-        border: none;
-        background: #eef2f8;
-        color: var(--ink-soft);
-        border-radius: 999px;
-        padding: 5px 10px;
-        font: inherit;
-        font-size: 0.72rem;
-        font-weight: 600;
-        cursor: pointer;
+        border: none; background: #eef2f8; color: var(--ink-soft);
+        border-radius: 999px; padding: 4px 9px; font: inherit; font-size: 0.7rem; font-weight: 600; cursor: pointer;
       }
+      .chip.on { background: var(--brand-soft); color: var(--brand-deep); }
 
-      .chip.on {
-        background: var(--brand-soft);
-        color: var(--brand-deep);
-      }
-
-      .session-list {
-        flex: 1;
-        overflow: auto;
-        padding: 8px;
-      }
+      .session-list, .scroll { flex: 1; overflow: auto; padding: 8px; }
 
       .session {
-        display: grid;
-        grid-template-columns: 42px 1fr auto;
-        gap: 8px;
-        padding: 10px;
-        border-radius: 12px;
-        cursor: pointer;
-        border: 1px solid transparent;
+        display: grid; grid-template-columns: 40px 1fr auto; gap: 8px;
+        padding: 9px; border-radius: 10px; cursor: pointer; border: 1px solid transparent;
       }
-
       .session:hover { background: #f5f8fc; }
-      .session.active {
-        background: var(--brand-soft);
-        border-color: #c9dbf8;
-      }
-
-      .session .av {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
+      .session.active { background: var(--brand-soft); border-color: #c9dbf8; }
+      .session .av, .av {
+        width: 40px; height: 40px; border-radius: 50%;
         background: linear-gradient(145deg, #7aa6f5, #2b6de5);
-        color: #fff;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
-        font-size: 0.85rem;
+        color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 0.82rem;
       }
-
-      .session .name {
-        font-size: 0.88rem;
-        font-weight: 700;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .session .preview {
-        font-size: 0.72rem;
-        color: var(--ink-soft);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-top: 2px;
-      }
-
-      .session .time { font-size: 0.68rem; color: #99a8bc; }
-      .session .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #ff4d4f;
-        margin-top: 4px;
-        margin-left: auto;
-      }
-
-      /* 中间聊天 */
-      .chat {
-        background: #f3f6fb;
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-        min-height: 0;
-      }
+      .session .name { font-size: 0.84rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .session .preview { font-size: 0.7rem; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+      .session .time { font-size: 0.66rem; color: #99a8bc; }
+      .session .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4d4f; margin: 4px 0 0 auto; }
 
       .chat-hd {
-        background: var(--panel);
-        border-bottom: 1px solid var(--line);
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        background: var(--panel); border-bottom: 1px solid var(--line);
+        padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
       }
-
-      .chat-hd .who strong { display: block; font-size: 1rem; }
-      .chat-hd .who span { font-size: 0.75rem; color: var(--ink-soft); }
-
-      .chat-hd .actions {
-        margin-left: auto;
-        display: flex;
-        gap: 8px;
-      }
+      .chat-hd .who strong { display: block; font-size: 0.95rem; }
+      .chat-hd .who span { font-size: 0.72rem; color: var(--ink-soft); }
+      .chat-hd .actions { margin-left: auto; display: flex; gap: 8px; }
 
       .btn {
-        appearance: none;
-        border: none;
-        border-radius: 8px;
-        padding: 8px 12px;
-        font: inherit;
-        font-size: 0.8rem;
-        font-weight: 700;
-        cursor: pointer;
+        appearance: none; border: none; border-radius: 8px; padding: 7px 11px;
+        font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer;
       }
-
       .btn-ghost { background: #eef2f8; color: var(--ink); }
       .btn-danger { background: #fde8e8; color: var(--danger); }
-      .btn-primary {
-        background: linear-gradient(180deg, #3a7aef, var(--brand));
-        color: #fff;
-      }
+      .btn-primary { background: linear-gradient(180deg, #3a7aef, var(--brand)); color: #fff; }
       .btn-soft { background: var(--brand-soft); color: var(--brand-deep); }
-      .btn-block { width: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; }
+      .btn-block { width: 100%; margin-top: 8px; padding: 9px; border-radius: 10px; }
+      .btn-sm { padding: 5px 8px; font-size: 0.72rem; }
 
       .chat-body {
-        flex: 1;
-        overflow: auto;
-        padding: 18px 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
+        flex: 1; overflow: auto; padding: 16px 18px;
+        display: flex; flex-direction: column; gap: 12px;
       }
 
-      .bubble-row { display: flex; gap: 10px; max-width: 78%; animation: rise 0.3s ease both; }
+      .bubble-row { display: flex; gap: 8px; max-width: 78%; animation: rise 0.25s ease both; }
       .bubble-row.me { align-self: flex-end; flex-direction: row-reverse; }
-      .bubble-row .av {
-        width: 36px; height: 36px; border-radius: 50%;
-        display: grid; place-items: center; color: #fff; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
-      }
-      .bubble-row.cust .av { background: linear-gradient(145deg, #7aa6f5, #2b6de5); }
-      .bubble-row.ai .av { background: linear-gradient(145deg, #5b8def, #2b6de5); }
+      .bubble-row .av { width: 34px; height: 34px; font-size: 0.72rem; flex-shrink: 0; }
       .bubble-row.me .av { background: linear-gradient(145deg, #7ad39a, #07c160); }
+      .bubble-row.ai .av { background: linear-gradient(145deg, #5b8def, #2b6de5); }
 
       .bubble {
-        background: #fff;
-        border-radius: 12px;
-        padding: 10px 12px;
-        font-size: 0.88rem;
-        line-height: 1.55;
-        box-shadow: 0 1px 3px rgba(20, 40, 70, 0.06);
+        background: #fff; border-radius: 12px; padding: 9px 11px;
+        font-size: 0.86rem; line-height: 1.5; box-shadow: 0 1px 3px rgba(20,40,70,0.06);
       }
-
       .bubble-row.me .bubble { background: #d9f7be; }
-      .bubble-row.ai .bubble {
-        background: linear-gradient(180deg, #f4f8ff, #eaf1ff);
-        border: 1px solid #d5e3f8;
-      }
+      .bubble-row.ai .bubble { background: linear-gradient(180deg, #f4f8ff, #eaf1ff); border: 1px solid #d5e3f8; }
+      .bubble .meta { margin-top: 5px; font-size: 0.68rem; color: #8a98a8; }
 
-      .bubble .meta {
-        margin-top: 6px;
-        font-size: 0.7rem;
-        color: #8a98a8;
-      }
+      .ai-card { margin-top: 8px; background: #fff; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; }
+      .ai-card .ai-hd { padding: 7px 9px; background: var(--brand-soft); color: var(--brand-deep); font-size: 0.72rem; font-weight: 700; }
+      .ai-card table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+      .ai-card th, .ai-card td { padding: 6px 8px; border-top: 1px solid var(--line); text-align: left; }
 
-      .ai-card {
-        margin-top: 8px;
-        background: #fff;
-        border-radius: 10px;
-        border: 1px solid var(--line);
-        overflow: hidden;
-      }
-
-      .ai-card .ai-hd {
-        padding: 8px 10px;
-        background: var(--brand-soft);
-        color: var(--brand-deep);
-        font-size: 0.75rem;
-        font-weight: 700;
-      }
-
-      .ai-card table { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
-      .ai-card th, .ai-card td { padding: 7px 8px; border-top: 1px solid var(--line); text-align: left; }
-      .ai-card th { color: var(--ink-soft); background: #fafbfd; }
-
-      .composer {
-        background: var(--panel);
-        border-top: 1px solid var(--line);
-        padding: 12px 14px 14px;
-      }
-
-      .composer-tools {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 8px;
-      }
-
+      .composer { background: var(--panel); border-top: 1px solid var(--line); padding: 10px 12px 12px; flex-shrink: 0; }
+      .composer-tools { display: flex; gap: 6px; margin-bottom: 7px; flex-wrap: wrap; }
       .tool {
-        border: 1px solid var(--line);
-        background: #f7f9fc;
-        border-radius: 8px;
-        padding: 5px 10px;
-        font-size: 0.74rem;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--ink-soft);
+        border: 1px solid var(--line); background: #f7f9fc; border-radius: 8px;
+        padding: 4px 9px; font-size: 0.72rem; font-weight: 600; cursor: pointer; color: var(--ink-soft);
       }
-
       .composer textarea {
-        width: 100%;
-        min-height: 64px;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 10px 12px;
-        font: inherit;
-        font-size: 0.88rem;
-        resize: vertical;
-        outline: none;
+        width: 100%; min-height: 56px; border: 1px solid var(--line); border-radius: 10px;
+        padding: 9px 11px; font: inherit; font-size: 0.86rem; resize: vertical; outline: none;
       }
+      .composer textarea:focus { border-color: #8eb0f0; box-shadow: 0 0 0 3px rgba(43,109,229,0.12); }
+      .composer-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; gap: 10px; }
+      .composer-foot .hint { font-size: 0.7rem; color: var(--ink-soft); }
 
-      .composer textarea:focus {
-        border-color: #8eb0f0;
-        box-shadow: 0 0 0 3px rgba(43, 109, 229, 0.12);
-      }
-
-      .composer-foot {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 8px;
-        gap: 12px;
-      }
-
-      .composer-foot .hint { font-size: 0.72rem; color: var(--ink-soft); }
-      .composer-foot .btn { padding: 10px 18px; }
-
-      /* 右侧客户栏 */
-      .right {
-        background: var(--panel);
-        border-left: 1px solid var(--line);
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-      }
-
+      /* 右侧：压缩画像 + 内容优先 */
       .profile {
-        padding: 14px 14px 12px;
+        padding: 10px 12px;
         border-bottom: 1px solid var(--line);
-        background: linear-gradient(180deg, #f5f9ff, #fff 70%);
+        background: linear-gradient(180deg, #f5f9ff, #fff 80%);
+        flex-shrink: 0;
       }
 
-      .profile-top {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
+      .profile-top { display: flex; gap: 8px; align-items: center; }
+      .profile-top .av { width: 36px; height: 36px; font-size: 0.85rem; }
+      .profile-top h2 { margin: 0; font-size: 0.88rem; }
+      .profile-top p { margin: 2px 0 0; font-size: 0.68rem; color: var(--ink-soft); }
 
-      .profile-top .av {
-        width: 48px; height: 48px; border-radius: 50%;
-        background: linear-gradient(145deg, #7aa6f5, #2b6de5);
-        color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1rem;
-      }
-
-      .profile-top h2 { margin: 0; font-size: 0.98rem; }
-      .profile-top p { margin: 3px 0 0; font-size: 0.72rem; color: var(--ink-soft); }
-
-      .tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 10px;
-      }
-
+      .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
       .tag {
-        font-size: 0.68rem;
-        font-weight: 700;
-        border-radius: 6px;
-        padding: 3px 7px;
-        background: #eef2f8;
-        color: var(--ink-soft);
+        font-size: 0.64rem; font-weight: 700; border-radius: 5px; padding: 2px 6px;
+        background: #eef2f8; color: var(--ink-soft);
       }
-
       .tag.active { background: #dff5ea; color: var(--ok); }
-      .tag.sleep { background: #f1f3f6; color: #7a8796; }
-      .tag.lost { background: #fde8e8; color: var(--danger); }
       .tag.volume { background: #e8f0ff; color: var(--brand-deep); }
-      .tag.profit { background: #fff4df; color: var(--warn); }
       .tag.level { background: #efe8ff; color: #6b4cc0; }
+      .tag.profit { background: #fff4df; color: var(--warn); }
 
-      .kpi-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-top: 12px;
-      }
-
-      .kpi {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 8px 10px;
-      }
-
-      .kpi .label { font-size: 0.66rem; color: var(--ink-soft); }
-      .kpi .value { margin-top: 2px; font-size: 0.92rem; font-weight: 700; }
-      .kpi .value.danger { color: var(--danger); }
-      .kpi .value.ok { color: var(--ok); }
-      .kpi .sub { font-size: 0.64rem; color: #99a8bc; margin-top: 2px; }
-
-      .debt-row {
-        margin-top: 10px;
-        padding: 10px;
-        border-radius: 10px;
+      .debt-one {
+        margin-top: 7px;
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        font-size: 0.72rem;
+        padding: 7px 8px;
+        border-radius: 8px;
         background: #fff8f5;
         border: 1px solid #f3ddd2;
-        font-size: 0.74rem;
-        line-height: 1.55;
       }
+      .debt-one strong { color: var(--danger); }
 
-      .debt-row strong { color: var(--danger); }
+      .profile-extra {
+        display: none;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed var(--line);
+      }
+      .profile.expanded .profile-extra { display: block; }
+
+      .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .kpi { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+      .kpi .label { font-size: 0.62rem; color: var(--ink-soft); }
+      .kpi .value { margin-top: 1px; font-size: 0.82rem; font-weight: 700; }
+      .kpi .value.danger { color: var(--danger); }
+      .kpi .value.ok { color: var(--ok); }
+      .kpi .sub { font-size: 0.6rem; color: #99a8bc; margin-top: 1px; }
+
+      .debt-detail { margin-top: 7px; font-size: 0.7rem; color: var(--ink-soft); line-height: 1.45; }
 
       .rtabs {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        display: flex;
+        overflow-x: auto;
         border-bottom: 1px solid var(--line);
         background: #fafbfd;
+        flex-shrink: 0;
+        scrollbar-width: none;
       }
-
+      .rtabs::-webkit-scrollbar { display: none; }
       .rtabs button {
-        appearance: none;
-        border: none;
-        background: transparent;
-        padding: 10px 4px;
-        font: inherit;
-        font-size: 0.74rem;
-        font-weight: 700;
-        color: var(--ink-soft);
-        cursor: pointer;
-        position: relative;
+        appearance: none; border: none; background: transparent;
+        padding: 9px 11px; font: inherit; font-size: 0.74rem; font-weight: 700;
+        color: var(--ink-soft); cursor: pointer; position: relative; white-space: nowrap; flex-shrink: 0;
       }
-
       .rtabs button.active { color: var(--brand); }
       .rtabs button.active::after {
-        content: "";
-        position: absolute;
-        left: 20%; right: 20%; bottom: 0;
-        height: 2.5px; border-radius: 2px 2px 0 0;
-        background: var(--brand);
+        content: ""; position: absolute; left: 18%; right: 18%; bottom: 0;
+        height: 2.5px; border-radius: 2px 2px 0 0; background: var(--brand);
       }
 
-      .rtabs.more { grid-template-columns: repeat(3, 1fr); }
+      .rbody { flex: 1; overflow: auto; padding: 10px; min-height: 0; }
 
-      .rbody {
-        flex: 1;
-        overflow: auto;
-        padding: 12px;
-      }
-
-      .pane { display: none; animation: rise 0.25s ease both; }
+      .pane { display: none; animation: rise 0.2s ease both; }
       .pane.active { display: block; }
 
       @keyframes rise {
-        from { opacity: 0; transform: translateY(6px); }
+        from { opacity: 0; transform: translateY(5px); }
         to { opacity: 1; transform: none; }
       }
 
       .block {
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        padding: 12px;
-        margin-bottom: 10px;
-        background: #fff;
+        border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+        margin-bottom: 8px; background: #fff;
       }
-
       .block h3 {
-        margin: 0 0 8px;
-        font-size: 0.82rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        margin: 0 0 7px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
       }
-
       .block h3 .count {
-        margin-left: auto;
-        font-size: 0.68rem;
-        color: var(--brand);
-        background: var(--brand-soft);
-        border-radius: 999px;
-        padding: 2px 8px;
+        margin-left: auto; font-size: 0.66rem; color: var(--brand);
+        background: var(--brand-soft); border-radius: 999px; padding: 2px 7px;
       }
+      .hint { margin: 0 0 7px; font-size: 0.7rem; color: var(--ink-soft); line-height: 1.4; }
 
-      .hint { margin: 0 0 8px; font-size: 0.72rem; color: var(--ink-soft); line-height: 1.45; }
-
-      .search-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 6px;
-        margin-bottom: 8px;
-      }
-
+      .search-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; margin-bottom: 7px; }
       input, select {
-        width: 100%;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 8px 10px;
-        font: inherit;
-        font-size: 0.8rem;
-        outline: none;
+        width: 100%; border: 1px solid var(--line); border-radius: 8px;
+        padding: 7px 9px; font: inherit; font-size: 0.78rem; outline: none;
       }
-
-      input:focus, select:focus {
-        border-color: #8eb0f0;
-        box-shadow: 0 0 0 3px rgba(43, 109, 229, 0.1);
-      }
+      input:focus, select:focus { border-color: #8eb0f0; box-shadow: 0 0 0 3px rgba(43,109,229,0.1); }
 
       .item {
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 10px;
-        margin-bottom: 8px;
-        font-size: 0.78rem;
+        border: 1px solid var(--line); border-radius: 9px; padding: 8px 9px;
+        margin-bottom: 7px; font-size: 0.76rem;
       }
-
-      .item .top {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 700;
-      }
-
-      .item .sub { margin-top: 4px; color: var(--ink-soft); font-size: 0.72rem; line-height: 1.45; }
+      .item .top { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+      .item .sub { margin-top: 3px; color: var(--ink-soft); font-size: 0.7rem; line-height: 1.4; }
 
       .status {
-        margin-left: auto;
-        font-size: 0.66rem;
-        font-weight: 700;
-        border-radius: 999px;
-        padding: 2px 7px;
+        margin-left: auto; font-size: 0.64rem; font-weight: 700;
+        border-radius: 999px; padding: 2px 6px;
       }
-
       .status.ok { background: #dff5ea; color: var(--ok); }
       .status.wait { background: var(--brand-soft); color: var(--brand-deep); }
       .status.warn { background: #fff4df; color: var(--warn); }
 
       .line {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 6px 0;
-        border-bottom: 1px dashed var(--line);
-        font-size: 0.74rem;
+        display: flex; justify-content: space-between; gap: 8px;
+        padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 0.74rem;
       }
-
       .line:last-child { border-bottom: none; }
 
       .linkish {
-        border: none;
-        background: none;
-        color: var(--brand);
-        font: inherit;
-        font-size: 0.74rem;
-        font-weight: 700;
-        cursor: pointer;
-        padding: 0;
+        border: none; background: none; color: var(--brand);
+        font: inherit; font-size: 0.72rem; font-weight: 700; cursor: pointer; padding: 0;
       }
 
       .cart-bar {
-        border-top: 1px solid var(--line);
-        padding: 10px 12px;
-        background: #f8fbff;
+        border-top: 1px solid var(--line); padding: 8px 10px; background: #f8fbff; flex-shrink: 0;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .cart-bar .sum { flex: 1; font-size: 0.76rem; font-weight: 700; }
+      .cart-bar .amt { color: #c2410c; }
+      .price { color: #c2410c; font-weight: 700; }
+      .empty { text-align: center; color: var(--ink-soft); font-size: 0.78rem; padding: 20px 8px; }
+
+      /* —— 全页模块（客户/报价/数据/设置） —— */
+      #mod-customers, #mod-quotes, #mod-data, #mod-settings {
+        grid-template-columns: 1fr;
       }
 
-      .cart-bar .sum {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.8rem;
-        font-weight: 700;
-        margin-bottom: 8px;
+      .page-inner {
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
       }
 
-      .cart-bar .sum .amt { color: #c2410c; }
+      .page-toolbar {
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--panel);
+      }
+      .page-toolbar h1 { margin: 0; font-size: 1.15rem; margin-right: auto; }
+
+      .page-content {
+        overflow: auto;
+        padding: 16px 18px;
+      }
+
+      .table-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      table.data {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      table.data th, table.data td {
+        padding: 11px 12px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: middle;
+      }
+      table.data th {
+        background: #f5f8fc;
+        color: var(--ink-soft);
+        font-weight: 600;
+        font-size: 0.76rem;
+      }
+      table.data tr:hover td { background: #f8fbff; }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .stat {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+      .stat .label { font-size: 0.74rem; color: var(--ink-soft); }
+      .stat .value { margin-top: 4px; font-size: 1.35rem; font-weight: 700; font-family: var(--display); }
+      .stat .trend { margin-top: 4px; font-size: 0.72rem; color: var(--ok); }
+
+      .split-2 {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 12px;
+      }
+
+      .chart-fake {
+        height: 180px;
+        border-radius: 12px;
+        background:
+          linear-gradient(180deg, transparent 0%, transparent 40%, rgba(43,109,229,0.08) 40%, rgba(43,109,229,0.08) 100%),
+          repeating-linear-gradient(90deg, transparent 0 28px, rgba(43,109,229,0.12) 28px 30px);
+        border: 1px dashed #c9dbf8;
+        display: grid;
+        place-items: end stretch;
+        padding: 12px 16px;
+        gap: 8px;
+        grid-auto-flow: column;
+        align-items: end;
+      }
+      .chart-fake i {
+        display: block;
+        background: linear-gradient(180deg, #5b9bff, #2b6de5);
+        border-radius: 6px 6px 2px 2px;
+        width: 100%;
+      }
+
+      .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .setting-item {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 0.86rem;
+      }
+      .setting-item:last-child { border-bottom: none; }
+      .setting-item .desc { font-size: 0.74rem; color: var(--ink-soft); margin-top: 3px; }
+
+      .toggle {
+        width: 42px; height: 24px; border-radius: 999px; border: none;
+        background: #d5dde8; position: relative; cursor: pointer; padding: 0; flex-shrink: 0;
+      }
+      .toggle.on { background: var(--brand); }
+      .toggle::after {
+        content: ""; position: absolute; top: 3px; left: 3px;
+        width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left 0.15s ease;
+      }
+      .toggle.on::after { left: 21px; }
 
       .toast {
-        position: fixed;
-        left: 50%;
-        bottom: 28px;
-        transform: translateX(-50%) translateY(8px);
-        background: rgba(26, 35, 50, 0.92);
-        color: #fff;
-        padding: 10px 16px;
-        border-radius: 10px;
-        font-size: 0.82rem;
-        opacity: 0;
-        pointer-events: none;
-        transition: 0.2s ease;
-        z-index: 20;
+        position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(8px);
+        background: rgba(26,35,50,0.92); color: #fff; padding: 10px 16px; border-radius: 10px;
+        font-size: 0.82rem; opacity: 0; pointer-events: none; transition: 0.2s ease; z-index: 30;
       }
-
       .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-      .empty {
-        text-align: center;
-        color: var(--ink-soft);
-        font-size: 0.8rem;
-        padding: 24px 8px;
-      }
-
-      .price { color: #c2410c; font-weight: 700; }
-
-      @media (max-width: 1200px) {
-        .app { grid-template-columns: 64px 240px minmax(0, 1fr) 340px; }
+      @media (max-width: 1280px) {
+        #mod-service { grid-template-columns: 230px minmax(0, 1fr) 300px; }
+        .stat-grid { grid-template-columns: repeat(2, 1fr); }
+        .split-2, .settings-grid { grid-template-columns: 1fr; }
       }
     </style>
   </head>
   <body>
     <div class="app">
-      <!-- 左轨 -->
       <nav class="rail" aria-label="主导航">
         <div class="logo">AI</div>
-        <button type="button" class="active"><span class="ico">💬</span>客服</button>
-        <button type="button"><span class="ico">👥</span>客户</button>
-        <button type="button"><span class="ico">📦</span>报价</button>
-        <button type="button"><span class="ico">📊</span>数据</button>
-        <button type="button" style="margin-top:auto"><span class="ico">⚙️</span>设置</button>
+        <button type="button" class="active" data-mod="service"><span class="ico">💬</span>客服</button>
+        <button type="button" data-mod="customers"><span class="ico">👥</span>客户</button>
+        <button type="button" data-mod="quotes"><span class="ico">📦</span>报价</button>
+        <button type="button" data-mod="data"><span class="ico">📊</span>数据</button>
+        <button type="button" data-mod="settings" style="margin-top:auto"><span class="ico">⚙️</span>设置</button>
       </nav>
 
-      <!-- 会话列表 -->
-      <aside class="sessions">
-        <div class="hd">
-          <h1>会话列表</h1>
-          <div class="seller">黄好庭 · 租户 100260</div>
-        </div>
-        <div class="filters">
-          <button type="button" class="chip on" data-filter="all">全部</button>
-          <button type="button" class="chip" data-filter="urgent">待跟进</button>
-          <button type="button" class="chip" data-filter="quote">询价中</button>
-          <button type="button" class="chip" data-filter="human">人工中</button>
-        </div>
-        <div class="session-list" id="sessionList"></div>
-      </aside>
+      <div class="workspace">
+        <!-- 客服 -->
+        <section class="module active" id="mod-service">
+          <aside class="sessions">
+            <div class="hd">
+              <h1>会话列表</h1>
+              <div class="sub">黄好庭 · 租户 100260</div>
+            </div>
+            <div class="filters">
+              <button type="button" class="chip on" data-filter="all">全部</button>
+              <button type="button" class="chip" data-filter="urgent">待跟进</button>
+              <button type="button" class="chip" data-filter="quote">询价中</button>
+              <button type="button" class="chip" data-filter="human">人工中</button>
+            </div>
+            <div class="session-list" id="sessionList"></div>
+          </aside>
 
-      <!-- 聊天区 -->
-      <main class="chat">
-        <header class="chat-hd">
-          <div class="who">
-            <strong id="chatName">华建物资 · 李工</strong>
-            <span id="chatSub">微信客户 · 人工接管中 · 上次采购 08-07</span>
-          </div>
-          <div class="actions">
-            <button type="button" class="btn btn-ghost" id="btnRefresh">刷新</button>
-            <button type="button" class="btn btn-danger" id="btnEndHuman">结束人工</button>
-          </div>
-        </header>
+          <main class="chat">
+            <header class="chat-hd">
+              <div class="who">
+                <strong id="chatName">华建物资 · 李工</strong>
+                <span id="chatSub">微信客户 · 人工接管中</span>
+              </div>
+              <div class="actions">
+                <button type="button" class="btn btn-ghost" id="btnRefresh">刷新</button>
+                <button type="button" class="btn btn-danger" id="btnEndHuman">结束人工</button>
+              </div>
+            </header>
+            <div class="chat-body" id="chatBody"></div>
+            <footer class="composer">
+              <div class="composer-tools">
+                <button type="button" class="tool" data-quick="quote">发报价单</button>
+                <button type="button" class="tool" data-quick="stock">查现货话术</button>
+                <button type="button" class="tool" data-quick="debt">催款提醒</button>
+                <button type="button" class="tool" data-quick="visit">预约回访</button>
+              </div>
+              <textarea id="replyInput" placeholder="输入回复… Enter 发送，Shift+Enter 换行"></textarea>
+              <div class="composer-foot">
+                <div class="hint">约 3 秒自动刷新 · 自动加「(人工: 黄好庭)」</div>
+                <button type="button" class="btn btn-primary" id="btnSend">发送</button>
+              </div>
+            </footer>
+          </main>
 
-        <div class="chat-body" id="chatBody"></div>
+          <aside class="right">
+            <section class="profile" id="profile">
+              <div class="profile-top">
+                <div class="av">李</div>
+                <div style="min-width:0;flex:1">
+                  <h2>华建物资有限公司</h2>
+                  <p>李工 · 168****9099 · 济南</p>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnToggleProfile">展开</button>
+              </div>
+              <div class="tags">
+                <span class="tag active">活跃</span>
+                <span class="tag volume">走量</span>
+                <span class="tag profit">利润</span>
+                <span class="tag level">A 级</span>
+              </div>
+              <div class="debt-one">
+                <span>欠款 <strong>¥128,600</strong></span>
+                <span style="color:var(--ink-soft)">近月 86.4 吨</span>
+              </div>
+              <div class="profile-extra">
+                <div class="kpi-grid">
+                  <div class="kpi"><div class="label">近月采购量</div><div class="value">86.4 吨</div><div class="sub">同比 +12%</div></div>
+                  <div class="kpi"><div class="label">最近采购</div><div class="value">08-07</div><div class="sub">镀锌管 8.2 吨</div></div>
+                  <div class="kpi"><div class="label">应收利息</div><div class="value danger">¥1,280</div><div class="sub">超期 12 天</div></div>
+                  <div class="kpi"><div class="label">客户类型</div><div class="value ok">利润+走量</div><div class="sub">毛利贡献中高</div></div>
+                </div>
+                <div class="debt-detail">预收 ¥20,000 · 应收 ¥86,000 · 订单应收 ¥22,600</div>
+              </div>
+            </section>
 
-        <footer class="composer">
-          <div class="composer-tools">
-            <button type="button" class="tool" data-quick="quote">发报价单</button>
-            <button type="button" class="tool" data-quick="stock">查现货话术</button>
-            <button type="button" class="tool" data-quick="debt">催款提醒</button>
-            <button type="button" class="tool" data-quick="visit">预约回访</button>
-          </div>
-          <textarea id="replyInput" placeholder="输入回复内容… Enter 发送，Shift+Enter 换行"></textarea>
-          <div class="composer-foot">
-            <div class="hint">约 3 秒自动刷新 · 文本自动加「(人工: 黄好庭)」</div>
-            <button type="button" class="btn btn-primary" id="btnSend">发送</button>
-          </div>
-        </footer>
-      </main>
+            <div class="rtabs" id="rtabs">
+              <button type="button" class="active" data-pane="orders">订单</button>
+              <button type="button" data-pane="stock">库存</button>
+              <button type="button" data-pane="invoice">发票</button>
+              <button type="button" data-pane="quote">报价</button>
+              <button type="button" data-pane="history">购买历史</button>
+              <button type="button" data-pane="last">上一单</button>
+            </div>
 
-      <!-- 右侧客户能力 -->
-      <aside class="right">
-        <section class="profile" id="profile">
-          <div class="profile-top">
-            <div class="av">李</div>
-            <div>
-              <h2>华建物资有限公司</h2>
-              <p>联系人 李工 · 168-****-9099 · 济南</p>
+            <div class="rbody">
+              <section class="pane active" id="pane-orders">
+                <div class="block">
+                  <h3>客户订单 <span class="count">3</span></h3>
+                  <div class="search-row">
+                    <input type="search" placeholder="订单号 / 规格" id="orderQ" />
+                    <button type="button" class="btn btn-primary btn-sm" id="btnSearchOrder">查</button>
+                  </div>
+                  <div id="orderList"></div>
+                </div>
+              </section>
+              <section class="pane" id="pane-stock">
+                <div class="block">
+                  <h3>查库存 / 价格</h3>
+                  <p class="hint">可带挂牌价加入报价清单。</p>
+                  <div class="search-row">
+                    <input type="text" id="stockQ" value="方管 50*100" />
+                    <button type="button" class="btn btn-primary btn-sm" id="btnSearchStock">查</button>
+                  </div>
+                  <div id="stockList"></div>
+                </div>
+              </section>
+              <section class="pane" id="pane-invoice">
+                <div class="block">
+                  <h3>发票记录 <span class="count">2</span></h3>
+                  <div id="invoiceList"></div>
+                </div>
+              </section>
+              <section class="pane" id="pane-quote">
+                <div class="block">
+                  <h3>当前报价清单 <span class="count" id="quoteCount">0</span></h3>
+                  <p class="hint">库存 / 历史 / 上一单均可带价加入。</p>
+                  <div id="quoteList"></div>
+                  <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:8px;font-size:0.82rem">
+                    <span>预估合计</span><span class="price" id="quoteTotal">¥0</span>
+                  </div>
+                  <button type="button" class="btn btn-primary btn-block" id="btnSendQuote">生成并发送报价单</button>
+                  <button type="button" class="btn btn-ghost btn-block" id="btnClearQuote">清空清单</button>
+                </div>
+                <div class="block">
+                  <h3>历史报价</h3>
+                  <div id="quoteHist"></div>
+                </div>
+              </section>
+              <section class="pane" id="pane-history">
+                <div class="block">
+                  <h3>购买历史 <span class="count">5</span></h3>
+                  <p class="hint">加入报价时带入历史成交价。</p>
+                  <div id="historyList"></div>
+                </div>
+              </section>
+              <section class="pane" id="pane-last">
+                <div class="block">
+                  <h3>上一单购买记录</h3>
+                  <p class="hint">SO20260805008 · 08-05 · 已完成</p>
+                  <div id="lastOrderLines"></div>
+                  <button type="button" class="btn btn-soft btn-block" id="btnAddLastAll">整单加入报价（带价）</button>
+                </div>
+              </section>
             </div>
-          </div>
-          <div class="tags">
-            <span class="tag active">活跃</span>
-            <span class="tag volume">走量客户</span>
-            <span class="tag level">A 级</span>
-            <span class="tag">钢铁贸易</span>
-            <span class="tag">合作 2 年</span>
-          </div>
-          <div class="kpi-grid">
-            <div class="kpi">
-              <div class="label">近月采购量</div>
-              <div class="value">86.4 吨</div>
-              <div class="sub">同比 +12%</div>
+
+            <div class="cart-bar">
+              <div class="sum">报价 <span class="amt" id="cartBarAmt">0 项 · ¥0</span></div>
+              <button type="button" class="btn btn-primary btn-sm" id="btnGoQuote">去报价</button>
             </div>
-            <div class="kpi">
-              <div class="label">最近采购</div>
-              <div class="value">08-07</div>
-              <div class="sub">镀锌管 8.2 吨</div>
+          </aside>
+        </section>
+
+        <!-- 客户 -->
+        <section class="module" id="mod-customers">
+          <div class="page-inner">
+            <div class="page-toolbar">
+              <h1>客户管理</h1>
+              <input type="search" style="max-width:240px" placeholder="搜索客户 / 联系人 / 地区" id="custQ" />
+              <select style="max-width:140px" id="custFilter">
+                <option>全部状态</option>
+                <option>活跃</option>
+                <option>沉睡</option>
+                <option>流失</option>
+              </select>
+              <button type="button" class="btn btn-primary" id="btnCustSearch">查询</button>
+              <button type="button" class="btn btn-soft" id="btnOpenServiceFromCust">打开会话跟进</button>
             </div>
-            <div class="kpi">
-              <div class="label">应收利息</div>
-              <div class="value danger">¥1,280</div>
-              <div class="sub">超期 12 天</div>
+            <div class="page-content">
+              <div class="table-card">
+                <table class="data">
+                  <thead>
+                    <tr>
+                      <th>客户</th>
+                      <th>等级/类型</th>
+                      <th>状态</th>
+                      <th>近月采购</th>
+                      <th>欠款</th>
+                      <th>最近采购</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="custTable"></tbody>
+                </table>
+              </div>
             </div>
-            <div class="kpi">
-              <div class="label">客户类型</div>
-              <div class="value ok">利润+走量</div>
-              <div class="sub">毛利贡献中高</div>
-            </div>
-          </div>
-          <div class="debt-row">
-            <div>欠款余额 <strong>¥128,600</strong></div>
-            <div>预收 ¥20,000 · 应收 ¥86,000 · 订单应收 ¥22,600</div>
           </div>
         </section>
 
-        <div class="rtabs" id="rtabs1">
-          <button type="button" class="active" data-pane="orders">订单</button>
-          <button type="button" data-pane="stock">库存</button>
-          <button type="button" data-pane="invoice">发票</button>
-        </div>
-        <div class="rtabs more" id="rtabs2">
-          <button type="button" data-pane="quote">报价</button>
-          <button type="button" data-pane="history">购买历史</button>
-          <button type="button" data-pane="last">上一单</button>
-        </div>
-
-        <div class="rbody">
-          <!-- 订单 -->
-          <section class="pane active" id="pane-orders">
-            <div class="block">
-              <h3>客户订单 <span class="count">3</span></h3>
-              <div class="search-row">
-                <input type="search" placeholder="订单号 / 规格" id="orderQ" />
-                <button type="button" class="btn btn-primary" id="btnSearchOrder">查</button>
+        <!-- 报价 -->
+        <section class="module" id="mod-quotes">
+          <div class="page-inner">
+            <div class="page-toolbar">
+              <h1>我的报价</h1>
+              <input type="search" style="max-width:220px" placeholder="报价单号 / 客户" id="quoteQ" />
+              <select style="max-width:140px">
+                <option>全部状态</option>
+                <option>议价中</option>
+                <option>已成交</option>
+                <option>已过期</option>
+              </select>
+              <button type="button" class="btn btn-primary" id="btnQuoteSearch">查询</button>
+              <button type="button" class="btn btn-soft" id="btnNewQuote">新建报价</button>
+            </div>
+            <div class="page-content">
+              <div class="table-card">
+                <table class="data">
+                  <thead>
+                    <tr>
+                      <th>报价单</th>
+                      <th>客户</th>
+                      <th>摘要</th>
+                      <th>金额</th>
+                      <th>状态</th>
+                      <th>时间</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="quoteTable"></tbody>
+                </table>
               </div>
-              <div id="orderList"></div>
             </div>
-          </section>
-
-          <!-- 库存 -->
-          <section class="pane" id="pane-stock">
-            <div class="block">
-              <h3>查库存 / 价格</h3>
-              <p class="hint">检索后可加入当前报价清单（带挂牌价）。</p>
-              <div class="search-row">
-                <input type="text" id="stockQ" value="方管 50*100" />
-                <button type="button" class="btn btn-primary" id="btnSearchStock">查</button>
-              </div>
-              <div id="stockList"></div>
-            </div>
-          </section>
-
-          <!-- 发票 -->
-          <section class="pane" id="pane-invoice">
-            <div class="block">
-              <h3>发票记录 <span class="count">2</span></h3>
-              <div id="invoiceList"></div>
-            </div>
-          </section>
-
-          <!-- 报价 -->
-          <section class="pane" id="pane-quote">
-            <div class="block">
-              <h3>当前报价清单 <span class="count" id="quoteCount">0</span></h3>
-              <p class="hint">可从库存 / 购买历史 / 上一单加入；可改价后发给客户。</p>
-              <div id="quoteList"></div>
-              <div class="sum-line" style="display:flex;justify-content:space-between;font-weight:700;margin-top:8px;font-size:0.84rem">
-                <span>预估合计</span>
-                <span class="price" id="quoteTotal">¥0</span>
-              </div>
-              <button type="button" class="btn btn-primary btn-block" id="btnSendQuote">生成并发送报价单</button>
-              <button type="button" class="btn btn-ghost btn-block" id="btnClearQuote">清空清单</button>
-            </div>
-            <div class="block">
-              <h3>历史报价</h3>
-              <div id="quoteHist"></div>
-            </div>
-          </section>
-
-          <!-- 购买历史 -->
-          <section class="pane" id="pane-history">
-            <div class="block">
-              <h3>购买历史 <span class="count">5</span></h3>
-              <p class="hint">点击「加入报价」可带历史成交价进入当前清单。</p>
-              <div id="historyList"></div>
-            </div>
-          </section>
-
-          <!-- 上一单 -->
-          <section class="pane" id="pane-last">
-            <div class="block">
-              <h3>上一单购买记录</h3>
-              <p class="hint">SO20260805008 · 2026-08-05 · 已完成</p>
-              <div id="lastOrderLines"></div>
-              <button type="button" class="btn btn-soft btn-block" id="btnAddLastAll">整单加入报价（带价）</button>
-            </div>
-          </section>
-        </div>
-
-        <div class="cart-bar">
-          <div class="sum">
-            <span>报价清单</span>
-            <span class="amt" id="cartBarAmt">0 项 · ¥0</span>
           </div>
-          <button type="button" class="btn btn-primary btn-block" id="btnGoQuote" style="margin:0">查看 / 编辑报价</button>
-        </div>
-      </aside>
+        </section>
+
+        <!-- 数据 -->
+        <section class="module" id="mod-data">
+          <div class="page-inner">
+            <div class="page-toolbar">
+              <h1>销售数据</h1>
+              <select style="max-width:140px"><option>近 7 天</option><option selected>近 30 天</option><option>近 90 天</option></select>
+              <button type="button" class="btn btn-ghost" id="btnDataRefresh">刷新</button>
+            </div>
+            <div class="page-content">
+              <div class="stat-grid">
+                <div class="stat"><div class="label">成交金额</div><div class="value">¥186.2万</div><div class="trend">↑ 18% 环比</div></div>
+                <div class="stat"><div class="label">报价转化率</div><div class="value">36%</div><div class="trend">↑ 4pt</div></div>
+                <div class="stat"><div class="label">跟进会话</div><div class="value">128</div><div class="trend">人工接管 42</div></div>
+                <div class="stat"><div class="label">逾期应收</div><div class="value" style="color:var(--danger)">¥32.6万</div><div class="trend" style="color:var(--warn)">12 家客户</div></div>
+              </div>
+              <div class="split-2">
+                <div class="block" style="margin:0">
+                  <h3>近月销量（吨）</h3>
+                  <div class="chart-fake" aria-hidden="true">
+                    <i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i>
+                    <i style="height:70%"></i><i style="height:62%"></i><i style="height:78%"></i>
+                    <i style="height:66%"></i><i style="height:88%"></i>
+                  </div>
+                </div>
+                <div class="block" style="margin:0">
+                  <h3>待办提醒</h3>
+                  <div class="item"><div class="top">询价超时未跟进 <span class="status warn">3</span></div><div class="sub">华建物资、济南贸易等</div></div>
+                  <div class="item"><div class="top">应收超期 <span class="status warn">5</span></div><div class="sub">利息合计约 ¥6,420</div></div>
+                  <div class="item"><div class="top">报价议价中 <span class="status wait">7</span></div><div class="sub">客户已打开小程序议价页</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 设置 -->
+        <section class="module" id="mod-settings">
+          <div class="page-inner">
+            <div class="page-toolbar">
+              <h1>设置</h1>
+              <button type="button" class="btn btn-primary" id="btnSaveSettings">保存设置</button>
+            </div>
+            <div class="page-content">
+              <div class="settings-grid">
+                <div class="block" style="margin:0">
+                  <h3>会话与推送</h3>
+                  <div class="setting-item">
+                    <div><div>询价超时催办</div><div class="desc">超过 15 分钟未跟进推送催办卡</div></div>
+                    <button type="button" class="toggle on" data-set="urgent"></button>
+                  </div>
+                  <div class="setting-item">
+                    <div><div>推送显示欠款角标</div><div class="desc">询价卡可选展示应收提醒</div></div>
+                    <button type="button" class="toggle" data-set="debt"></button>
+                  </div>
+                  <div class="setting-item">
+                    <div><div>自动加「(人工: 姓名)」</div><div class="desc">发送回复时自动署名</div></div>
+                    <button type="button" class="toggle on" data-set="sign"></button>
+                  </div>
+                </div>
+                <div class="block" style="margin:0">
+                  <h3>报价默认</h3>
+                  <div class="setting-item">
+                    <div><div>默认 AI 方案</div><div class="desc">优价 / 均衡 / 保障</div></div>
+                    <select style="max-width:120px"><option>均衡</option><option>优价</option><option>保障</option></select>
+                  </div>
+                  <div class="setting-item">
+                    <div><div>发送附带小程序议价</div><div class="desc">PDF 底部自动带议价入口</div></div>
+                    <button type="button" class="toggle on" data-set="mp"></button>
+                  </div>
+                  <div class="setting-item">
+                    <div><div>历史价优先带入报价</div><div class="desc">从购买历史加入时用成交价</div></div>
+                    <button type="button" class="toggle on" data-set="histPrice"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -840,53 +769,27 @@
         filter: "all",
         activeId: "s1",
         quote: [],
+        profileOpen: false,
       };
 
       const sessions = [
-        {
-          id: "s1",
-          name: "华建物资 · 李工",
-          av: "李",
-          preview: "方管 50*100*2.75 约12吨，有现货吗？",
-          time: "09:43",
-          unread: true,
-          filter: "quote",
-          company: "华建物资有限公司",
-        },
-        {
-          id: "s2",
-          name: "East Like New",
-          av: "E",
-          preview: "123",
-          time: "昨天",
-          unread: true,
-          filter: "urgent",
-          company: "East Like New",
-        },
-        {
-          id: "s3",
-          name: "张经理 · 济南贸易",
-          av: "张",
-          preview: "发票能不能这周开？",
-          time: "昨天",
-          unread: false,
-          filter: "human",
-          company: "济南XX贸易",
-        },
+        { id: "s1", name: "华建物资 · 李工", av: "李", preview: "方管 50*100*2.75 约12吨，有现货吗？", time: "09:43", unread: true, filter: "quote", company: "华建物资有限公司" },
+        { id: "s2", name: "East Like New", av: "E", preview: "123", time: "昨天", unread: true, filter: "urgent", company: "East Like New" },
+        { id: "s3", name: "张经理 · 济南贸易", av: "张", preview: "发票能不能这周开？", time: "昨天", unread: false, filter: "human", company: "济南XX贸易" },
       ];
 
       const messages = {
         s1: [
           { role: "cust", text: "在吗？方管和卷板都要问问价。", time: "09:41" },
-          { role: "ai", text: "您好，我是普讯助手。已记录您的询价意向，正在为您核价。", time: "09:41", card: true },
+          { role: "ai", text: "您好，我是普讯助手。已记录询价意向，正在核价。", time: "09:41", card: true },
           { role: "cust", text: "方管 50*100*2.75 约12吨，有现货吗？", time: "09:43" },
-          { role: "me", text: "(人工: 黄好庭) 李工您好，方管现货充足，我先按津西 Q235B 给您核价。", time: "09:44" },
+          { role: "me", text: "(人工: 黄好庭) 李工您好，方管现货充足，我先按津西 Q235B 核价。", time: "09:44" },
         ],
         s2: [
           { role: "cust", text: "你好", time: "昨天 17:30" },
-          { role: "ai", text: "你好！欢迎咨询。可直接发「品名 规格 材质 产地 数量」。", time: "昨天 17:30" },
+          { role: "ai", text: "你好！可直接发「品名 规格 材质 产地 数量」。", time: "昨天 17:30" },
           { role: "cust", text: "123", time: "昨天 17:35" },
-          { role: "ai", text: "暂未识别到钢材明细，已引导客户按格式发送；请销售尽快接管。", time: "昨天 17:35" },
+          { role: "ai", text: "暂未识别到钢材明细，请销售尽快接管。", time: "昨天 17:35" },
         ],
         s3: [
           { role: "cust", text: "上单发票这周能开吗？", time: "昨天 11:20" },
@@ -919,13 +822,26 @@
         { sku: "热轧卷板", spec: "3.0mm", material: "Q235B", origin: "济南", weight: 80.0, price: 4220, date: "06-01", order: "SO20260601003" },
       ];
 
-      const lastOrder = [
-        { sku: "镀锌管", spec: "48*3.0", material: "Q235", origin: "本地", weight: 8.2, price: 5500 },
-      ];
+      const lastOrder = [{ sku: "镀锌管", spec: "48*3.0", material: "Q235", origin: "本地", weight: 8.2, price: 5500 }];
 
       const quoteHist = [
         { id: "QT20260815012", status: "ok", statusText: "已成交", sub: "镀锌管 · ¥45,100 · 08-15" },
         { id: "QT20260810007", status: "warn", statusText: "已过期", sub: "角钢 · ¥28,800 · 08-10" },
+      ];
+
+      const customers = [
+        { name: "华建物资有限公司", contact: "李工", level: "A · 走量+利润", status: "活跃", ton: "86.4吨", debt: "¥12.86万", last: "08-07" },
+        { name: "济南XX贸易", contact: "张经理", level: "B · 利润", status: "活跃", ton: "42.0吨", debt: "¥3.2万", last: "08-12" },
+        { name: "East Like New", contact: "—", level: "C · 新客", status: "沉睡", ton: "0", debt: "¥0", last: "—" },
+        { name: "鲁北钢材", contact: "王总", level: "A · 走量", status: "活跃", ton: "120吨", debt: "¥28万", last: "08-18" },
+        { name: "齐河建工", contact: "赵工", level: "B · 走量", status: "流失", ton: "0", debt: "¥1.1万", last: "03-02" },
+      ];
+
+      const quoteRows = [
+        { id: "QT20260822001", customer: "华建物资", summary: "方管+卷板 2项", amount: "¥218.6万", status: "议价中", time: "今天" },
+        { id: "QT20260815012", customer: "华建物资", summary: "镀锌管", amount: "¥4.51万", status: "已成交", time: "08-15" },
+        { id: "QT20260810007", customer: "济南XX贸易", summary: "角钢", amount: "¥2.88万", status: "已过期", time: "08-10" },
+        { id: "QT20260808003", customer: "鲁北钢材", summary: "热轧卷板", amount: "¥52万", status: "已成交", time: "08-08" },
       ];
 
       function toast(msg) {
@@ -933,21 +849,21 @@
         el.textContent = msg;
         el.classList.add("show");
         clearTimeout(toast._t);
-        toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+        toast._t = setTimeout(() => el.classList.remove("show"), 2000);
       }
 
       function esc(s) {
-        return String(s ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll('"', "&quot;");
+        return String(s ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll('"', "&quot;");
+      }
+
+      function switchMod(mod) {
+        document.querySelectorAll(".rail button[data-mod]").forEach((b) => b.classList.toggle("active", b.dataset.mod === mod));
+        document.querySelectorAll(".module").forEach((m) => m.classList.toggle("active", m.id === `mod-${mod}`));
       }
 
       function renderSessions() {
         const list = sessions.filter((s) => state.filter === "all" || s.filter === state.filter);
-        $("sessionList").innerHTML = list
-          .map(
-            (s) => `
+        $("sessionList").innerHTML = list.map((s) => `
           <div class="session ${s.id === state.activeId ? "active" : ""}" data-id="${s.id}">
             <div class="av">${esc(s.av)}</div>
             <div>
@@ -958,9 +874,7 @@
               <div class="time">${esc(s.time)}</div>
               ${s.unread ? '<div class="dot"></div>' : ""}
             </div>
-          </div>`
-          )
-          .join("");
+          </div>`).join("");
       }
 
       function renderChat() {
@@ -968,36 +882,29 @@
         $("chatName").textContent = s.name;
         $("chatSub").textContent = `${s.company} · 人工接管中`;
         const msgs = messages[state.activeId] || [];
-        $("chatBody").innerHTML = msgs
-          .map((m) => {
-            const roleClass = m.role === "me" ? "me" : m.role === "ai" ? "ai" : "cust";
-            const av = m.role === "me" ? "黄" : m.role === "ai" ? "AI" : s.av;
-            const card =
-              m.card
-                ? `<div class="ai-card"><div class="ai-hd">AI 推荐现货（可加入报价）</div>
-                    <table><thead><tr><th>品名规格</th><th>库存</th><th>挂牌价</th><th></th></tr></thead>
-                    <tbody>
-                      <tr><td>方管 50*100*2.75</td><td>86.4吨</td><td class="price">¥5000</td><td><button type="button" class="linkish" data-add-chat="0">加入</button></td></tr>
-                      <tr><td>热轧卷板 3.0mm</td><td>1200吨</td><td class="price">¥4280</td><td><button type="button" class="linkish" data-add-chat="2">加入</button></td></tr>
-                    </tbody></table></div>`
-                : "";
-            return `<div class="bubble-row ${roleClass}">
-              <div class="av">${esc(av)}</div>
-              <div class="bubble">${esc(m.text)}${card}<div class="meta">${esc(m.time)}</div></div>
-            </div>`;
-          })
-          .join("");
+        $("chatBody").innerHTML = msgs.map((m) => {
+          const roleClass = m.role === "me" ? "me" : m.role === "ai" ? "ai" : "cust";
+          const av = m.role === "me" ? "黄" : m.role === "ai" ? "AI" : s.av;
+          const card = m.card ? `<div class="ai-card"><div class="ai-hd">AI 推荐现货（可加入报价）</div>
+            <table><thead><tr><th>品名规格</th><th>库存</th><th>价</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>方管 50*100*2.75</td><td>86.4吨</td><td class="price">¥5000</td><td><button type="button" class="linkish" data-add-chat="0">加入</button></td></tr>
+              <tr><td>热轧卷板 3.0mm</td><td>1200吨</td><td class="price">¥4280</td><td><button type="button" class="linkish" data-add-chat="2">加入</button></td></tr>
+            </tbody></table></div>` : "";
+          return `<div class="bubble-row ${roleClass}">
+            <div class="av">${esc(av)}</div>
+            <div class="bubble">${esc(m.text)}${card}<div class="meta">${esc(m.time)}</div></div>
+          </div>`;
+        }).join("");
         $("chatBody").scrollTop = $("chatBody").scrollHeight;
       }
+
+      function quoteAmount(i) { return Math.round(Number(i.price) * (Number(i.weight) || 1)); }
 
       function addToQuote(item) {
         state.quote.push({ ...item });
         renderQuote();
-        toast(`已加入报价：${item.sku} ${item.spec} · ¥${item.price}/吨`);
-      }
-
-      function quoteAmount(i) {
-        return Math.round(Number(i.price) * (Number(i.weight) || 1));
+        toast(`已加入报价：${item.sku} ${item.spec}`);
       }
 
       function renderQuote() {
@@ -1009,117 +916,92 @@
           $("quoteList").innerHTML = `<div class="empty">清单为空，可从库存/历史/上一单加入</div>`;
           return;
         }
-        $("quoteList").innerHTML = state.quote
-          .map(
-            (q, idx) => `
+        $("quoteList").innerHTML = state.quote.map((q, idx) => `
           <div class="line">
-            <div>
-              <strong>${esc(q.sku)} ${esc(q.spec)}</strong>
-              <div class="sub">${esc(q.material || "")} / ${esc(q.origin || "")} · ${esc(q.weight)}吨</div>
-            </div>
-            <div style="text-align:right">
-              <div class="price">¥${Number(q.price).toLocaleString()}</div>
-              <button type="button" class="linkish" data-rm-quote="${idx}">移除</button>
-            </div>
-          </div>`
-          )
-          .join("");
+            <div><strong>${esc(q.sku)} ${esc(q.spec)}</strong>
+              <div class="sub">${esc(q.material || "")} / ${esc(q.origin || "")} · ${esc(q.weight)}吨</div></div>
+            <div style="text-align:right"><div class="price">¥${Number(q.price).toLocaleString()}</div>
+              <button type="button" class="linkish" data-rm-quote="${idx}">移除</button></div>
+          </div>`).join("");
       }
 
       function renderOrders(list = orders) {
-        $("orderList").innerHTML = list
-          .map(
-            (o) => `
-          <div class="item">
-            <div class="top">${esc(o.id)}<span class="status ${o.status}">${esc(o.statusText)}</span></div>
-            <div class="sub">${esc(o.sub)}</div>
-          </div>`
-          )
-          .join("");
+        $("orderList").innerHTML = list.map((o) => `
+          <div class="item"><div class="top">${esc(o.id)}<span class="status ${o.status}">${esc(o.statusText)}</span></div>
+          <div class="sub">${esc(o.sub)}</div></div>`).join("");
       }
 
       function renderStock(list = stocks) {
-        $("stockList").innerHTML = list
-          .map(
-            (s, i) => `
-          <div class="item">
-            <div class="top">${esc(s.name)}<span class="price">¥${s.price}/吨</span></div>
-            <div class="sub">${esc(s.meta)} · 库存 ${s.ton} 吨</div>
-            <div style="margin-top:6px;text-align:right">
-              <button type="button" class="linkish" data-add-stock="${i}">加入报价（带价）</button>
-            </div>
-          </div>`
-          )
-          .join("");
+        $("stockList").innerHTML = list.map((s, i) => `
+          <div class="item"><div class="top">${esc(s.name)}<span class="price">¥${s.price}/吨</span></div>
+          <div class="sub">${esc(s.meta)} · 库存 ${s.ton} 吨</div>
+          <div style="margin-top:5px;text-align:right"><button type="button" class="linkish" data-add-stock="${i}">加入报价</button></div></div>`).join("");
       }
 
       function renderInvoices() {
-        $("invoiceList").innerHTML = invoices
-          .map(
-            (inv) => `
-          <div class="item">
-            <div class="top">${esc(inv.id)}<span class="status ${inv.status}">${esc(inv.statusText)}</span></div>
-            <div class="sub">${esc(inv.sub)}</div>
-          </div>`
-          )
-          .join("");
+        $("invoiceList").innerHTML = invoices.map((inv) => `
+          <div class="item"><div class="top">${esc(inv.id)}<span class="status ${inv.status}">${esc(inv.statusText)}</span></div>
+          <div class="sub">${esc(inv.sub)}</div></div>`).join("");
       }
 
       function renderHistory() {
-        $("historyList").innerHTML = history
-          .map(
-            (h, i) => `
-          <div class="item">
-            <div class="top">${esc(h.sku)} ${esc(h.spec)}<span class="price">¥${h.price}</span></div>
-            <div class="sub">${esc(h.material)} / ${esc(h.origin)} · ${h.weight}吨 · ${esc(h.date)} · ${esc(h.order)}</div>
-            <div style="margin-top:6px;text-align:right">
-              <button type="button" class="linkish" data-add-hist="${i}">加入报价（带历史价）</button>
-            </div>
-          </div>`
-          )
-          .join("");
+        $("historyList").innerHTML = history.map((h, i) => `
+          <div class="item"><div class="top">${esc(h.sku)} ${esc(h.spec)}<span class="price">¥${h.price}</span></div>
+          <div class="sub">${esc(h.material)} / ${esc(h.origin)} · ${h.weight}吨 · ${esc(h.date)}</div>
+          <div style="margin-top:5px;text-align:right"><button type="button" class="linkish" data-add-hist="${i}">加入报价</button></div></div>`).join("");
       }
 
       function renderLast() {
-        $("lastOrderLines").innerHTML = lastOrder
-          .map(
-            (l, i) => `
-          <div class="line">
-            <div>
-              <strong>${esc(l.sku)} ${esc(l.spec)}</strong>
-              <div class="sub">${esc(l.material)} / ${esc(l.origin)} · ${l.weight}吨</div>
-            </div>
-            <div style="text-align:right">
-              <div class="price">¥${l.price}/吨</div>
-              <button type="button" class="linkish" data-add-last="${i}">加入</button>
-            </div>
-          </div>`
-          )
-          .join("");
+        $("lastOrderLines").innerHTML = lastOrder.map((l, i) => `
+          <div class="line"><div><strong>${esc(l.sku)} ${esc(l.spec)}</strong>
+            <div class="sub">${esc(l.material)} / ${esc(l.origin)} · ${l.weight}吨</div></div>
+            <div style="text-align:right"><div class="price">¥${l.price}/吨</div>
+            <button type="button" class="linkish" data-add-last="${i}">加入</button></div></div>`).join("");
       }
 
       function renderQuoteHist() {
-        $("quoteHist").innerHTML = quoteHist
-          .map(
-            (q) => `
-          <div class="item">
-            <div class="top">${esc(q.id)}<span class="status ${q.status}">${esc(q.statusText)}</span></div>
-            <div class="sub">${esc(q.sub)}</div>
-          </div>`
-          )
-          .join("");
+        $("quoteHist").innerHTML = quoteHist.map((q) => `
+          <div class="item"><div class="top">${esc(q.id)}<span class="status ${q.status}">${esc(q.statusText)}</span></div>
+          <div class="sub">${esc(q.sub)}</div></div>`).join("");
+      }
+
+      function renderCustomers(list = customers) {
+        $("custTable").innerHTML = list.map((c) => `
+          <tr>
+            <td><strong>${esc(c.name)}</strong><div class="sub">${esc(c.contact)}</div></td>
+            <td>${esc(c.level)}</td>
+            <td><span class="status ${c.status === "活跃" ? "ok" : c.status === "沉睡" ? "wait" : "warn"}">${esc(c.status)}</span></td>
+            <td>${esc(c.ton)}</td>
+            <td class="price">${esc(c.debt)}</td>
+            <td>${esc(c.last)}</td>
+            <td><button type="button" class="linkish" data-open-cust="${esc(c.name)}">去会话</button></td>
+          </tr>`).join("");
+      }
+
+      function renderQuoteTable(list = quoteRows) {
+        $("quoteTable").innerHTML = list.map((q) => `
+          <tr>
+            <td>${esc(q.id)}</td><td>${esc(q.customer)}</td><td>${esc(q.summary)}</td>
+            <td class="price">${esc(q.amount)}</td>
+            <td><span class="status ${q.status === "已成交" ? "ok" : q.status === "议价中" ? "wait" : "warn"}">${esc(q.status)}</span></td>
+            <td>${esc(q.time)}</td>
+            <td><button type="button" class="linkish" data-view-quote="${esc(q.id)}">查看</button></td>
+          </tr>`).join("");
       }
 
       function switchPane(name) {
-        document.querySelectorAll(".rtabs button").forEach((b) => {
-          b.classList.toggle("active", b.dataset.pane === name);
-        });
-        document.querySelectorAll(".pane").forEach((p) => {
-          p.classList.toggle("active", p.id === `pane-${name}`);
-        });
+        document.querySelectorAll("#rtabs button").forEach((b) => b.classList.toggle("active", b.dataset.pane === name));
+        document.querySelectorAll(".rbody .pane").forEach((p) => p.classList.toggle("active", p.id === `pane-${name}`));
       }
 
-      // events
+      // rail
+      document.querySelectorAll(".rail button[data-mod]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          switchMod(btn.dataset.mod);
+          toast(`已切换到「${btn.textContent.trim()}」`);
+        });
+      });
+
       document.querySelectorAll(".filters .chip").forEach((chip) => {
         chip.addEventListener("click", () => {
           document.querySelectorAll(".filters .chip").forEach((c) => c.classList.remove("on"));
@@ -1139,7 +1021,13 @@
         renderChat();
       });
 
-      document.querySelectorAll(".rtabs button").forEach((btn) => {
+      $("btnToggleProfile").addEventListener("click", () => {
+        state.profileOpen = !state.profileOpen;
+        $("profile").classList.toggle("expanded", state.profileOpen);
+        $("btnToggleProfile").textContent = state.profileOpen ? "收起" : "展开";
+      });
+
+      document.querySelectorAll("#rtabs button").forEach((btn) => {
         btn.addEventListener("click", () => switchPane(btn.dataset.pane));
       });
 
@@ -1152,7 +1040,8 @@
 
       $("btnSearchStock").addEventListener("click", () => {
         const q = $("stockQ").value.trim();
-        const list = q ? stocks.filter((s) => s.name.includes(q.replace(/\s/g, "")) || s.name.includes(q)) : stocks;
+        let list = stocks.slice();
+        if (q) list = list.filter((s) => s.name.includes(q.replace(/\s/g, "")) || s.name.includes(q));
         renderStock(list.length ? list : stocks);
         toast("已刷新库存价格");
       });
@@ -1162,14 +1051,7 @@
         if (!btn) return;
         const s = stocks[Number(btn.dataset.addStock)];
         const parts = s.name.split(" ");
-        addToQuote({
-          sku: parts[0],
-          spec: parts.slice(1).join(" "),
-          material: s.meta.split(" / ")[0],
-          origin: s.meta.split(" · ")[0].split(" / ")[1] || "",
-          weight: 1,
-          price: s.price,
-        });
+        addToQuote({ sku: parts[0], spec: parts.slice(1).join(" "), material: s.meta.split(" / ")[0], origin: "现货", weight: 1, price: s.price });
       });
 
       $("historyList").addEventListener("click", (e) => {
@@ -1182,8 +1064,7 @@
       $("lastOrderLines").addEventListener("click", (e) => {
         const btn = e.target.closest("[data-add-last]");
         if (!btn) return;
-        const l = lastOrder[Number(btn.dataset.addLast)];
-        addToQuote({ ...l });
+        addToQuote({ ...lastOrder[Number(btn.dataset.addLast)] });
       });
 
       $("btnAddLastAll").addEventListener("click", () => {
@@ -1198,19 +1079,18 @@
         renderQuote();
       });
 
-      $("btnClearQuote").addEventListener("click", () => {
-        state.quote = [];
-        renderQuote();
-        toast("报价清单已清空");
-      });
+      $("btnClearQuote").addEventListener("click", () => { state.quote = []; renderQuote(); toast("清单已清空"); });
 
       $("btnSendQuote").addEventListener("click", () => {
         if (!state.quote.length) return toast("清单为空");
         const total = state.quote.reduce((s, i) => s + quoteAmount(i), 0);
-        const text = `(人工: 黄好庭) 李工，报价单已生成（${state.quote.length} 项，约 ¥${total.toLocaleString()}），PDF 与议价小程序一并发送。`;
-        messages[state.activeId].push({ role: "me", text, time: "刚刚" });
+        messages[state.activeId].push({
+          role: "me",
+          text: `(人工: 黄好庭) 报价单已生成（${state.quote.length} 项，约 ¥${total.toLocaleString()}），PDF 与议价小程序一并发送。`,
+          time: "刚刚",
+        });
         renderChat();
-        toast("报价单已发送到会话（含 PDF / 小程序入口）");
+        toast("报价单已发送到会话");
       });
 
       $("btnGoQuote").addEventListener("click", () => switchPane("quote"));
@@ -1220,23 +1100,8 @@
         if (!btn) return;
         const s = stocks[Number(btn.dataset.addChat)];
         const parts = s.name.split(" ");
-        addToQuote({
-          sku: parts[0],
-          spec: parts.slice(1).join(" "),
-          material: "Q235B",
-          origin: "现货",
-          weight: 1,
-          price: s.price,
-        });
+        addToQuote({ sku: parts[0], spec: parts.slice(1).join(" "), material: "Q235B", origin: "现货", weight: 1, price: s.price });
         switchPane("quote");
-      });
-
-      $("btnSend").addEventListener("click", sendReply);
-      $("replyInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          sendReply();
-        }
       });
 
       function sendReply() {
@@ -1251,21 +1116,76 @@
         renderChat();
       }
 
+      $("btnSend").addEventListener("click", sendReply);
+      $("replyInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendReply(); }
+      });
+
       document.querySelectorAll(".composer-tools .tool").forEach((btn) => {
         btn.addEventListener("click", () => {
           const map = {
             quote: "报价单已准备好，我发给您（含 PDF 与议价小程序）。",
-            stock: "现货充足，可当天安排提货/发运，需要我按到站给您核算运费吗？",
-            debt: "温馨提醒：贵司当前应收尚有部分余额，利息按约定计算，方便安排回款吗？",
-            visit: "我周四下午方便回访您，确认一下近期用量计划，您看可以吗？",
+            stock: "现货充足，可当天安排提货/发运，需要核算到站运费吗？",
+            debt: "温馨提醒：贵司当前仍有应收余额，方便安排回款吗？",
+            visit: "我周四下午方便回访，确认近期用量计划，可以吗？",
           };
           $("replyInput").value = map[btn.dataset.quick] || "";
           $("replyInput").focus();
         });
       });
 
-      $("btnEndHuman").addEventListener("click", () => toast("已结束人工，会话交回智能助手（演示）"));
+      $("btnEndHuman").addEventListener("click", () => toast("已结束人工，交回智能助手（演示）"));
       $("btnRefresh").addEventListener("click", () => toast("会话已刷新"));
+
+      // customers / quotes / settings
+      $("btnCustSearch").addEventListener("click", () => {
+        const q = $("custQ").value.trim();
+        const st = $("custFilter").value;
+        let list = customers.slice();
+        if (st !== "全部状态") list = list.filter((c) => c.status === st);
+        if (q) list = list.filter((c) => (c.name + c.contact).includes(q));
+        renderCustomers(list);
+        toast(`找到 ${list.length} 家客户`);
+      });
+
+      $("custTable").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-open-cust]");
+        if (!btn) return;
+        switchMod("service");
+        toast(`已打开客服台跟进：${btn.dataset.openCust}`);
+      });
+
+      $("btnOpenServiceFromCust").addEventListener("click", () => {
+        switchMod("service");
+        toast("已回到客服会话");
+      });
+
+      $("btnQuoteSearch").addEventListener("click", () => {
+        const q = $("quoteQ").value.trim();
+        const list = q ? quoteRows.filter((r) => (r.id + r.customer + r.summary).includes(q)) : quoteRows;
+        renderQuoteTable(list);
+        toast(`找到 ${list.length} 条报价`);
+      });
+
+      $("quoteTable").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-view-quote]");
+        if (!btn) return;
+        toast(`查看报价单 ${btn.dataset.viewQuote}（演示）`);
+      });
+
+      $("btnNewQuote").addEventListener("click", () => {
+        switchMod("service");
+        switchPane("quote");
+        toast("请在客服台右侧完善报价清单");
+      });
+
+      $("btnDataRefresh").addEventListener("click", () => toast("数据已刷新"));
+
+      document.querySelectorAll("#mod-settings .toggle").forEach((btn) => {
+        btn.addEventListener("click", () => btn.classList.toggle("on"));
+      });
+
+      $("btnSaveSettings").addEventListener("click", () => toast("设置已保存（演示）"));
 
       renderSessions();
       renderChat();
@@ -1276,6 +1196,8 @@
       renderLast();
       renderQuoteHist();
       renderQuote();
+      renderCustomers();
+      renderQuoteTable();
     </script>
   </body>
 </html>

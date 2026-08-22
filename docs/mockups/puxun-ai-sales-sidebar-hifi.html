@@ -24,18 +24,16 @@
         --ok: #1a9f5c;
         --warn: #c98512;
         --danger: #d14343;
+        --plan-bg: #1a2740;
         --shadow: 0 18px 50px rgba(18, 36, 68, 0.18);
         --font: "Noto Sans SC", "Sora", sans-serif;
         --display: "Sora", "Noto Sans SC", sans-serif;
-        --sidebar-w: 360px;
+        --sidebar-w: 380px;
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
 
-      html,
-      body {
+      html, body {
         margin: 0;
         min-height: 100%;
         font-family: var(--font);
@@ -46,13 +44,10 @@
           linear-gradient(160deg, #d9e3f2, #eef2f7 40%, #e4ebf4);
       }
 
-      body {
-        min-height: 100vh;
-        padding: 28px 18px 48px;
-      }
+      body { min-height: 100vh; padding: 28px 18px 48px; }
 
       .page-intro {
-        max-width: 1180px;
+        max-width: 1200px;
         margin: 0 auto 18px;
         animation: rise 0.5s ease both;
       }
@@ -60,7 +55,7 @@
       .page-intro h1 {
         margin: 0;
         font-family: var(--display);
-        font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+        font-size: clamp(1.55rem, 2.4vw, 2.05rem);
         letter-spacing: -0.02em;
       }
 
@@ -68,17 +63,16 @@
         margin: 8px 0 0;
         color: var(--ink-soft);
         line-height: 1.55;
-        max-width: 52rem;
-        font-size: 0.95rem;
+        max-width: 54rem;
+        font-size: 0.94rem;
       }
 
       .stage {
-        max-width: 1180px;
+        max-width: 1200px;
         margin: 0 auto;
         display: grid;
         grid-template-columns: minmax(0, 1fr) var(--sidebar-w);
-        gap: 0;
-        min-height: 760px;
+        min-height: 820px;
         border-radius: 18px;
         overflow: hidden;
         box-shadow: var(--shadow);
@@ -88,17 +82,10 @@
       }
 
       @keyframes rise {
-        from {
-          opacity: 0;
-          transform: translateY(12px);
-        }
-        to {
-          opacity: 1;
-          transform: none;
-        }
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: none; }
       }
 
-      /* —— 左侧企微会话区 —— */
       .chat-pane {
         background: #ededed;
         display: flex;
@@ -117,15 +104,8 @@
         padding: 0 16px;
       }
 
-      .chat-top .name {
-        font-weight: 700;
-        font-size: 0.98rem;
-      }
-
-      .chat-top .meta {
-        color: var(--ink-soft);
-        font-size: 0.78rem;
-      }
+      .chat-top .name { font-weight: 700; font-size: 0.98rem; }
+      .chat-top .meta { color: var(--ink-soft); font-size: 0.78rem; }
 
       .chat-body {
         flex: 1;
@@ -137,24 +117,17 @@
       }
 
       .bubble {
-        max-width: 72%;
+        max-width: 74%;
         padding: 10px 12px;
         border-radius: 8px;
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         line-height: 1.5;
-        position: relative;
         animation: pop 0.35s ease both;
       }
 
       @keyframes pop {
-        from {
-          opacity: 0;
-          transform: translateY(6px) scale(0.98);
-        }
-        to {
-          opacity: 1;
-          transform: none;
-        }
+        from { opacity: 0; transform: translateY(6px) scale(0.98); }
+        to { opacity: 1; transform: none; }
       }
 
       .bubble.customer {
@@ -172,6 +145,25 @@
         margin-top: 4px;
         font-size: 0.72rem;
         color: #8896a6;
+      }
+
+      .bubble .mp-card {
+        margin-top: 8px;
+        background: #fff;
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid #e5e5e5;
+      }
+
+      .bubble .mp-card strong {
+        display: block;
+        font-size: 0.82rem;
+        margin-bottom: 4px;
+      }
+
+      .bubble .mp-card span {
+        font-size: 0.74rem;
+        color: #576b95;
       }
 
       .chat-composer {
@@ -200,15 +192,13 @@
         padding: 9px 14px;
         font: inherit;
         font-weight: 600;
-        cursor: pointer;
       }
 
-      /* —— 右侧栏 —— */
       .sidebar {
         background: var(--bg);
         display: flex;
         flex-direction: column;
-        min-height: 760px;
+        min-height: 820px;
         position: relative;
       }
 
@@ -222,12 +212,7 @@
         gap: 10px;
       }
 
-      .brand {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        min-width: 0;
-      }
+      .brand { display: flex; gap: 10px; align-items: center; min-width: 0; }
 
       .brand-mark {
         width: 34px;
@@ -250,22 +235,10 @@
         font-family: var(--display);
         font-size: 0.72rem;
         font-weight: 700;
-        letter-spacing: 0.04em;
       }
 
-      .brand h2 {
-        margin: 0;
-        font-size: 1.02rem;
-        font-weight: 700;
-        letter-spacing: 0.01em;
-        line-height: 1.2;
-      }
-
-      .brand p {
-        margin: 2px 0 0;
-        font-size: 0.72rem;
-        opacity: 0.82;
-      }
+      .brand h2 { margin: 0; font-size: 1.02rem; font-weight: 700; line-height: 1.2; }
+      .brand p { margin: 2px 0 0; font-size: 0.72rem; opacity: 0.82; }
 
       .seller-chip {
         flex-shrink: 0;
@@ -299,15 +272,8 @@
         flex-shrink: 0;
       }
 
-      .customer-bar .who strong {
-        display: block;
-        font-size: 0.88rem;
-      }
-
-      .customer-bar .who span {
-        color: var(--ink-soft);
-        font-size: 0.72rem;
-      }
+      .customer-bar .who strong { display: block; font-size: 0.88rem; }
+      .customer-bar .who span { color: var(--ink-soft); font-size: 0.72rem; }
 
       .tag {
         margin-left: auto;
@@ -331,95 +297,72 @@
         appearance: none;
         border: none;
         background: transparent;
-        padding: 11px 4px 10px;
+        padding: 11px 2px 10px;
         font: inherit;
-        font-size: 0.78rem;
+        font-size: 0.76rem;
         font-weight: 600;
         color: var(--ink-soft);
         cursor: pointer;
         position: relative;
-        transition: color 0.18s ease;
       }
 
-      .nav-tabs button.active {
-        color: var(--brand);
-      }
+      .nav-tabs button.active { color: var(--brand); }
 
       .nav-tabs button.active::after {
         content: "";
         position: absolute;
-        left: 18%;
-        right: 18%;
+        left: 16%;
+        right: 16%;
         bottom: 0;
         height: 2.5px;
         border-radius: 2px 2px 0 0;
         background: var(--brand);
-        animation: tabIn 0.25s ease;
       }
 
-      @keyframes tabIn {
-        from {
-          transform: scaleX(0.4);
-          opacity: 0.4;
-        }
-        to {
-          transform: scaleX(1);
-          opacity: 1;
-        }
+      .nav-tabs .badge {
+        display: inline-grid;
+        place-items: center;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        margin-left: 2px;
+        border-radius: 999px;
+        background: #ff4d4f;
+        color: #fff;
+        font-size: 0.64rem;
+        vertical-align: text-top;
       }
 
       .sb-scroll {
         flex: 1;
         overflow: auto;
         padding: 12px;
+        padding-bottom: 18px;
       }
 
-      .panel {
-        display: none;
-        animation: fadePanel 0.28s ease both;
-      }
-
-      .panel.active {
-        display: block;
-      }
+      .panel { display: none; animation: fadePanel 0.28s ease both; }
+      .panel.active { display: block; }
 
       @keyframes fadePanel {
-        from {
-          opacity: 0;
-          transform: translateY(6px);
-        }
-        to {
-          opacity: 1;
-          transform: none;
-        }
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: none; }
       }
 
-      .steps {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 12px;
-      }
+      .steps { display: flex; gap: 5px; margin-bottom: 12px; }
 
       .step {
         flex: 1;
         text-align: center;
-        font-size: 0.68rem;
+        font-size: 0.64rem;
         color: var(--ink-soft);
-        padding: 6px 4px;
+        padding: 6px 2px;
         border-radius: 8px;
         background: #e7edf6;
         font-weight: 600;
       }
 
-      .step.on {
-        background: var(--brand-soft);
-        color: var(--brand-deep);
-      }
-
-      .step.done {
-        background: #dff5ea;
-        color: var(--ok);
-      }
+      .step.on { background: var(--brand-soft); color: var(--brand-deep); }
+      .step.done { background: #dff5ea; color: var(--ok); }
 
       .block {
         background: var(--panel);
@@ -433,6 +376,19 @@
         margin: 0 0 8px;
         font-size: 0.82rem;
         font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .block h3 .count {
+        margin-left: auto;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--brand);
+        background: var(--brand-soft);
+        border-radius: 999px;
+        padding: 2px 8px;
       }
 
       .hint {
@@ -442,11 +398,7 @@
         line-height: 1.45;
       }
 
-      textarea,
-      input[type="text"],
-      input[type="search"],
-      input[type="date"],
-      select {
+      textarea, input[type="text"], input[type="search"], input[type="date"], input[type="number"], select {
         width: 100%;
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -456,21 +408,14 @@
         background: #fff;
         color: var(--ink);
         outline: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
 
-      textarea:focus,
-      input:focus,
-      select:focus {
+      textarea:focus, input:focus, select:focus {
         border-color: #8eb0f0;
         box-shadow: 0 0 0 3px rgba(43, 109, 229, 0.12);
       }
 
-      textarea {
-        min-height: 72px;
-        resize: vertical;
-        line-height: 1.45;
-      }
+      textarea { min-height: 68px; resize: vertical; line-height: 1.45; }
 
       .media-row {
         display: grid;
@@ -479,13 +424,12 @@
         margin-top: 8px;
       }
 
-      .upload-box,
-      .hold-talk {
+      .upload-box, .hold-talk {
         border-radius: 8px;
         min-height: 44px;
         display: grid;
         place-items: center;
-        font-size: 0.78rem;
+        font-size: 0.76rem;
         font-weight: 600;
         cursor: pointer;
         user-select: none;
@@ -500,14 +444,11 @@
       .hold-talk {
         background: #f3f6fb;
         border: 1px solid var(--line);
-        color: var(--ink);
       }
 
-      .hold-talk:active,
       .hold-talk.pressing {
         background: var(--brand-soft);
         color: var(--brand-deep);
-        border-color: #9cbcf0;
       }
 
       .btn {
@@ -516,16 +457,14 @@
         border-radius: 10px;
         padding: 11px 14px;
         font: inherit;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         font-weight: 700;
         cursor: pointer;
         width: 100%;
-        transition: transform 0.12s ease, background 0.15s ease, opacity 0.15s ease;
+        transition: transform 0.12s ease, background 0.15s ease;
       }
 
-      .btn:active {
-        transform: scale(0.985);
-      }
+      .btn:active { transform: scale(0.985); }
 
       .btn-primary {
         background: linear-gradient(180deg, #3a7aef, var(--brand));
@@ -534,21 +473,22 @@
         margin-top: 10px;
       }
 
-      .btn-primary:hover {
-        background: linear-gradient(180deg, #3371e4, var(--brand-deep));
-      }
-
-      .btn-ghost {
-        background: #eef2f8;
-        color: var(--ink);
+      .btn-ghost { background: #eef2f8; color: var(--ink); margin-top: 8px; }
+      .btn-soft { background: var(--brand-soft); color: var(--brand-deep); margin-top: 8px; }
+      .btn-dark {
+        background: linear-gradient(180deg, #2a3b58, #1a2740);
+        color: #fff;
         margin-top: 8px;
       }
 
-      .btn-soft {
-        background: var(--brand-soft);
-        color: var(--brand-deep);
+      .btn-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
         margin-top: 8px;
       }
+
+      .btn-row .btn { margin-top: 0; }
 
       .table-wrap {
         overflow: auto;
@@ -560,13 +500,12 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.72rem;
-        min-width: 420px;
+        font-size: 0.7rem;
+        min-width: 400px;
       }
 
-      th,
-      td {
-        padding: 8px 6px;
+      th, td {
+        padding: 7px 5px;
         border-bottom: 1px solid var(--line);
         text-align: left;
         vertical-align: middle;
@@ -583,9 +522,9 @@
         width: 100%;
         border: 1px solid transparent;
         background: transparent;
-        padding: 4px 2px;
+        padding: 3px 2px;
         font: inherit;
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         border-radius: 4px;
       }
 
@@ -601,12 +540,9 @@
         color: #9aa8b8;
         cursor: pointer;
         font-size: 0.95rem;
-        padding: 0 4px;
       }
 
-      .row-del:hover {
-        color: var(--danger);
-      }
+      .row-del:hover { color: var(--danger); }
 
       .table-actions {
         display: flex;
@@ -620,7 +556,7 @@
         background: none;
         color: var(--brand);
         font: inherit;
-        font-size: 0.78rem;
+        font-size: 0.76rem;
         font-weight: 600;
         cursor: pointer;
         padding: 0;
@@ -647,11 +583,7 @@
         margin-bottom: 10px;
       }
 
-      .list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
+      .list { display: flex; flex-direction: column; gap: 8px; }
 
       .item {
         background: var(--panel);
@@ -662,49 +594,28 @@
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
 
-      .item:hover,
-      .item.open {
+      .item:hover, .item.open {
         border-color: #9cbcf0;
         box-shadow: 0 6px 16px rgba(43, 109, 229, 0.08);
       }
 
-      .item-head {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .item-head strong {
-        font-size: 0.84rem;
-      }
+      .item-head { display: flex; align-items: center; gap: 8px; }
+      .item-head strong { font-size: 0.82rem; }
 
       .status {
         margin-left: auto;
-        font-size: 0.68rem;
+        font-size: 0.66rem;
         font-weight: 700;
         border-radius: 999px;
         padding: 3px 8px;
       }
 
-      .status.shipping {
-        background: #fff4df;
-        color: var(--warn);
-      }
-
-      .status.done {
-        background: #dff5ea;
-        color: var(--ok);
-      }
-
-      .status.wait {
-        background: var(--brand-soft);
-        color: var(--brand-deep);
-      }
-
-      .status.void {
-        background: #f1f3f6;
-        color: #7a8796;
-      }
+      .status.shipping { background: #fff4df; color: var(--warn); }
+      .status.done { background: #dff5ea; color: var(--ok); }
+      .status.wait { background: var(--brand-soft); color: var(--brand-deep); }
+      .status.void { background: #f1f3f6; color: #7a8796; }
+      .status.sent { background: #e8f0ff; color: var(--brand-deep); }
+      .status.bargain { background: #fff0e8; color: #c2410c; }
 
       .item-sub {
         margin-top: 6px;
@@ -719,14 +630,10 @@
         padding-top: 10px;
         border-top: 1px dashed var(--line);
         font-size: 0.74rem;
-        color: var(--ink);
         line-height: 1.55;
       }
 
-      .item.open .item-detail {
-        display: block;
-        animation: fadePanel 0.25s ease;
-      }
+      .item.open .item-detail { display: block; animation: fadePanel 0.25s ease; }
 
       .item-actions {
         display: grid;
@@ -738,19 +645,171 @@
       .item-actions .btn {
         margin: 0;
         padding: 8px 10px;
-        font-size: 0.76rem;
+        font-size: 0.74rem;
         border-radius: 8px;
       }
 
-      .stock-table th,
-      .stock-table td {
-        white-space: nowrap;
+      /* AI 方案卡 — 吸收参考图优点 */
+      .plans {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 6px;
       }
 
-      .price {
+      .plan {
+        background: var(--plan-bg);
+        color: #e8eef8;
+        border-radius: 12px;
+        padding: 12px;
+        border: 1.5px solid transparent;
+        cursor: pointer;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+      }
+
+      .plan:hover { transform: translateY(-1px); }
+
+      .plan.selected {
+        border-color: #5b9bff;
+        box-shadow: 0 0 0 1px rgba(91, 155, 255, 0.35);
+      }
+
+      .plan-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+
+      .plan-tag {
+        font-size: 0.66rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: rgba(91, 155, 255, 0.25);
+        color: #9cc4ff;
+      }
+
+      .plan-tag.best { background: rgba(7, 193, 96, 0.25); color: #7dffb0; }
+      .plan-tag.fast { background: rgba(255, 170, 80, 0.25); color: #ffc98a; }
+
+      .plan .price {
+        margin-left: auto;
+        font-family: var(--display);
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .plan .price small {
+        font-size: 0.68rem;
+        font-weight: 500;
+        opacity: 0.75;
+      }
+
+      .plan-meta {
+        font-size: 0.72rem;
+        color: rgba(232, 238, 248, 0.72);
+        line-height: 1.45;
+      }
+
+      /* 报价清单 */
+      .cart-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px 10px;
+        padding: 10px 0;
+        border-bottom: 1px dashed var(--line);
+        font-size: 0.78rem;
+      }
+
+      .cart-item:last-child { border-bottom: none; }
+
+      .cart-item .title { font-weight: 700; }
+      .cart-item .meta { color: var(--ink-soft); font-size: 0.7rem; grid-column: 1 / -1; }
+
+      .cart-item .price-edit {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 700;
         color: #c2410c;
+      }
+
+      .cart-item .price-edit input {
+        width: 72px;
+        padding: 4px 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #c2410c;
+        text-align: right;
+      }
+
+      .cart-sum {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+        font-size: 0.82rem;
         font-weight: 700;
       }
+
+      .cart-sum .total { color: #c2410c; font-size: 1.05rem; }
+
+      .mp-box {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #f3f8ff, #eef6f1);
+        border: 1px solid #d5e4f7;
+        font-size: 0.74rem;
+        line-height: 1.5;
+      }
+
+      .mp-box code {
+        display: block;
+        margin-top: 6px;
+        padding: 8px;
+        border-radius: 8px;
+        background: #fff;
+        border: 1px solid var(--line);
+        font-size: 0.7rem;
+        color: var(--brand-deep);
+        word-break: break-all;
+      }
+
+      .pdf-preview {
+        margin-top: 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fafbfd;
+        padding: 12px;
+        font-size: 0.74rem;
+        line-height: 1.55;
+        display: none;
+      }
+
+      .pdf-preview.show { display: block; animation: fadePanel 0.25s ease; }
+
+      .pdf-preview h4 {
+        margin: 0 0 8px;
+        font-size: 0.84rem;
+        text-align: center;
+      }
+
+      .pdf-preview .pdf-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 4px 0;
+        border-bottom: 1px dotted #dde3ec;
+      }
+
+      .hist-table { min-width: 0; }
+
+      .hist-table td, .hist-table th { font-size: 0.68rem; }
 
       .toast {
         position: absolute;
@@ -769,20 +828,17 @@
         z-index: 5;
       }
 
-      .toast.show {
-        opacity: 1;
-        transform: none;
-      }
+      .toast.show { opacity: 1; transform: none; }
 
       .empty {
         text-align: center;
         color: var(--ink-soft);
         font-size: 0.8rem;
-        padding: 28px 10px;
+        padding: 20px 10px;
       }
 
       .logic-note {
-        max-width: 1180px;
+        max-width: 1200px;
         margin: 18px auto 0;
         background: rgba(255, 255, 255, 0.72);
         border: 1px solid rgba(255, 255, 255, 0.9);
@@ -794,33 +850,14 @@
         animation: rise 0.55s ease 0.12s both;
       }
 
-      .logic-note h3 {
-        margin: 0 0 8px;
-        color: var(--ink);
-        font-size: 0.95rem;
-      }
-
-      .logic-note ul {
-        margin: 0;
-        padding-left: 1.15rem;
-      }
-
-      .logic-note li + li {
-        margin-top: 4px;
-      }
+      .logic-note h3 { margin: 0 0 8px; color: var(--ink); font-size: 0.95rem; }
+      .logic-note ul { margin: 0; padding-left: 1.15rem; }
+      .logic-note li + li { margin-top: 4px; }
 
       @media (max-width: 900px) {
-        .stage {
-          grid-template-columns: 1fr;
-        }
-
-        .chat-pane {
-          display: none;
-        }
-
-        .sidebar {
-          min-height: 100vh;
-        }
+        .stage { grid-template-columns: 1fr; }
+        .chat-pane { display: none; }
+        .sidebar { min-height: 100vh; }
       }
     </style>
   </head>
@@ -828,14 +865,13 @@
     <header class="page-intro">
       <h1>普讯AI销售 · 企微右侧栏</h1>
       <p>
-        面向钢铁贸易（兼配件）销售员：在客户会话旁完成
-        <strong>智能报价</strong>、<strong>查订单</strong>、<strong>查库存/价格</strong>、<strong>查发票</strong>。
-        下方为企微桌面端「聊天 + 右侧栏」高保真效果图，可点击切换模块体验交互。
+        吸收「智能报价方案 + 历史记录」优点：识别后进入
+        <strong>AI 多档方案</strong> → 汇总到<strong>报价清单</strong> →
+        一键生成 <strong>PDF + 小程序议价链接</strong>发给客户；销售侧可随时查看本客户<strong>报价历史</strong>。
       </p>
     </header>
 
-    <div class="stage" aria-label="企微会话与右侧栏效果图">
-      <!-- 左侧会话（上下文） -->
+    <div class="stage">
       <section class="chat-pane" aria-hidden="true">
         <div class="chat-top">
           <div>
@@ -846,19 +882,23 @@
         </div>
         <div class="chat-body">
           <div class="bubble customer">
-            李工，在吗？我们要一批方管，先报个价。
+            李工，方管和热轧卷板都报一下，能锁货吗？
             <div class="time">09:41</div>
           </div>
           <div class="bubble sales">
-            在的，把规格发我，我这边马上核价。
+            好，我先核价，稍后发您报价单和小程序，您可在里面再议价。
             <div class="time">09:42</div>
           </div>
           <div class="bubble customer">
-            方管 50*100*2.75 1件<br />再看看有没有现货，发票能不能开专票。
+            方管 50*100*2.75 约 12 吨<br />热轧卷板 Q235B 3.0mm 500吨 济南
             <div class="time">09:43</div>
           </div>
           <div class="bubble sales" id="chatEcho" style="display: none">
             <span id="chatEchoText"></span>
+            <div class="mp-card" id="chatMpCard" style="display: none">
+              <strong>📄 报价单 PDF 已生成</strong>
+              <span id="chatMpLink">小程序 · 进入议价页</span>
+            </div>
             <div class="time">刚刚</div>
           </div>
         </div>
@@ -868,8 +908,7 @@
         </div>
       </section>
 
-      <!-- 右侧栏 -->
-      <aside class="sidebar" aria-label="普讯AI销售右侧栏">
+      <aside class="sidebar">
         <div class="sb-header">
           <div class="brand">
             <div class="brand-mark" aria-hidden="true"></div>
@@ -890,11 +929,13 @@
           <span class="tag">当前会话</span>
         </div>
 
-        <nav class="nav-tabs" role="tablist" aria-label="功能模块">
-          <button type="button" class="active" data-tab="quote" role="tab" aria-selected="true">报价</button>
-          <button type="button" data-tab="orders" role="tab" aria-selected="false">订单</button>
-          <button type="button" data-tab="stock" role="tab" aria-selected="false">库存价格</button>
-          <button type="button" data-tab="invoice" role="tab" aria-selected="false">发票</button>
+        <nav class="nav-tabs" role="tablist">
+          <button type="button" class="active" data-tab="quote" role="tab">
+            报价<span class="badge" id="cartBadge" hidden>0</span>
+          </button>
+          <button type="button" data-tab="orders" role="tab">订单</button>
+          <button type="button" data-tab="stock" role="tab">库存价格</button>
+          <button type="button" data-tab="invoice" role="tab">发票</button>
         </nav>
 
         <div class="sb-scroll">
@@ -903,13 +944,15 @@
             <div class="steps" id="quoteSteps">
               <div class="step on" data-step="1">1 识别</div>
               <div class="step" data-step="2">2 核对</div>
-              <div class="step" data-step="3">3 回复</div>
+              <div class="step" data-step="3">3 方案</div>
+              <div class="step" data-step="4">4 清单发送</div>
             </div>
 
             <div class="block" id="quoteInputBlock">
-              <h3>回复单据 · 客户原话</h3>
-              <p class="hint">支持文字 / 语音 / 图片 / Excel / PDF，识别为钢铁贸易明细后可编辑。</p>
-              <textarea id="rawInquiry">方管 50*100*2.75 1件</textarea>
+              <h3>客户原话</h3>
+              <p class="hint">文字 / 语音 / 图片 / Excel / PDF → 识别为钢铁明细。</p>
+              <textarea id="rawInquiry">方管 50*100*2.75 约12吨
+热轧卷板 Q235B 3.0mm 500吨 济南</textarea>
               <div class="media-row">
                 <div class="upload-box" id="btnUpload">上传图片/Excel/PDF</div>
                 <div class="hold-talk" id="btnTalk">按住 说话</div>
@@ -919,7 +962,7 @@
 
             <div class="block" id="quoteTableBlock" hidden>
               <h3>识别结果 · 请核对</h3>
-              <p class="hint">材质、产地、重量可补全；确认后生成报价回复。</p>
+              <p class="hint">补全材质/产地/吨位后，生成 AI 报价方案。</p>
               <div class="table-wrap">
                 <table>
                   <thead>
@@ -928,9 +971,9 @@
                       <th>品种</th>
                       <th>规格</th>
                       <th>材质</th>
-                      <th>产地</th>
+                      <th>产地/到站</th>
                       <th>数量</th>
-                      <th>重量(吨)</th>
+                      <th>吨位</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -941,16 +984,72 @@
                 <button type="button" class="linkish" id="btnAddRow">+ 增行</button>
                 <button type="button" class="linkish" id="btnClearRows">清空</button>
               </div>
-              <button type="button" class="btn btn-primary" id="btnConfirmQuote">确认并报价</button>
+              <button type="button" class="btn btn-primary" id="btnGenPlans">生成 AI 报价方案</button>
               <button type="button" class="btn btn-ghost" id="btnBackRecognize">返回修改原话</button>
             </div>
 
-            <div class="block" id="quoteReplyBlock" hidden>
-              <h3>建议回复（可编辑）</h3>
-              <p class="hint">已按现货价生成；可改价后一键发到当前会话。</p>
-              <textarea id="suggestReply"></textarea>
-              <button type="button" class="btn btn-primary" id="btnSendCustomer">发送给客户</button>
-              <button type="button" class="btn btn-soft" id="btnToStock">去核库存/价格</button>
+            <div class="block" id="quotePlanBlock" hidden>
+              <h3>AI 报价方案</h3>
+              <p class="hint">参考多档策略：优价 / 均衡 / 保障到货，选一档后加入清单（可改单价）。</p>
+              <div class="plans" id="planList"></div>
+              <button type="button" class="btn btn-primary" id="btnAddToCart">将本批明细加入报价清单</button>
+              <button type="button" class="btn btn-ghost" id="btnBackTable">返回核对明细</button>
+            </div>
+
+            <div class="block" id="quoteCartBlock" hidden>
+              <h3>
+                报价清单
+                <span class="count" id="cartCountLabel">0 项</span>
+              </h3>
+              <p class="hint">可继续从「库存价格」加入更多行；确认后一次性发给客户。</p>
+              <div id="cartList"></div>
+              <div class="cart-sum">
+                <span>预估合计</span>
+                <span class="total" id="cartTotal">¥0</span>
+              </div>
+
+              <div class="mp-box">
+                <strong>客户议价入口（随 PDF 一并发送）</strong><br />
+                客户打开小程序可对本次报价单自行改价/留言，销售端实时可见。
+                <code id="mpLinkText">小程序://普讯议价/pages/quote?id=（生成后填入）</code>
+              </div>
+
+              <div class="pdf-preview" id="pdfPreview">
+                <h4>普讯报价单 · 华建物资</h4>
+                <div id="pdfBody"></div>
+                <p style="margin: 10px 0 0; color: var(--ink-soft); font-size: 0.7rem; text-align: center">
+                  底部附：小程序议价链接 · 有效期 7 天
+                </p>
+              </div>
+
+              <div class="btn-row">
+                <button type="button" class="btn btn-dark" id="btnGenPdf">生成 PDF</button>
+                <button type="button" class="btn btn-primary" id="btnSendPackage">发给客户</button>
+              </div>
+              <button type="button" class="btn btn-soft" id="btnContinueAdd">继续添加明细</button>
+              <button type="button" class="btn btn-ghost" id="btnClearCart">清空清单</button>
+            </div>
+
+            <!-- 报价历史：销售侧常驻 -->
+            <div class="block" id="historyBlock">
+              <h3>
+                本客户报价历史
+                <span class="count" id="histCount">0</span>
+              </h3>
+              <p class="hint">右侧随时可查：已发送 / 议价中 / 已成交 / 已过期。</p>
+              <div class="table-wrap">
+                <table class="hist-table">
+                  <thead>
+                    <tr>
+                      <th>报价单</th>
+                      <th>摘要</th>
+                      <th>状态</th>
+                      <th>时间</th>
+                    </tr>
+                  </thead>
+                  <tbody id="histRows"></tbody>
+                </table>
+              </div>
             </div>
           </section>
 
@@ -958,9 +1057,9 @@
           <section class="panel" id="panel-orders" role="tabpanel" hidden>
             <div class="block">
               <h3>查询订单</h3>
-              <p class="hint">默认带出当前客户近单；也可搜订单号、规格、日期。</p>
+              <p class="hint">默认当前客户近单；可搜订单号、规格、日期。</p>
               <div class="search-row">
-                <input type="search" id="orderQ" placeholder="订单号 / 规格 / 品名" value="" />
+                <input type="search" id="orderQ" placeholder="订单号 / 规格 / 品名" />
                 <button type="button" class="btn btn-primary" id="btnSearchOrder">查询</button>
               </div>
               <div class="filters">
@@ -979,15 +1078,14 @@
           <section class="panel" id="panel-stock" role="tabpanel" hidden>
             <div class="block">
               <h3>查询库存与价格</h3>
-              <p class="hint">按品种/规格/材质/产地检索；可将行直接「加入报价」。</p>
+              <p class="hint">检索现货后「加入报价清单」，与识别明细合并发送。</p>
               <div class="filters">
-                <input type="text" id="stockSku" placeholder="品种，如方管" value="方管" />
-                <input type="text" id="stockSpec" placeholder="规格，如 50*100*2.75" value="50*100" />
+                <input type="text" id="stockSku" placeholder="品种" value="方管" />
+                <input type="text" id="stockSpec" placeholder="规格" value="50*100" />
                 <select id="stockMaterial">
                   <option value="">材质不限</option>
                   <option>Q235B</option>
                   <option>Q355B</option>
-                  <option>20#</option>
                 </select>
                 <select id="stockOrigin">
                   <option value="">产地不限</option>
@@ -1001,12 +1099,12 @@
             <div class="block" id="stockResultBlock" hidden>
               <h3>查询结果</h3>
               <div class="table-wrap">
-                <table class="stock-table">
+                <table>
                   <thead>
                     <tr>
                       <th>品种规格</th>
                       <th>材质/产地</th>
-                      <th>库存(吨)</th>
+                      <th>库存</th>
                       <th>挂牌价</th>
                       <th></th>
                     </tr>
@@ -1021,7 +1119,7 @@
           <section class="panel" id="panel-invoice" role="tabpanel" hidden>
             <div class="block">
               <h3>查询发票</h3>
-              <p class="hint">按发票号、关联订单或开票月查询；可生成发送给客户的说明。</p>
+              <p class="hint">按发票号、订单或开票月查询。</p>
               <div class="search-row">
                 <input type="search" id="invoiceQ" placeholder="发票号 / 订单号 / 税号" />
                 <button type="button" class="btn btn-primary" id="btnSearchInvoice">查询</button>
@@ -1048,13 +1146,12 @@
     </div>
 
     <section class="logic-note">
-      <h3>交互逻辑说明（效果图对应）</h3>
+      <h3>本次增强的交互逻辑</h3>
       <ul>
-        <li><strong>客户上下文常驻</strong>：四个模块都绑定当前企微会话客户，避免反复选择。</li>
-        <li><strong>报价三步</strong>：识别 → 核对明细（品种/规格/材质/产地/数量/吨位）→ 编辑建议回复并发送；可跳转库存核价。</li>
-        <li><strong>订单</strong>：默认当前客户近单；展开看明细与物流；一键生成进度回复。</li>
-        <li><strong>库存价格</strong>：检索现货与挂牌价；「加入报价」回写报价核对表，减少重复录入。</li>
-        <li><strong>发票</strong>：查已开/待开；复制抬头信息或生成发票进度话术发回会话。</li>
+        <li><strong>AI 多档方案</strong>（吸收参考图）：优价 / 均衡 / 保障到货，选档后再入清单。</li>
+        <li><strong>报价清单</strong>：多来源（识别 + 库存）汇总，可改单价，预估合计。</li>
+        <li><strong>一次性发给客户</strong>：生成 PDF 报价单，底部附带<strong>小程序议价链接</strong>，客户可自行进页议价。</li>
+        <li><strong>报价历史</strong>：侧栏底部常驻本客户记录（已发送 / 议价中 / 已成交 / 已过期），方便销售跟进。</li>
       </ul>
     </section>
 
@@ -1064,6 +1161,74 @@
       const state = {
         quoteStep: 1,
         rows: [],
+        selectedPlan: "balanced",
+        cart: [],
+        quoteId: null,
+        pdfReady: false,
+        history: [
+          {
+            id: "QT20260815012",
+            summary: "镀锌管 48*3.0 · 8.2吨",
+            status: "done",
+            statusText: "已成交",
+            time: "08-15",
+            amount: 45100,
+          },
+          {
+            id: "QT20260810007",
+            summary: "角钢 50*50*5 · 6吨",
+            status: "void",
+            statusText: "已过期",
+            time: "08-10",
+            amount: 28800,
+          },
+          {
+            id: "QT20260805003",
+            summary: "槽钢 16# · 10吨",
+            status: "sent",
+            statusText: "已发送",
+            time: "08-05",
+            amount: 36500,
+          },
+        ],
+      };
+
+      const plansMeta = {
+        best: {
+          tag: "优价",
+          tagClass: "best",
+          label: "最优成本",
+          factor: 0.98,
+          lead: "7 天",
+          supplier: "资源 A · 大户长协",
+          note: "价格最优，交期稍长",
+        },
+        balanced: {
+          tag: "均衡",
+          tagClass: "",
+          label: "均衡推荐",
+          factor: 1,
+          lead: "5 天",
+          supplier: "资源 B · 现货+期货",
+          note: "价格与交期平衡（推荐）",
+        },
+        fast: {
+          tag: "保障",
+          tagClass: "fast",
+          label: "保障到货",
+          factor: 1.025,
+          lead: "3 天",
+          supplier: "资源 C · 本地现货",
+          note: "优先锁库，交期最短",
+        },
+      };
+
+      const basePriceMap = {
+        方管: 5000,
+        热轧卷板: 4280,
+        镀锌管: 5500,
+        角钢: 4800,
+        槽钢: 4650,
       };
 
       const demoOrders = [
@@ -1073,9 +1238,8 @@
           status: "shipping",
           statusText: "在途",
           sub: "方管 50*100*2.75 · 12.6 吨 · ¥63,000 · 08-18",
-          detail:
-            "明细：方管 50*100*2.75 / Q235B / 津西 · 12.6 吨<br/>物流：顺丰快运 SF1489**** · 预计明日到厂<br/>收货：华建物资仓库",
-          reply: "李工，您这单 SO20260818021 已发运，顺丰快运单号 SF1489****，预计明日到贵司仓库。",
+          detail: "物流：顺丰快运 SF1489**** · 预计明日到厂",
+          reply: "李工，SO20260818021 已发运，单号 SF1489****，预计明日到贵司仓库。",
         },
         {
           id: "SO20260805008",
@@ -1083,42 +1247,15 @@
           status: "done",
           statusText: "已完成",
           sub: "镀锌管 48*3.0 · 8.2 吨 · ¥45,100 · 08-05",
-          detail: "明细：镀锌管 48*3.0 / Q235 · 8.2 吨<br/>签收：08-07 已签收<br/>开票：已关联专票 3102****",
-          reply: "李工，SO20260805008 已签收完成，专票已开，需要我把发票信息再发您一份吗？",
-        },
-        {
-          id: "SO20260722015",
-          title: "SO20260722015",
-          status: "done",
-          statusText: "已完成",
-          sub: "角钢 50*50*5 · 6.0 吨 · ¥28,800 · 07-22",
-          detail: "明细：角钢 50*50*5 / Q235B / 唐山 · 6.0 吨<br/>状态：已完成结算",
-          reply: "李工，SO20260722015 已完成结算。如需复购同规格可直接说，我帮您核最新价。",
+          detail: "签收：08-07 · 已关联专票",
+          reply: "李工，SO20260805008 已签收完成，专票已开。",
         },
       ];
 
       const demoStock = [
-        {
-          name: "方管 50*100*2.75",
-          meta: "Q235B / 津西",
-          ton: "86.4",
-          price: "5000",
-          warehouse: "一号库",
-        },
-        {
-          name: "方管 50*100*2.5",
-          meta: "Q235B / 唐山",
-          ton: "42.0",
-          price: "4980",
-          warehouse: "二号库",
-        },
-        {
-          name: "方管 60*120*3.0",
-          meta: "Q355B / 包钢",
-          ton: "18.5",
-          price: "5320",
-          warehouse: "一号库",
-        },
+        { name: "方管 50*100*2.75", meta: "Q235B / 津西", ton: "86.4", price: "5000", warehouse: "一号库" },
+        { name: "方管 50*100*2.5", meta: "Q235B / 唐山", ton: "42.0", price: "4980", warehouse: "二号库" },
+        { name: "热轧卷板 3.0mm", meta: "Q235B / 济南仓", ton: "1200", price: "4280", warehouse: "卷板仓" },
       ];
 
       const demoInvoices = [
@@ -1127,22 +1264,27 @@
           title: "专票 3102****0819",
           status: "done",
           statusText: "已开具",
-          sub: "关联 SO20260805008 · 金额 ¥45,100 · 华建物资",
-          detail:
-            "购方：华建物资有限公司<br/>税号：9131**********8X<br/>金额（含税）：¥45,100.00<br/>开票日期：2026-08-08",
-          reply:
-            "李工，专票已开好：发票号码 3102****0819，金额 45100 元，购方华建物资。需要我把 PDF 发您邮箱吗？",
+          sub: "关联 SO20260805008 · ¥45,100",
+          detail: "购方：华建物资有限公司<br/>税号：9131**********8X",
+          reply: "李工，专票 3102****0819 已开好，金额 45100 元。",
         },
         {
           id: "INV-WAIT-021",
-          title: "待开 · 关联 SO20260818021",
+          title: "待开 · SO20260818021",
           status: "wait",
           statusText: "待开具",
-          sub: "预计到货签收后开专票 · ¥63,000",
-          detail: "申请类型：增值税专用发票<br/>预计节点：客户签收后 1 个工作日<br/>抬头：华建物资有限公司",
-          reply: "李工，这单到货签收后我们会开专票（抬头华建物资），开好第一时间发您。",
+          sub: "签收后开专票 · ¥63,000",
+          detail: "抬头：华建物资有限公司",
+          reply: "李工，到货签收后开专票，开好第一时间发您。",
         },
       ];
+
+      function esc(s) {
+        return String(s ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll('"', "&quot;");
+      }
 
       function toast(msg) {
         const el = $("toast");
@@ -1150,6 +1292,13 @@
         el.classList.add("show");
         clearTimeout(toast._t);
         toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+      }
+
+      function basePrice(sku) {
+        for (const k of Object.keys(basePriceMap)) {
+          if ((sku || "").includes(k)) return basePriceMap[k];
+        }
+        return 4800;
       }
 
       function setQuoteStep(step) {
@@ -1161,13 +1310,26 @@
         });
         $("quoteInputBlock").hidden = step !== 1;
         $("quoteTableBlock").hidden = step !== 2;
-        $("quoteReplyBlock").hidden = step !== 3;
+        $("quotePlanBlock").hidden = step !== 3;
+        $("quoteCartBlock").hidden = step !== 4;
+        if (step === 4) renderCart();
+      }
+
+      function switchTab(tab) {
+        document.querySelectorAll(".nav-tabs button").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.tab === tab);
+        });
+        document.querySelectorAll(".panel").forEach((p) => {
+          const on = p.id === `panel-${tab}`;
+          p.classList.toggle("active", on);
+          p.hidden = !on;
+        });
       }
 
       function renderQuoteRows() {
         const body = $("quoteRows");
         if (!state.rows.length) {
-          body.innerHTML = `<tr><td colspan="8" class="empty">暂无明细，请返回识别或增行</td></tr>`;
+          body.innerHTML = `<tr><td colspan="8" class="empty">暂无明细</td></tr>`;
           return;
         }
         body.innerHTML = state.rows
@@ -1177,50 +1339,103 @@
             <td>${i + 1}</td>
             <td><input value="${esc(r.sku)}" data-k="sku" /></td>
             <td><input value="${esc(r.spec)}" data-k="spec" /></td>
-            <td><input value="${esc(r.material)}" data-k="material" placeholder="如 Q235B" /></td>
-            <td><input value="${esc(r.origin)}" data-k="origin" placeholder="如 津西" /></td>
+            <td><input value="${esc(r.material)}" data-k="material" placeholder="Q235B" /></td>
+            <td><input value="${esc(r.origin)}" data-k="origin" placeholder="产地/到站" /></td>
             <td><input value="${esc(r.qty)}" data-k="qty" /></td>
-            <td><input value="${esc(r.weight)}" data-k="weight" placeholder="可空" /></td>
-            <td><button type="button" class="row-del" data-del="${i}" aria-label="删除">×</button></td>
+            <td><input value="${esc(r.weight)}" data-k="weight" placeholder="吨" /></td>
+            <td><button type="button" class="row-del" data-del="${i}">×</button></td>
           </tr>`
           )
           .join("");
       }
 
-      function esc(s) {
-        return String(s ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll('"', "&quot;");
+      function renderPlans() {
+        const root = $("planList");
+        root.innerHTML = Object.entries(plansMeta)
+          .map(([key, p]) => {
+            const sample = state.rows[0] || { sku: "方管" };
+            const price = Math.round(basePrice(sample.sku) * p.factor);
+            const selected = state.selectedPlan === key ? "selected" : "";
+            return `
+              <div class="plan ${selected}" data-plan="${key}">
+                <div class="plan-top">
+                  <span class="plan-tag ${p.tagClass}">${p.tag}</span>
+                  <span style="font-size:0.78rem;font-weight:600">${p.label}</span>
+                  <div class="price">¥${price.toLocaleString()}<small>/吨起</small></div>
+                </div>
+                <div class="plan-meta">${p.supplier} · 交期约 ${p.lead}<br/>${p.note}</div>
+              </div>`;
+          })
+          .join("");
       }
 
-      function switchTab(tab) {
-        document.querySelectorAll(".nav-tabs button").forEach((btn) => {
-          const on = btn.dataset.tab === tab;
-          btn.classList.toggle("active", on);
-          btn.setAttribute("aria-selected", on ? "true" : "false");
-        });
-        document.querySelectorAll(".panel").forEach((p) => {
-          const on = p.id === `panel-${tab}`;
-          p.classList.toggle("active", on);
-          p.hidden = !on;
-        });
+      function updateCartBadge() {
+        const n = state.cart.length;
+        const badge = $("cartBadge");
+        if (n > 0) {
+          badge.hidden = false;
+          badge.textContent = String(n);
+        } else {
+          badge.hidden = true;
+        }
+        $("cartCountLabel").textContent = `${n} 项`;
+      }
+
+      function cartAmount(item) {
+        const w = Number(item.weight) || 1;
+        return Math.round(Number(item.price) * w);
+      }
+
+      function renderCart() {
+        updateCartBadge();
+        const root = $("cartList");
+        if (!state.cart.length) {
+          root.innerHTML = `<div class="empty">清单为空，请先加入明细</div>`;
+          $("cartTotal").textContent = "¥0";
+          return;
+        }
+        root.innerHTML = state.cart
+          .map(
+            (c, i) => `
+          <div class="cart-item" data-i="${i}">
+            <div class="title">${esc(c.sku)} ${esc(c.spec)}</div>
+            <div class="price-edit">
+              ¥<input type="number" data-price="${i}" value="${esc(c.price)}" />
+              <span>/吨</span>
+            </div>
+            <div class="meta">${esc(c.material || "—")} / ${esc(c.origin || "—")} · ${esc(c.weight || c.qty)} · ${esc(c.planTag || "")}</div>
+            <button type="button" class="linkish" data-rm="${i}" style="justify-self:end">移除</button>
+          </div>`
+          )
+          .join("");
+        const total = state.cart.reduce((s, c) => s + cartAmount(c), 0);
+        $("cartTotal").textContent = `¥${total.toLocaleString()}`;
+        if (state.quoteId) {
+          $("mpLinkText").textContent = `小程序://普讯议价/pages/quote?id=${state.quoteId}`;
+        }
+      }
+
+      function renderHistory() {
+        $("histCount").textContent = String(state.history.length);
+        $("histRows").innerHTML = state.history
+          .map(
+            (h) => `
+          <tr>
+            <td>${esc(h.id)}</td>
+            <td>${esc(h.summary)}</td>
+            <td><span class="status ${esc(h.status)}">${esc(h.statusText)}</span></td>
+            <td>${esc(h.time)}</td>
+          </tr>`
+          )
+          .join("");
       }
 
       function statusClass(s) {
-        if (s === "shipping") return "shipping";
-        if (s === "done") return "done";
-        if (s === "wait") return "wait";
-        return "void";
+        return s;
       }
 
       function renderOrders(list) {
-        const root = $("orderList");
-        if (!list.length) {
-          root.innerHTML = `<div class="empty">未找到订单，试试改关键词或日期</div>`;
-          return;
-        }
-        root.innerHTML = list
+        $("orderList").innerHTML = list
           .map(
             (o) => `
           <article class="item" data-id="${esc(o.id)}">
@@ -1249,21 +1464,16 @@
           <tr>
             <td>${esc(s.name)}<div class="item-sub">${esc(s.warehouse)}</div></td>
             <td>${esc(s.meta)}</td>
-            <td>${esc(s.ton)}</td>
-            <td class="price">¥${esc(s.price)}/吨</td>
-            <td><button type="button" class="linkish" data-add-stock="${i}">加入报价</button></td>
+            <td>${esc(s.ton)}吨</td>
+            <td style="color:#c2410c;font-weight:700">¥${esc(s.price)}</td>
+            <td><button type="button" class="linkish" data-add-stock="${i}">加入清单</button></td>
           </tr>`
           )
           .join("");
       }
 
       function renderInvoices(list) {
-        const root = $("invoiceList");
-        if (!list.length) {
-          root.innerHTML = `<div class="empty">未找到发票记录</div>`;
-          return;
-        }
-        root.innerHTML = list
+        $("invoiceList").innerHTML = list
           .map(
             (inv) => `
           <article class="item" data-id="${esc(inv.id)}">
@@ -1275,8 +1485,8 @@
             <div class="item-detail">
               ${inv.detail}
               <div class="item-actions">
-                <button type="button" class="btn btn-soft" data-act="reply" data-reply="${esc(inv.reply)}">发送说明给客户</button>
-                <button type="button" class="btn btn-ghost" data-act="copy-title">复制抬头税号</button>
+                <button type="button" class="btn btn-soft" data-act="reply" data-reply="${esc(inv.reply)}">发送说明</button>
+                <button type="button" class="btn btn-ghost" data-act="copy-title">复制抬头</button>
               </div>
             </div>
           </article>`
@@ -1284,49 +1494,54 @@
           .join("");
       }
 
-      function sendToChat(text) {
+      function sendToChat(text, withMp) {
         $("chatEcho").style.display = "block";
         $("chatEchoText").textContent = text;
+        const mp = $("chatMpCard");
+        if (withMp && state.quoteId) {
+          mp.style.display = "block";
+          $("chatMpLink").textContent = `小程序 · 议价页 ${state.quoteId}`;
+        } else {
+          mp.style.display = "none";
+        }
         toast("已发送到当前客户会话（效果图演示）");
       }
 
-      // —— 绑定 ——
+      function newQuoteId() {
+        const d = new Date();
+        const stamp =
+          d.getFullYear().toString() +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          String(d.getDate()).padStart(2, "0") +
+          String(Math.floor(Math.random() * 900) + 100);
+        return `QT${stamp}`;
+      }
+
+      // —— 事件 ——
       document.querySelectorAll(".nav-tabs button").forEach((btn) => {
         btn.addEventListener("click", () => switchTab(btn.dataset.tab));
       });
 
       $("btnRecognize").addEventListener("click", () => {
         const raw = $("rawInquiry").value.trim();
-        if (!raw) {
-          toast("请先填写或上传客户原话");
-          return;
-        }
+        if (!raw) return toast("请先填写客户原话");
         state.rows = [
-          {
-            sku: "方管",
-            spec: "50*100*2.75",
-            material: "",
-            origin: "",
-            qty: "1件",
-            weight: "",
-          },
+          { sku: "方管", spec: "50*100*2.75", material: "Q235B", origin: "津西", qty: "约12吨", weight: "12" },
+          { sku: "热轧卷板", spec: "3.0mm", material: "Q235B", origin: "济南", qty: "500吨", weight: "500" },
         ];
-        // 简单再解析：若含多段可扩展；此处演示主流程
-        if (/镀锌|角钢|圆钢|槽钢/.test(raw)) {
-          state.rows[0].sku = raw.match(/镀锌管|角钢|圆钢|槽钢|方管/)?.[0] || "方管";
-        }
+        if (!/热轧|卷板/.test(raw)) state.rows = state.rows.slice(0, 1);
         renderQuoteRows();
         setQuoteStep(2);
-        toast("已识别 1 行明细，请核对材质/产地");
+        toast(`已识别 ${state.rows.length} 行明细`);
       });
 
       $("btnBackRecognize").addEventListener("click", () => setQuoteStep(1));
+      $("btnBackTable").addEventListener("click", () => setQuoteStep(2));
 
       $("quoteRows").addEventListener("input", (e) => {
         const input = e.target.closest("input[data-k]");
         if (!input) return;
-        const tr = input.closest("tr");
-        const i = Number(tr.dataset.i);
+        const i = Number(input.closest("tr").dataset.i);
         state.rows[i][input.dataset.k] = input.value;
       });
 
@@ -1347,47 +1562,130 @@
         renderQuoteRows();
       });
 
-      $("btnConfirmQuote").addEventListener("click", () => {
-        if (!state.rows.length) {
-          toast("请至少保留一行明细");
-          return;
-        }
-        const r = state.rows[0];
-        const material = r.material || "Q235B";
-        const origin = r.origin || "津西";
-        const price = 5000;
-        $("suggestReply").value =
-          `李工，您好：\n` +
-          `${r.sku} ${r.spec}（${material}/${origin}）现货价约 ¥${price}/吨，` +
-          `您要的数量「${r.qty}」可当天安排。\n` +
-          `是否按此价锁货？需要我帮您核准确吨位和运费也可以说。`;
-        // 回写材质产地便于后续
-        r.material = material;
-        r.origin = origin;
+      $("btnGenPlans").addEventListener("click", () => {
+        if (!state.rows.length) return toast("请至少保留一行明细");
+        state.rows.forEach((r) => {
+          if (!r.material) r.material = "Q235B";
+          if (!r.origin) r.origin = "津西";
+          if (!r.weight) r.weight = "1";
+        });
+        renderQuoteRows();
+        renderPlans();
         setQuoteStep(3);
-        toast("已生成建议回复，可编辑后发送");
+        toast("已生成三档 AI 报价方案");
       });
 
-      $("btnSendCustomer").addEventListener("click", () => {
-        const text = $("suggestReply").value.trim();
-        if (!text) return;
-        sendToChat(text);
+      $("planList").addEventListener("click", (e) => {
+        const plan = e.target.closest("[data-plan]");
+        if (!plan) return;
+        state.selectedPlan = plan.dataset.plan;
+        renderPlans();
       });
 
-      $("btnToStock").addEventListener("click", () => {
-        switchTab("stock");
-        $("stockSku").value = state.rows[0]?.sku || "方管";
-        $("stockSpec").value = (state.rows[0]?.spec || "50*100").split("*").slice(0, 2).join("*");
-        toast("已带入当前规格，可查询库存价格");
+      $("btnAddToCart").addEventListener("click", () => {
+        const p = plansMeta[state.selectedPlan];
+        state.rows.forEach((r) => {
+          const price = Math.round(basePrice(r.sku) * p.factor);
+          state.cart.push({
+            sku: r.sku,
+            spec: r.spec,
+            material: r.material,
+            origin: r.origin,
+            qty: r.qty,
+            weight: r.weight || "1",
+            price,
+            planTag: p.tag,
+          });
+        });
+        state.pdfReady = false;
+        $("pdfPreview").classList.remove("show");
+        if (!state.quoteId) state.quoteId = newQuoteId();
+        $("mpLinkText").textContent = `小程序://普讯议价/pages/quote?id=${state.quoteId}`;
+        setQuoteStep(4);
+        toast(`已加入清单（${p.tag}方案），共 ${state.cart.length} 项`);
       });
 
-      $("btnUpload").addEventListener("click", () => toast("演示：已选择询价图片 / Excel（待识别）"));
+      $("cartList").addEventListener("input", (e) => {
+        const input = e.target.closest("[data-price]");
+        if (!input) return;
+        state.cart[Number(input.dataset.price)].price = Number(input.value) || 0;
+        const total = state.cart.reduce((s, c) => s + cartAmount(c), 0);
+        $("cartTotal").textContent = `¥${total.toLocaleString()}`;
+        state.pdfReady = false;
+        $("pdfPreview").classList.remove("show");
+      });
+
+      $("cartList").addEventListener("click", (e) => {
+        const rm = e.target.closest("[data-rm]");
+        if (!rm) return;
+        state.cart.splice(Number(rm.dataset.rm), 1);
+        renderCart();
+      });
+
+      $("btnGenPdf").addEventListener("click", () => {
+        if (!state.cart.length) return toast("清单为空");
+        if (!state.quoteId) state.quoteId = newQuoteId();
+        const total = state.cart.reduce((s, c) => s + cartAmount(c), 0);
+        $("pdfBody").innerHTML =
+          `<div class="pdf-line"><span>报价单号</span><span>${esc(state.quoteId)}</span></div>` +
+          state.cart
+            .map(
+              (c) =>
+                `<div class="pdf-line"><span>${esc(c.sku)} ${esc(c.spec)} · ${esc(c.weight)}吨</span><span>¥${Number(c.price).toLocaleString()}/吨</span></div>`
+            )
+            .join("") +
+          `<div class="pdf-line"><span>合计（估）</span><span style="color:#c2410c;font-weight:700">¥${total.toLocaleString()}</span></div>` +
+          `<div class="pdf-line"><span>议价小程序</span><span>普讯议价 / ${esc(state.quoteId)}</span></div>`;
+        $("pdfPreview").classList.add("show");
+        $("mpLinkText").textContent = `小程序://普讯议价/pages/quote?id=${state.quoteId}`;
+        state.pdfReady = true;
+        toast("PDF 报价单已生成（含小程序议价入口）");
+      });
+
+      $("btnSendPackage").addEventListener("click", () => {
+        if (!state.cart.length) return toast("清单为空");
+        if (!state.pdfReady) $("btnGenPdf").click();
+        const total = state.cart.reduce((s, c) => s + cartAmount(c), 0);
+        const summary = state.cart.map((c) => `${c.sku}${c.spec}`).join("、");
+        const text =
+          `李工，您好：\n` +
+          `已为您生成报价单 ${state.quoteId}（共 ${state.cart.length} 项，预估合计约 ¥${total.toLocaleString()}）。\n` +
+          `附件为 PDF 报价单；您也可点下方小程序进入议价页自行调整意向价，我们会同步收到。`;
+        sendToChat(text, true);
+
+        state.history.unshift({
+          id: state.quoteId,
+          summary: summary.slice(0, 22) + (summary.length > 22 ? "…" : ""),
+          status: "bargain",
+          statusText: "议价中",
+          time: "今天",
+          amount: total,
+        });
+        renderHistory();
+
+        // 重置本单 id，便于下次再发新单；清单保留供继续改
+        state.quoteId = null;
+        state.pdfReady = false;
+      });
+
+      $("btnContinueAdd").addEventListener("click", () => setQuoteStep(1));
+
+      $("btnClearCart").addEventListener("click", () => {
+        state.cart = [];
+        state.quoteId = null;
+        state.pdfReady = false;
+        $("pdfPreview").classList.remove("show");
+        renderCart();
+        toast("清单已清空");
+      });
+
+      $("btnUpload").addEventListener("click", () => toast("演示：已选择询价附件"));
       const talk = $("btnTalk");
       talk.addEventListener("mousedown", () => talk.classList.add("pressing"));
       talk.addEventListener("mouseup", () => {
         talk.classList.remove("pressing");
-        $("rawInquiry").value = "方管 50*100*2.75 要1件，有现货吗";
-        toast("语音已转写到客户原话");
+        $("rawInquiry").value = "方管 50*100*2.75 约12吨，再加一卷热轧 3.0";
+        toast("语音已转写");
       });
       talk.addEventListener("mouseleave", () => talk.classList.remove("pressing"));
 
@@ -1405,25 +1703,18 @@
         const item = e.target.closest(".item");
         if (!item) return;
         const act = e.target.closest("[data-act]");
-        if (act?.dataset.act === "reply") {
-          sendToChat(act.dataset.reply);
-          return;
-        }
-        if (act?.dataset.act === "copy") {
-          toast(`已复制订单号 ${item.dataset.id}`);
-          return;
-        }
+        if (act?.dataset.act === "reply") return sendToChat(act.dataset.reply, false);
+        if (act?.dataset.act === "copy") return toast(`已复制 ${item.dataset.id}`);
         item.classList.toggle("open");
       });
 
       $("btnSearchStock").addEventListener("click", () => {
         const sku = $("stockSku").value.trim();
-        let list = demoStock.slice();
-        if (sku) list = list.filter((s) => s.name.includes(sku));
+        let list = demoStock.filter((s) => !sku || s.name.includes(sku));
         const spec = $("stockSpec").value.trim();
         if (spec) list = list.filter((s) => s.name.includes(spec.replace(/\s/g, "")));
         renderStock(list.length ? list : demoStock);
-        toast("已刷新库存与挂牌价");
+        toast("已刷新库存价格");
       });
 
       $("stockRows").addEventListener("click", (e) => {
@@ -1431,20 +1722,21 @@
         if (!btn) return;
         const s = demoStock[Number(btn.dataset.addStock)];
         const parts = s.name.split(" ");
-        state.rows = [
-          {
-            sku: parts[0] || "方管",
-            spec: parts.slice(1).join(" ") || "",
-            material: s.meta.split(" / ")[0] || "",
-            origin: s.meta.split(" / ")[1] || "",
-            qty: "1件",
-            weight: "",
-          },
-        ];
-        renderQuoteRows();
+        state.cart.push({
+          sku: parts[0],
+          spec: parts.slice(1).join(" "),
+          material: s.meta.split(" / ")[0],
+          origin: s.meta.split(" / ")[1],
+          qty: "1吨",
+          weight: "1",
+          price: Number(s.price),
+          planTag: "现货",
+        });
+        if (!state.quoteId) state.quoteId = newQuoteId();
+        state.pdfReady = false;
         switchTab("quote");
-        setQuoteStep(2);
-        toast(`已加入报价：${s.name} · ¥${s.price}/吨`);
+        setQuoteStep(4);
+        toast(`已加入报价清单：${s.name}`);
       });
 
       $("btnSearchInvoice").addEventListener("click", () => {
@@ -1454,28 +1746,23 @@
         if (st !== "all") list = list.filter((i) => i.status === st);
         if (q) list = list.filter((i) => (i.title + i.sub + i.id).includes(q));
         renderInvoices(list);
-        toast(`找到 ${list.length} 条发票记录`);
+        toast(`找到 ${list.length} 条发票`);
       });
 
       $("invoiceList").addEventListener("click", (e) => {
         const item = e.target.closest(".item");
         if (!item) return;
         const act = e.target.closest("[data-act]");
-        if (act?.dataset.act === "reply") {
-          sendToChat(act.dataset.reply);
-          return;
-        }
-        if (act?.dataset.act === "copy-title") {
-          toast("已复制：华建物资有限公司 / 9131**********8X");
-          return;
-        }
+        if (act?.dataset.act === "reply") return sendToChat(act.dataset.reply, false);
+        if (act?.dataset.act === "copy-title") return toast("已复制抬头与税号");
         item.classList.toggle("open");
       });
 
-      // 初始
       setQuoteStep(1);
+      renderHistory();
       renderOrders(demoOrders);
       renderInvoices(demoInvoices);
+      updateCartBadge();
     </script>
   </body>
 </html>

@@ -133,11 +133,16 @@
       .customer-bar {
         background: var(--panel);
         border-bottom: 1px solid var(--line);
-        padding: 10px 12px;
+        padding: 10px 12px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .customer-bar-row {
         display: flex;
         align-items: center;
         gap: 10px;
-        flex-shrink: 0;
         cursor: pointer;
       }
       .customer-bar .avatar {
@@ -155,6 +160,17 @@
         background: var(--brand-soft); border-radius: 6px;
         padding: 3px 7px; font-weight: 600;
       }
+      .cust-tags {
+        display: flex; flex-wrap: wrap; gap: 4px;
+      }
+      .cust-tags .tag-pill {
+        font-size: 0.64rem; font-weight: 700; border-radius: 5px; padding: 2px 6px;
+        background: #eef2f8; color: var(--ink-soft);
+      }
+      .cust-tags .tag-pill.active { background: #dff5ea; color: var(--ok); }
+      .cust-tags .tag-pill.volume { background: #e8f0ff; color: var(--brand-deep); }
+      .cust-tags .tag-pill.level { background: #efe8ff; color: #6b4cc0; }
+      .cust-tags .tag-pill.profit { background: #fff4df; color: var(--warn); }
 
       .cust-insight {
         display: none;
@@ -164,15 +180,6 @@
         flex-shrink: 0;
       }
       .cust-insight.open { display: block; }
-      .cust-insight .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
-      .cust-insight .tag-pill {
-        font-size: 0.64rem; font-weight: 700; border-radius: 5px; padding: 2px 6px;
-        background: #eef2f8; color: var(--ink-soft);
-      }
-      .cust-insight .tag-pill.active { background: #dff5ea; color: var(--ok); }
-      .cust-insight .tag-pill.volume { background: #e8f0ff; color: var(--brand-deep); }
-      .cust-insight .tag-pill.level { background: #efe8ff; color: #6b4cc0; }
-      .cust-insight .tag-pill.profit { background: #fff4df; color: var(--warn); }
       .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
       .kpi { background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
       .kpi .label { font-size: 0.62rem; color: var(--ink-soft); }
@@ -593,22 +600,24 @@
               <div class="seller-chip">销售 · 黄好庭</div>
             </div>
 
-            <div class="customer-bar" id="customerBar" title="点击展开客户画像">
-              <div class="avatar" id="custAv">李</div>
-              <div class="who">
-                <strong id="custName">华建物资 · 李工</strong>
-                <span id="custMeta">欠款 ¥128,600 · 近月 86.4 吨</span>
+            <div class="customer-bar" id="customerBar">
+              <div class="customer-bar-row" id="customerBarRow" title="点击展开客户画像">
+                <div class="avatar" id="custAv">李</div>
+                <div class="who">
+                  <strong id="custName">华建物资 · 李工</strong>
+                  <span id="custMeta">欠款 ¥128,600 · 近月 86.4 吨</span>
+                </div>
+                <span class="tag" id="custInsightToggle">画像</span>
               </div>
-              <span class="tag" id="custInsightToggle">画像</span>
-            </div>
-
-            <div class="cust-insight" id="custInsight">
-              <div class="tags">
+              <div class="cust-tags" aria-label="客户标签">
                 <span class="tag-pill active">活跃</span>
                 <span class="tag-pill volume">走量</span>
                 <span class="tag-pill profit">利润</span>
                 <span class="tag-pill level">A 级</span>
               </div>
+            </div>
+
+            <div class="cust-insight" id="custInsight">
               <div class="kpi-grid">
                 <div class="kpi"><div class="label">近月采购量</div><div class="value">86.4 吨</div><div class="sub">同比 +12%</div></div>
                 <div class="kpi"><div class="label">最近采购</div><div class="value">08-07</div><div class="sub">镀锌管 8.2 吨</div></div>
@@ -1193,7 +1202,7 @@
         renderChat();
       });
 
-      $("customerBar").addEventListener("click", () => {
+      $("customerBarRow").addEventListener("click", () => {
         state.insightOpen = !state.insightOpen;
         $("custInsight").classList.toggle("open", state.insightOpen);
         $("custInsightToggle").textContent = state.insightOpen ? "收起" : "画像";

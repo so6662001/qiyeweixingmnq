@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>普讯AI销售 · 定制化推送卡片</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand: #2b6de5;
+        --brand-deep: #1d54b8;
+        --brand-soft: #e8f0ff;
+        --wx-green: #07c160;
+        --ink: #1a2332;
+        --ink-soft: #5b6b7c;
+        --line: #e6ebf2;
+        --font: "Noto Sans SC", "Sora", sans-serif;
+        --display: "Sora", "Noto Sans SC", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        font-family: var(--font);
+        color: var(--ink);
+        background:
+          radial-gradient(900px 420px at 8% -8%, rgba(43, 109, 229, 0.2), transparent 55%),
+          radial-gradient(700px 380px at 92% 0%, rgba(7, 193, 96, 0.12), transparent 50%),
+          linear-gradient(160deg, #d5e0ef, #eef2f7 45%, #e2eaf4);
+      }
+
+      body { padding: 28px 16px 48px; }
+
+      .page-intro {
+        max-width: 1180px;
+        margin: 0 auto 18px;
+        animation: rise 0.45s ease both;
+      }
+
+      .page-intro h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(1.5rem, 2.4vw, 2rem);
+        letter-spacing: -0.02em;
+      }
+
+      .page-intro p {
+        margin: 8px 0 0;
+        color: var(--ink-soft);
+        line-height: 1.55;
+        max-width: 52rem;
+        font-size: 0.94rem;
+      }
+
+      .answer {
+        max-width: 1180px;
+        margin: 0 auto 18px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: var(--ink-soft);
+        animation: rise 0.5s ease both;
+      }
+
+      .answer strong { color: var(--ink); }
+
+      .layout {
+        max-width: 1180px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+
+      @keyframes rise {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: none; }
+      }
+
+      .phone {
+        width: 100%;
+        max-width: 360px;
+        margin: 0 auto;
+        background: #111;
+        border-radius: 36px;
+        padding: 12px;
+        box-shadow: 0 24px 60px rgba(16, 35, 60, 0.28);
+        animation: rise 0.55s ease both;
+      }
+
+      .phone-screen {
+        background: #ededed;
+        border-radius: 28px;
+        overflow: hidden;
+        min-height: 700px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .status-bar {
+        height: 28px;
+        background: #f7f7f7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        font-size: 0.68rem;
+        font-weight: 600;
+      }
+
+      .nav-bar {
+        height: 48px;
+        background: #f7f7f7;
+        border-bottom: 1px solid #e2e2e2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+      }
+
+      .nav-bar .title { font-size: 0.95rem; font-weight: 700; }
+
+      .chat {
+        flex: 1;
+        padding: 14px 12px 18px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .time-sep {
+        align-self: center;
+        font-size: 0.7rem;
+        color: #999;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 999px;
+        padding: 3px 10px;
+      }
+
+      .msg {
+        display: flex;
+        gap: 8px;
+        align-self: flex-start;
+        animation: pop 0.35s ease both;
+      }
+
+      @keyframes pop {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: none; }
+      }
+
+      .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: linear-gradient(145deg, #4a8af5, #2b6de5);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* —— 微信风格定制卡片 —— */
+      .wx-card {
+        width: 260px;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+
+      .wx-card .cover {
+        height: 86px;
+        padding: 14px 14px 12px;
+        color: #fff;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+
+      .wx-card.quote .cover {
+        background:
+          linear-gradient(135deg, rgba(29, 84, 184, 0.15), transparent 50%),
+          linear-gradient(135deg, #2b6de5, #1a4fa8);
+      }
+
+      .wx-card.unknown .cover {
+        background:
+          linear-gradient(135deg, rgba(120, 130, 145, 0.2), transparent 45%),
+          linear-gradient(135deg, #6b7c90, #4f5f72);
+      }
+
+      .wx-card.urgent .cover {
+        background:
+          linear-gradient(135deg, rgba(201, 133, 18, 0.2), transparent 45%),
+          linear-gradient(135deg, #e09a2b, #c98512);
+      }
+
+      .wx-card .cover .tpl {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        font-size: 0.66rem;
+        opacity: 0.9;
+        font-weight: 600;
+      }
+
+      .wx-card .cover h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+
+      .wx-card .cover .sub {
+        margin-top: 4px;
+        font-size: 0.72rem;
+        opacity: 0.9;
+      }
+
+      .wx-card .rows { padding: 4px 0; }
+
+      .wx-card .row {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        gap: 8px;
+        padding: 8px 14px;
+        font-size: 0.8rem;
+        line-height: 1.4;
+      }
+
+      .wx-card .row .k {
+        color: #888;
+        flex-shrink: 0;
+      }
+
+      .wx-card .row .v {
+        color: #111;
+        word-break: break-word;
+      }
+
+      .wx-card .row .v.em { font-weight: 700; color: #1a2332; }
+      .wx-card .row .v.brand { color: var(--brand-deep); font-weight: 700; }
+      .wx-card .row .v.warn { color: #c98512; font-weight: 700; }
+
+      .wx-card .foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 11px 14px;
+        border-top: 1px solid #f0f0f0;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #576b95;
+        cursor: pointer;
+        background: #fafafa;
+      }
+
+      .wx-card .foot:hover { background: #f3f6fb; }
+      .wx-card .foot .go { color: #bbb; }
+
+      .mp-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.66rem;
+        color: #888;
+        margin-top: 8px;
+        padding: 0 14px 10px;
+      }
+
+      .mp-badge i {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        background: linear-gradient(145deg, #3a7aef, #1d54b8);
+        display: inline-block;
+      }
+
+      .composer {
+        height: 52px;
+        background: #f7f7f7;
+        border-top: 1px solid #e2e2e2;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 8px;
+        color: #999;
+        font-size: 0.82rem;
+      }
+
+      .composer .box {
+        flex: 1;
+        background: #fff;
+        border-radius: 6px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+      }
+
+      /* 右侧：模板定制 */
+      .panel {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.98);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 16px 40px rgba(20, 40, 70, 0.08);
+        animation: rise 0.55s ease 0.06s both;
+      }
+
+      .panel h2 {
+        margin: 0 0 6px;
+        font-size: 1.1rem;
+      }
+
+      .panel .lead {
+        margin: 0 0 14px;
+        color: var(--ink-soft);
+        font-size: 0.86rem;
+        line-height: 1.55;
+      }
+
+      .tpl-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .tpl-tabs button {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: #f5f8fc;
+        color: var(--ink-soft);
+        border-radius: 999px;
+        padding: 7px 12px;
+        font: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .tpl-tabs button.on {
+        background: var(--brand-soft);
+        border-color: #b7cff5;
+        color: var(--brand-deep);
+      }
+
+      .field-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .field {
+        display: grid;
+        grid-template-columns: 90px 1fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        font-size: 0.82rem;
+      }
+
+      .field .name { font-weight: 700; }
+      .field .desc { color: var(--ink-soft); font-size: 0.75rem; }
+
+      .toggle {
+        width: 40px;
+        height: 22px;
+        border-radius: 999px;
+        background: #d5dde8;
+        position: relative;
+        cursor: pointer;
+        border: none;
+        padding: 0;
+      }
+
+      .toggle.on { background: var(--brand); }
+
+      .toggle::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        transition: left 0.15s ease;
+      }
+
+      .toggle.on::after { left: 20px; }
+
+      .channels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .channel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+        font-size: 0.8rem;
+      }
+
+      .channel strong { display: block; margin-bottom: 4px; font-size: 0.84rem; }
+      .channel span { color: var(--ink-soft); line-height: 1.45; font-size: 0.74rem; }
+
+      .json-box {
+        margin-top: 8px;
+        background: #15233a;
+        color: #d7e6ff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.72rem;
+        line-height: 1.55;
+        overflow: auto;
+        white-space: pre;
+      }
+
+      .note-grid {
+        max-width: 1180px;
+        margin: 18px auto 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .note {
+        background: rgba(255, 255, 255, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+
+      .note h3 { margin: 0 0 6px; font-size: 0.9rem; }
+      .note p { margin: 0; color: var(--ink-soft); font-size: 0.82rem; line-height: 1.55; }
+
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-intro">
+      <h1>客服推送销售员 · 定制化卡片</h1>
+      <p>可以。推送给销售员的消息建议做成<strong>可配置卡片模板</strong>，而不是纯文本+裸链接；按意图套不同模板，字段可开关、文案可改，点击进入聊天台。</p>
+    </header>
+
+    <div class="answer">
+      <strong>结论：</strong>支持定制化卡片。推荐落地形态为：
+      企微/微信「模板消息 / 图文卡片 / 小程序卡片」之一；业务侧维护多套模板（询价、意向不明、催办等），推送时只填字段，不把长 URL 暴露给销售员。
+    </div>
+
+    <div class="layout">
+      <!-- 手机预览 -->
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>09:41</span><span>5G · 86%</span></div>
+          <div class="nav-bar">
+            <span>‹</span>
+            <span class="title">普讯AI销售助理</span>
+            <span>···</span>
+          </div>
+          <div class="chat" id="chatPreview">
+            <div class="time-sep">定制卡片推送 · 今天 09:41</div>
+            <!-- cards injected -->
+          </div>
+          <div class="composer"><span>○</span><div class="box">输入消息…</div><span>发送</span></div>
+        </div>
+      </div>
+
+      <!-- 模板配置 -->
+      <section class="panel">
+        <h2>卡片模板定制（效果图）</h2>
+        <p class="lead">切换模板预览左侧卡片；右侧开关表示该字段是否出现在推送里（钢铁贸易可按租户定制）。</p>
+
+        <div class="tpl-tabs" id="tplTabs">
+          <button type="button" class="on" data-tpl="quote">询价提醒卡</button>
+          <button type="button" data-tpl="unknown">意向不明卡</button>
+          <button type="button" data-tpl="urgent">超时催办卡</button>
+        </div>
+
+        <div class="channels">
+          <div class="channel">
+            <strong>企微应用消息卡片</strong>
+            <span>销售在企微里收；适合内部销售员推送，按钮直达聊天台。</span>
+          </div>
+          <div class="channel">
+            <strong>小程序卡片 / 模板消息</strong>
+            <span>若销售用个微服务号承接，可用小程序卡片隐藏长链。</span>
+          </div>
+        </div>
+
+        <div class="field-list" id="fieldList"></div>
+
+        <div style="font-size:0.82rem;font-weight:700;margin-bottom:6px">推送载荷示例（定制字段）</div>
+        <div class="json-box" id="jsonBox"></div>
+      </section>
+    </div>
+
+    <section class="note-grid">
+      <div class="note">
+        <h3>为什么要定制卡</h3>
+        <p>纯文本难扫读、长链接易点错；卡片把「谁、说了什么、要你干什么」固定成字段，销售 1 秒决策。</p>
+      </div>
+      <div class="note">
+        <h3>如何定制</h3>
+        <p>按意图选模板；字段开关、标题文案、主按钮文案、跳转参数（tenantId、wxUserId、sessionId）均可配置。</p>
+      </div>
+      <div class="note">
+        <h3>钢铁场景字段</h3>
+        <p>询价卡建议固定：客户、原话、识别摘要（品名规格吨位）、助手动作、打开聊天台；可选欠款提醒角标。</p>
+      </div>
+      <div class="note">
+        <h3>与聊天台衔接</h3>
+        <p>卡片点击进入 `sales-desk`，自动选中该客户会话并打开报价侧栏，形成闭环。</p>
+      </div>
+    </section>
+
+    <script>
+      const templates = {
+        quote: {
+          name: "询价提醒卡",
+          className: "quote",
+          tplLabel: "模板 · 钢材询价",
+          title: "识别到钢材询价意向",
+          sub: "已自动回复 · 建议尽快报价",
+          foot: "打开聊天台 · 去报价",
+          fields: [
+            { key: "customer", label: "客户", value: "华建物资 · 李工", em: true, on: true, desc: "客户昵称/公司" },
+            { key: "intent", label: "意向", value: "询价", brand: true, on: true, desc: "系统识别标签" },
+            { key: "message", label: "客户原话", value: "方管 50*100*2.75 约12吨，有现货吗？", em: true, on: true, desc: "原始消息" },
+            { key: "parsed", label: "识别摘要", value: "方管 · 50*100*2.75 · 约12吨 · 要现货", on: true, desc: "结构化解析结果" },
+            { key: "ai", label: "助手已做", value: "已回复核价中，并生成报价草稿", on: true, desc: "自动回复摘要" },
+            { key: "debt", label: "欠款提醒", value: "应收 ¥86,000（可选角标）", warn: true, on: false, desc: "可按租户开关" },
+          ],
+          payload: {
+            template_id: "sales_push_quote_v1",
+            intent: "quote",
+            customer_name: "华建物资 · 李工",
+            message: "方管 50*100*2.75 约12吨，有现货吗？",
+            parsed_summary: "方管 · 50*100*2.75 · 约12吨 · 要现货",
+            cta: { text: "打开聊天台 · 去报价", url_path: "/sales-desk/index.html", params: ["tenantId", "wxUserId", "sessionId"] },
+          },
+        },
+        unknown: {
+          name: "意向不明卡",
+          className: "unknown",
+          tplLabel: "模板 · 待澄清",
+          title: "客户发来消息，待你跟进",
+          sub: "未识别到钢材明细 · 建议接管",
+          foot: "打开聊天台跟进",
+          fields: [
+            { key: "customer", label: "客户", value: "East Like New", em: true, on: true, desc: "客户昵称" },
+            { key: "intent", label: "意向", value: "意向不明", warn: true, on: true, desc: "未识别标签" },
+            { key: "message", label: "客户原话", value: "123", em: true, on: true, desc: "原始消息" },
+            { key: "ai", label: "助手已做", value: "已引导按「品名规格材质产地数量」发送", on: true, desc: "自动回复摘要" },
+            { key: "parsed", label: "识别摘要", value: "—", on: false, desc: "无解析时可隐藏" },
+            { key: "debt", label: "欠款提醒", value: "—", on: false, desc: "新客可关闭" },
+          ],
+          payload: {
+            template_id: "sales_push_unknown_v1",
+            intent: "unknown",
+            customer_name: "East Like New",
+            message: "123",
+            ai_summary: "已引导客户按钢材询价格式发送",
+            cta: { text: "打开聊天台跟进", url_path: "/sales-desk/index.html", params: ["tenantId", "wxUserId", "sessionId"] },
+          },
+        },
+        urgent: {
+          name: "超时催办卡",
+          className: "urgent",
+          tplLabel: "模板 · 超时未跟进",
+          title: "询价超 15 分钟未跟进",
+          sub: "客户可能正在等待报价",
+          foot: "立即打开聊天台",
+          fields: [
+            { key: "customer", label: "客户", value: "华建物资 · 李工", em: true, on: true, desc: "客户" },
+            { key: "intent", label: "状态", value: "超时未跟进", warn: true, on: true, desc: "催办状态" },
+            { key: "message", label: "原询价", value: "方管 50*100*2.75 约12吨", em: true, on: true, desc: "触发消息" },
+            { key: "parsed", label: "等待时长", value: "已等待 16 分钟", warn: true, on: true, desc: "SLA 提醒" },
+            { key: "ai", label: "助手已做", value: "已两次提醒客户稍候", on: true, desc: "自动安抚" },
+            { key: "debt", label: "欠款提醒", value: "—", on: false, desc: "可选" },
+          ],
+          payload: {
+            template_id: "sales_push_urgent_v1",
+            intent: "urgent",
+            customer_name: "华建物资 · 李工",
+            wait_minutes: 16,
+            message: "方管 50*100*2.75 约12吨",
+            cta: { text: "立即打开聊天台", url_path: "/sales-desk/index.html", params: ["tenantId", "wxUserId", "sessionId"] },
+          },
+        },
+      };
+
+      let current = "quote";
+
+      function render() {
+        const tpl = templates[current];
+        const chat = document.getElementById("chatPreview");
+        const rows = tpl.fields
+          .filter((f) => f.on)
+          .map((f) => {
+            const cls = f.em ? "em" : f.brand ? "brand" : f.warn ? "warn" : "";
+            return `<div class="row"><div class="k">${f.label}</div><div class="v ${cls}">${f.value}</div></div>`;
+          })
+          .join("");
+
+        chat.innerHTML = `
+          <div class="time-sep">定制卡片 · ${tpl.name}</div>
+          <div class="msg">
+            <div class="avatar">助</div>
+            <div>
+              <div class="wx-card ${tpl.className}">
+                <div class="cover">
+                  <div class="tpl">${tpl.tplLabel}</div>
+                  <h3>${tpl.title}</h3>
+                  <div class="sub">${tpl.sub}</div>
+                </div>
+                <div class="rows">${rows}</div>
+                <div class="mp-badge"><i></i> 普讯AI销售 · 定制卡片</div>
+                <div class="foot" onclick="location.href='./puxun-sales-desk-hifi.html'">
+                  <span>${tpl.foot}</span>
+                  <span class="go">›</span>
+                </div>
+              </div>
+            </div>
+          </div>`;
+
+        const fieldList = document.getElementById("fieldList");
+        fieldList.innerHTML = tpl.fields
+          .map(
+            (f, i) => `
+          <div class="field">
+            <div class="name">${f.label}</div>
+            <div class="desc">${f.desc}</div>
+            <button type="button" class="toggle ${f.on ? "on" : ""}" data-i="${i}" aria-label="切换字段"></button>
+          </div>`
+          )
+          .join("");
+
+        // payload reflects visible fields
+        const payload = {
+          ...tpl.payload,
+          visible_fields: tpl.fields.filter((f) => f.on).map((f) => f.key),
+        };
+        document.getElementById("jsonBox").textContent = JSON.stringify(payload, null, 2);
+      }
+
+      document.getElementById("tplTabs").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-tpl]");
+        if (!btn) return;
+        current = btn.dataset.tpl;
+        document.querySelectorAll("#tplTabs button").forEach((b) => b.classList.toggle("on", b === btn));
+        render();
+      });
+
+      document.getElementById("fieldList").addEventListener("click", (e) => {
+        const btn = e.target.closest(".toggle");
+        if (!btn) return;
+        const i = Number(btn.dataset.i);
+        templates[current].fields[i].on = !templates[current].fields[i].on;
+        render();
+      });
+
+      render();
+    </script>
+  </body>
+</html>

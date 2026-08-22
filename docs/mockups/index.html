@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>普讯AI销售 · 效果图索引</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #f4f8ff;
+        --soft: rgba(220, 232, 248, 0.8);
+        --font: "Noto Sans SC", "Sora", sans-serif;
+        --display: "Sora", "Noto Sans SC", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        color: var(--ink);
+        background:
+          radial-gradient(1000px 500px at 10% -10%, rgba(43, 109, 229, 0.42), transparent 55%),
+          radial-gradient(800px 420px at 90% 0%, rgba(26, 159, 92, 0.22), transparent 50%),
+          linear-gradient(155deg, #0b1628, #12233b 45%, #183153);
+        padding: 48px 22px;
+      }
+      .wrap { max-width: 720px; margin: 0 auto; }
+      a.card { margin-top: 16px; }
+      a.card:first-of-type { margin-top: 28px; }
+      h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-size: clamp(2rem, 4vw, 2.6rem);
+        letter-spacing: -0.03em;
+      }
+      p { color: var(--soft); line-height: 1.6; }
+      a.card {
+        display: block;
+        margin-top: 28px;
+        text-decoration: none;
+        color: inherit;
+        padding: 24px;
+        border-radius: 20px;
+        background: rgba(248, 251, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        transition: transform 0.18s ease, background 0.18s ease;
+      }
+      a.card:hover {
+        transform: translateY(-3px);
+        background: rgba(248, 251, 255, 0.12);
+      }
+      .kicker {
+        display: inline-block;
+        margin-bottom: 10px;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #8ec5ff;
+        font-family: var(--display);
+        font-weight: 700;
+      }
+      a.card h2 { margin: 0 0 8px; font-size: 1.3rem; }
+      a.card p { margin: 0; font-size: 0.92rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>普讯AI销售</h1>
+      <p>钢铁贸易销售场景高保真效果图：企微右侧栏、客服推送卡片、销售聊天台。</p>
+      <a class="card" href="./puxun-ai-sales-sidebar-hifi.html">
+        <span class="kicker">WeCom Sidebar</span>
+        <h2>企微右侧栏效果图</h2>
+        <p>报价清单 + AI 多方案 + PDF/小程序议价 + 报价历史；另含订单、库存价格、发票模块。</p>
+      </a>
+      <a class="card" href="./puxun-sales-push-notify-hifi.html">
+        <span class="kicker">Sales Push</span>
+        <h2>客服推送销售员 · 定制化卡片</h2>
+        <p>可配置询价/意向不明/催办等卡片模板；字段开关、隐藏长链，点击进入聊天台。</p>
+      </a>
+      <a class="card" href="./puxun-sales-desk-hifi.html">
+        <span class="kicker">Sales Desk</span>
+        <h2>销售聊天台（打开链接后）</h2>
+        <p>右侧与企微侧栏同构（品牌头 / 客户条 / 四页签）；报价清单、购买历史、上一单、欠款画像等聊天台能力保留。</p>
+      </a>
+    </div>
+  </body>
+</html>

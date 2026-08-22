@@ -63,15 +63,16 @@
       .rail button.active, .rail button:hover { background: rgba(255,255,255,0.1); color: #fff; }
       .rail .ico { display: block; font-size: 1.05rem; margin-bottom: 3px; }
 
+      .workspace { height: 100%; min-height: 0; min-width: 0; }
       .module { display: none; height: 100%; min-height: 0; }
       .module.active { display: grid; }
 
-      /* —— 客服模块：会话 | 聊天 | 右侧 —— */
+      /* —— 客服模块：会话 | 聊天 | 右侧（对齐企微右侧栏） —— */
       #mod-service {
-        grid-template-columns: 260px minmax(0, 1fr) 320px;
+        grid-template-columns: 260px minmax(0, 1fr) 380px;
       }
 
-      .sessions, .chat, .right, .page {
+      .sessions, .chat, .page {
         background: var(--panel);
         min-height: 0;
         display: flex;
@@ -79,8 +80,156 @@
       }
 
       .sessions { border-right: 1px solid var(--line); }
-      .right { border-left: 1px solid var(--line); }
       .chat { background: #f3f6fb; }
+
+      /* 右侧：与企微右侧栏同构 */
+      .right {
+        background: #f0f3f8;
+        border-left: 1px solid #d8dde6;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .sb-header {
+        background: linear-gradient(135deg, #2b6de5, #1d54b8 60%, #184a9e);
+        color: #fff;
+        padding: 14px 14px 12px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
+      .brand { display: flex; gap: 10px; align-items: center; min-width: 0; }
+      .brand-mark {
+        width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.35), rgba(255,255,255,0.08)),
+          #3d82f5;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
+        position: relative;
+      }
+      .brand-mark::after {
+        content: "AI";
+        position: absolute; inset: 0; display: grid; place-items: center;
+        font-family: var(--display); font-size: 0.72rem; font-weight: 700;
+      }
+      .brand h2 { margin: 0; font-size: 1.02rem; font-weight: 700; line-height: 1.2; }
+      .brand p { margin: 2px 0 0; font-size: 0.72rem; opacity: 0.82; }
+
+      .seller-chip {
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.16);
+        border: 1px solid rgba(255,255,255,0.22);
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-size: 0.72rem;
+        white-space: nowrap;
+      }
+
+      .customer-bar {
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .customer-bar .avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        background: linear-gradient(145deg, #7aa6f5, #2b6de5);
+        color: #fff; display: grid; place-items: center;
+        font-size: 0.78rem; font-weight: 700; flex-shrink: 0;
+      }
+      .customer-bar .who { min-width: 0; flex: 1; }
+      .customer-bar .who strong { display: block; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .customer-bar .who span { color: var(--ink-soft); font-size: 0.72rem; }
+      .customer-bar .tag {
+        margin-left: auto; flex-shrink: 0;
+        font-size: 0.68rem; color: var(--brand-deep);
+        background: var(--brand-soft); border-radius: 6px;
+        padding: 3px 7px; font-weight: 600;
+      }
+
+      .cust-insight {
+        display: none;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 0 12px 10px;
+        flex-shrink: 0;
+      }
+      .cust-insight.open { display: block; }
+      .cust-insight .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+      .cust-insight .tag-pill {
+        font-size: 0.64rem; font-weight: 700; border-radius: 5px; padding: 2px 6px;
+        background: #eef2f8; color: var(--ink-soft);
+      }
+      .cust-insight .tag-pill.active { background: #dff5ea; color: var(--ok); }
+      .cust-insight .tag-pill.volume { background: #e8f0ff; color: var(--brand-deep); }
+      .cust-insight .tag-pill.level { background: #efe8ff; color: #6b4cc0; }
+      .cust-insight .tag-pill.profit { background: #fff4df; color: var(--warn); }
+      .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .kpi { background: #f7f9fc; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+      .kpi .label { font-size: 0.62rem; color: var(--ink-soft); }
+      .kpi .value { margin-top: 1px; font-size: 0.82rem; font-weight: 700; }
+      .kpi .value.danger { color: var(--danger); }
+      .kpi .value.ok { color: var(--ok); }
+      .kpi .sub { font-size: 0.6rem; color: #99a8bc; margin-top: 1px; }
+      .debt-detail { margin-top: 7px; font-size: 0.7rem; color: var(--ink-soft); line-height: 1.45; }
+
+      .nav-tabs {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 0 4px;
+        flex-shrink: 0;
+      }
+      .nav-tabs button {
+        appearance: none; border: none; background: transparent;
+        padding: 11px 2px 10px; font: inherit; font-size: 0.76rem; font-weight: 600;
+        color: var(--ink-soft); cursor: pointer; position: relative;
+      }
+      .nav-tabs button.active { color: var(--brand); }
+      .nav-tabs button.active::after {
+        content: "";
+        position: absolute; left: 16%; right: 16%; bottom: 0;
+        height: 2.5px; border-radius: 2px 2px 0 0; background: var(--brand);
+      }
+      .nav-tabs .badge {
+        display: inline-grid; place-items: center;
+        min-width: 16px; height: 16px; padding: 0 4px; margin-left: 2px;
+        border-radius: 999px; background: #ff4d4f; color: #fff;
+        font-size: 0.64rem; vertical-align: text-top;
+      }
+
+      .sb-scroll {
+        flex: 1; overflow: auto; padding: 12px; padding-bottom: 18px; min-height: 0;
+      }
+
+      .pane { display: none; animation: rise 0.28s ease both; }
+      .pane.active { display: block; }
+
+      .subtabs {
+        display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
+      }
+      .subtabs button {
+        appearance: none; border: 1px solid var(--line); background: #fff;
+        border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 0.7rem;
+        font-weight: 600; color: var(--ink-soft); cursor: pointer;
+      }
+      .subtabs button.on {
+        background: var(--brand-soft); color: var(--brand-deep); border-color: #c9dbf8;
+      }
+
+      .filters-row {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;
+      }
 
       .hd {
         padding: 12px 14px;
@@ -177,111 +326,34 @@
       .composer-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; gap: 10px; }
       .composer-foot .hint { font-size: 0.7rem; color: var(--ink-soft); }
 
-      /* 右侧：压缩画像 + 内容优先 */
-      .profile {
-        padding: 10px 12px;
-        border-bottom: 1px solid var(--line);
-        background: linear-gradient(180deg, #f5f9ff, #fff 80%);
-        flex-shrink: 0;
-      }
-
-      .profile-top { display: flex; gap: 8px; align-items: center; }
-      .profile-top .av { width: 36px; height: 36px; font-size: 0.85rem; }
-      .profile-top h2 { margin: 0; font-size: 0.88rem; }
-      .profile-top p { margin: 2px 0 0; font-size: 0.68rem; color: var(--ink-soft); }
-
-      .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
-      .tag {
-        font-size: 0.64rem; font-weight: 700; border-radius: 5px; padding: 2px 6px;
-        background: #eef2f8; color: var(--ink-soft);
-      }
-      .tag.active { background: #dff5ea; color: var(--ok); }
-      .tag.volume { background: #e8f0ff; color: var(--brand-deep); }
-      .tag.level { background: #efe8ff; color: #6b4cc0; }
-      .tag.profit { background: #fff4df; color: var(--warn); }
-
-      .debt-one {
-        margin-top: 7px;
-        display: flex; align-items: center; justify-content: space-between; gap: 8px;
-        font-size: 0.72rem;
-        padding: 7px 8px;
-        border-radius: 8px;
-        background: #fff8f5;
-        border: 1px solid #f3ddd2;
-      }
-      .debt-one strong { color: var(--danger); }
-
-      .profile-extra {
-        display: none;
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px dashed var(--line);
-      }
-      .profile.expanded .profile-extra { display: block; }
-
-      .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-      .kpi { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
-      .kpi .label { font-size: 0.62rem; color: var(--ink-soft); }
-      .kpi .value { margin-top: 1px; font-size: 0.82rem; font-weight: 700; }
-      .kpi .value.danger { color: var(--danger); }
-      .kpi .value.ok { color: var(--ok); }
-      .kpi .sub { font-size: 0.6rem; color: #99a8bc; margin-top: 1px; }
-
-      .debt-detail { margin-top: 7px; font-size: 0.7rem; color: var(--ink-soft); line-height: 1.45; }
-
-      .rtabs {
-        display: flex;
-        overflow-x: auto;
-        border-bottom: 1px solid var(--line);
-        background: #fafbfd;
-        flex-shrink: 0;
-        scrollbar-width: none;
-      }
-      .rtabs::-webkit-scrollbar { display: none; }
-      .rtabs button {
-        appearance: none; border: none; background: transparent;
-        padding: 9px 11px; font: inherit; font-size: 0.74rem; font-weight: 700;
-        color: var(--ink-soft); cursor: pointer; position: relative; white-space: nowrap; flex-shrink: 0;
-      }
-      .rtabs button.active { color: var(--brand); }
-      .rtabs button.active::after {
-        content: ""; position: absolute; left: 18%; right: 18%; bottom: 0;
-        height: 2.5px; border-radius: 2px 2px 0 0; background: var(--brand);
-      }
-
-      .rbody { flex: 1; overflow: auto; padding: 10px; min-height: 0; }
-
-      .pane { display: none; animation: rise 0.2s ease both; }
-      .pane.active { display: block; }
-
       @keyframes rise {
         from { opacity: 0; transform: translateY(5px); }
         to { opacity: 1; transform: none; }
       }
 
       .block {
-        border: 1px solid var(--line); border-radius: 10px; padding: 10px;
-        margin-bottom: 8px; background: #fff;
+        border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+        margin-bottom: 10px; background: #fff;
       }
       .block h3 {
-        margin: 0 0 7px; font-size: 0.8rem; display: flex; align-items: center; gap: 8px;
+        margin: 0 0 8px; font-size: 0.82rem; display: flex; align-items: center; gap: 8px;
       }
       .block h3 .count {
-        margin-left: auto; font-size: 0.66rem; color: var(--brand);
-        background: var(--brand-soft); border-radius: 999px; padding: 2px 7px;
+        margin-left: auto; font-size: 0.7rem; color: var(--brand);
+        background: var(--brand-soft); border-radius: 999px; padding: 2px 8px;
       }
-      .hint { margin: 0 0 7px; font-size: 0.7rem; color: var(--ink-soft); line-height: 1.4; }
+      .hint { margin: 0 0 8px; font-size: 0.72rem; color: var(--ink-soft); line-height: 1.45; }
 
-      .search-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; margin-bottom: 7px; }
-      input, select {
+      .search-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; margin-bottom: 8px; }
+      input, select, textarea {
         width: 100%; border: 1px solid var(--line); border-radius: 8px;
-        padding: 7px 9px; font: inherit; font-size: 0.78rem; outline: none;
+        padding: 8px 10px; font: inherit; font-size: 0.78rem; outline: none; background: #fff;
       }
-      input:focus, select:focus { border-color: #8eb0f0; box-shadow: 0 0 0 3px rgba(43,109,229,0.1); }
+      input:focus, select:focus, textarea:focus { border-color: #8eb0f0; box-shadow: 0 0 0 3px rgba(43,109,229,0.1); }
 
       .item {
-        border: 1px solid var(--line); border-radius: 9px; padding: 8px 9px;
-        margin-bottom: 7px; font-size: 0.76rem;
+        border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px;
+        margin-bottom: 8px; font-size: 0.76rem; background: #fff;
       }
       .item .top { display: flex; align-items: center; gap: 8px; font-weight: 700; }
       .item .sub { margin-top: 3px; color: var(--ink-soft); font-size: 0.7rem; line-height: 1.4; }
@@ -296,7 +368,7 @@
 
       .line {
         display: flex; justify-content: space-between; gap: 8px;
-        padding: 6px 0; border-bottom: 1px dashed var(--line); font-size: 0.74rem;
+        padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 0.74rem;
       }
       .line:last-child { border-bottom: none; }
 
@@ -305,14 +377,24 @@
         font: inherit; font-size: 0.72rem; font-weight: 700; cursor: pointer; padding: 0;
       }
 
-      .cart-bar {
-        border-top: 1px solid var(--line); padding: 8px 10px; background: #f8fbff; flex-shrink: 0;
-        display: flex; align-items: center; gap: 8px;
+      .cart-sum {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line);
+        font-size: 0.82rem; font-weight: 700;
       }
-      .cart-bar .sum { flex: 1; font-size: 0.76rem; font-weight: 700; }
-      .cart-bar .amt { color: #c2410c; }
       .price { color: #c2410c; font-weight: 700; }
       .empty { text-align: center; color: var(--ink-soft); font-size: 0.78rem; padding: 20px 8px; }
+
+      .mp-box {
+        margin-top: 10px; padding: 10px; border-radius: 10px;
+        background: linear-gradient(135deg, #f0f6ff, #e8f7ef);
+        border: 1px solid #d5e3f8; font-size: 0.72rem; line-height: 1.45; color: var(--ink-soft);
+      }
+      .mp-box strong { display: block; color: var(--ink); margin-bottom: 4px; font-size: 0.78rem; }
+      .mp-box code {
+        display: block; margin-top: 6px; padding: 6px 8px; border-radius: 6px;
+        background: rgba(255,255,255,0.7); font-size: 0.66rem; word-break: break-all;
+      }
 
       /* —— 全页模块（客户/报价/数据/设置） —— */
       #mod-customers, #mod-quotes, #mod-data, #mod-settings {
@@ -438,7 +520,7 @@
       .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
       @media (max-width: 1280px) {
-        #mod-service { grid-template-columns: 230px minmax(0, 1fr) 300px; }
+        #mod-service { grid-template-columns: 230px minmax(0, 1fr) 360px; }
         .stat-grid { grid-template-columns: repeat(2, 1fr); }
         .split-2, .settings-grid { grid-template-columns: 1fr; }
       }
@@ -499,110 +581,179 @@
             </footer>
           </main>
 
-          <aside class="right">
-            <section class="profile" id="profile">
-              <div class="profile-top">
-                <div class="av">李</div>
-                <div style="min-width:0;flex:1">
-                  <h2>华建物资有限公司</h2>
-                  <p>李工 · 168****9099 · 济南</p>
+          <aside class="right" aria-label="普讯AI销售侧栏">
+            <div class="sb-header">
+              <div class="brand">
+                <div class="brand-mark" aria-hidden="true"></div>
+                <div>
+                  <h2>普讯AI销售</h2>
+                  <p>钢铁贸易 · 询价报价助手</p>
                 </div>
-                <button type="button" class="btn btn-ghost btn-sm" id="btnToggleProfile">展开</button>
               </div>
-              <div class="tags">
-                <span class="tag active">活跃</span>
-                <span class="tag volume">走量</span>
-                <span class="tag profit">利润</span>
-                <span class="tag level">A 级</span>
-              </div>
-              <div class="debt-one">
-                <span>欠款 <strong>¥128,600</strong></span>
-                <span style="color:var(--ink-soft)">近月 86.4 吨</span>
-              </div>
-              <div class="profile-extra">
-                <div class="kpi-grid">
-                  <div class="kpi"><div class="label">近月采购量</div><div class="value">86.4 吨</div><div class="sub">同比 +12%</div></div>
-                  <div class="kpi"><div class="label">最近采购</div><div class="value">08-07</div><div class="sub">镀锌管 8.2 吨</div></div>
-                  <div class="kpi"><div class="label">应收利息</div><div class="value danger">¥1,280</div><div class="sub">超期 12 天</div></div>
-                  <div class="kpi"><div class="label">客户类型</div><div class="value ok">利润+走量</div><div class="sub">毛利贡献中高</div></div>
-                </div>
-                <div class="debt-detail">预收 ¥20,000 · 应收 ¥86,000 · 订单应收 ¥22,600</div>
-              </div>
-            </section>
-
-            <div class="rtabs" id="rtabs">
-              <button type="button" class="active" data-pane="orders">订单</button>
-              <button type="button" data-pane="stock">库存</button>
-              <button type="button" data-pane="invoice">发票</button>
-              <button type="button" data-pane="quote">报价</button>
-              <button type="button" data-pane="history">购买历史</button>
-              <button type="button" data-pane="last">上一单</button>
+              <div class="seller-chip">销售 · 黄好庭</div>
             </div>
 
-            <div class="rbody">
-              <section class="pane active" id="pane-orders">
-                <div class="block">
-                  <h3>客户订单 <span class="count">3</span></h3>
-                  <div class="search-row">
-                    <input type="search" placeholder="订单号 / 规格" id="orderQ" />
-                    <button type="button" class="btn btn-primary btn-sm" id="btnSearchOrder">查</button>
+            <div class="customer-bar" id="customerBar" title="点击展开客户画像">
+              <div class="avatar" id="custAv">李</div>
+              <div class="who">
+                <strong id="custName">华建物资 · 李工</strong>
+                <span id="custMeta">欠款 ¥128,600 · 近月 86.4 吨</span>
+              </div>
+              <span class="tag" id="custInsightToggle">画像</span>
+            </div>
+
+            <div class="cust-insight" id="custInsight">
+              <div class="tags">
+                <span class="tag-pill active">活跃</span>
+                <span class="tag-pill volume">走量</span>
+                <span class="tag-pill profit">利润</span>
+                <span class="tag-pill level">A 级</span>
+              </div>
+              <div class="kpi-grid">
+                <div class="kpi"><div class="label">近月采购量</div><div class="value">86.4 吨</div><div class="sub">同比 +12%</div></div>
+                <div class="kpi"><div class="label">最近采购</div><div class="value">08-07</div><div class="sub">镀锌管 8.2 吨</div></div>
+                <div class="kpi"><div class="label">应收利息</div><div class="value danger">¥1,280</div><div class="sub">超期 12 天</div></div>
+                <div class="kpi"><div class="label">客户类型</div><div class="value ok">利润+走量</div><div class="sub">毛利贡献中高</div></div>
+              </div>
+              <div class="debt-detail">预收 ¥20,000 · 应收 ¥86,000 · 订单应收 ¥22,600</div>
+            </div>
+
+            <nav class="nav-tabs" id="rtabs" role="tablist">
+              <button type="button" class="active" data-pane="quote" role="tab">
+                报价<span class="badge" id="cartBadge" hidden>0</span>
+              </button>
+              <button type="button" data-pane="orders" role="tab">订单</button>
+              <button type="button" data-pane="stock" role="tab">库存价格</button>
+              <button type="button" data-pane="invoice" role="tab">发票</button>
+            </nav>
+
+            <div class="sb-scroll">
+              <!-- 报价：清单 + 购买历史 + 上一单 + 报价历史 -->
+              <section class="pane active" id="pane-quote" role="tabpanel">
+                <div class="subtabs" id="quoteSubtabs">
+                  <button type="button" class="on" data-qsub="cart">报价清单</button>
+                  <button type="button" data-qsub="history">购买历史</button>
+                  <button type="button" data-qsub="last">上一单</button>
+                  <button type="button" data-qsub="qhist">报价历史</button>
+                </div>
+
+                <div class="qsub" id="qsub-cart">
+                  <div class="block">
+                    <h3>当前报价清单 <span class="count" id="quoteCount">0</span></h3>
+                    <p class="hint">库存价格 / 购买历史 / 上一单均可带价加入，确认后发给客户。</p>
+                    <div id="quoteList"></div>
+                    <div class="cart-sum">
+                      <span>预估合计</span>
+                      <span class="price" id="quoteTotal">¥0</span>
+                    </div>
+                    <div class="mp-box">
+                      <strong>客户议价入口（随 PDF 一并发送）</strong>
+                      客户打开小程序可对本次报价自行改价/留言，销售端实时可见。
+                      <code>小程序://普讯议价/pages/quote?id=（发送后填入）</code>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" id="btnSendQuote">生成并发送报价单</button>
+                    <button type="button" class="btn btn-ghost btn-block" id="btnClearQuote">清空清单</button>
                   </div>
-                  <div id="orderList"></div>
+                </div>
+
+                <div class="qsub" id="qsub-history" hidden>
+                  <div class="block">
+                    <h3>购买历史 <span class="count">5</span></h3>
+                    <p class="hint">加入报价时带入历史成交价。</p>
+                    <div id="historyList"></div>
+                  </div>
+                </div>
+
+                <div class="qsub" id="qsub-last" hidden>
+                  <div class="block">
+                    <h3>上一单购买记录</h3>
+                    <p class="hint">SO20260805008 · 08-05 · 已完成</p>
+                    <div id="lastOrderLines"></div>
+                    <button type="button" class="btn btn-soft btn-block" id="btnAddLastAll">整单加入报价（带价）</button>
+                  </div>
+                </div>
+
+                <div class="qsub" id="qsub-qhist" hidden>
+                  <div class="block">
+                    <h3>本客户报价历史 <span class="count">2</span></h3>
+                    <p class="hint">已发送 / 议价中 / 已成交 / 已过期，方便跟进。</p>
+                    <div id="quoteHist"></div>
+                  </div>
                 </div>
               </section>
-              <section class="pane" id="pane-stock">
+
+              <section class="pane" id="pane-orders" role="tabpanel">
                 <div class="block">
-                  <h3>查库存 / 价格</h3>
-                  <p class="hint">可带挂牌价加入报价清单。</p>
+                  <h3>查询订单</h3>
+                  <p class="hint">默认当前客户近单；可搜订单号、规格。</p>
                   <div class="search-row">
-                    <input type="text" id="stockQ" value="方管 50*100" />
-                    <button type="button" class="btn btn-primary btn-sm" id="btnSearchStock">查</button>
+                    <input type="search" placeholder="订单号 / 规格 / 品名" id="orderQ" />
+                    <button type="button" class="btn btn-primary btn-sm" id="btnSearchOrder">查询</button>
                   </div>
+                  <div class="filters-row">
+                    <select id="orderStatus">
+                      <option value="all">全部状态</option>
+                      <option value="warn">待发货/在途</option>
+                      <option value="ok">已完成</option>
+                    </select>
+                    <input type="date" id="orderDate" value="2026-08-01" />
+                  </div>
+                </div>
+                <div id="orderList"></div>
+              </section>
+
+              <section class="pane" id="pane-stock" role="tabpanel">
+                <div class="block">
+                  <h3>查询库存与价格</h3>
+                  <p class="hint">检索现货后「加入报价清单」，与清单合并发送。</p>
+                  <div class="filters-row">
+                    <input type="text" id="stockSku" placeholder="品种" value="方管" />
+                    <input type="text" id="stockSpec" placeholder="规格" value="50*100" />
+                  </div>
+                  <div class="filters-row">
+                    <select id="stockMaterial">
+                      <option value="">材质不限</option>
+                      <option>Q235B</option>
+                      <option>Q355B</option>
+                    </select>
+                    <select id="stockOrigin">
+                      <option value="">产地不限</option>
+                      <option>津西</option>
+                      <option>唐山</option>
+                      <option>包钢</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn btn-primary btn-block" id="btnSearchStock">查询库存价格</button>
+                </div>
+                <div class="block">
+                  <h3>查询结果</h3>
                   <div id="stockList"></div>
                 </div>
               </section>
-              <section class="pane" id="pane-invoice">
-                <div class="block">
-                  <h3>发票记录 <span class="count">2</span></h3>
-                  <div id="invoiceList"></div>
-                </div>
-              </section>
-              <section class="pane" id="pane-quote">
-                <div class="block">
-                  <h3>当前报价清单 <span class="count" id="quoteCount">0</span></h3>
-                  <p class="hint">库存 / 历史 / 上一单均可带价加入。</p>
-                  <div id="quoteList"></div>
-                  <div style="display:flex;justify-content:space-between;font-weight:700;margin-top:8px;font-size:0.82rem">
-                    <span>预估合计</span><span class="price" id="quoteTotal">¥0</span>
-                  </div>
-                  <button type="button" class="btn btn-primary btn-block" id="btnSendQuote">生成并发送报价单</button>
-                  <button type="button" class="btn btn-ghost btn-block" id="btnClearQuote">清空清单</button>
-                </div>
-                <div class="block">
-                  <h3>历史报价</h3>
-                  <div id="quoteHist"></div>
-                </div>
-              </section>
-              <section class="pane" id="pane-history">
-                <div class="block">
-                  <h3>购买历史 <span class="count">5</span></h3>
-                  <p class="hint">加入报价时带入历史成交价。</p>
-                  <div id="historyList"></div>
-                </div>
-              </section>
-              <section class="pane" id="pane-last">
-                <div class="block">
-                  <h3>上一单购买记录</h3>
-                  <p class="hint">SO20260805008 · 08-05 · 已完成</p>
-                  <div id="lastOrderLines"></div>
-                  <button type="button" class="btn btn-soft btn-block" id="btnAddLastAll">整单加入报价（带价）</button>
-                </div>
-              </section>
-            </div>
 
-            <div class="cart-bar">
-              <div class="sum">报价 <span class="amt" id="cartBarAmt">0 项 · ¥0</span></div>
-              <button type="button" class="btn btn-primary btn-sm" id="btnGoQuote">去报价</button>
+              <section class="pane" id="pane-invoice" role="tabpanel">
+                <div class="block">
+                  <h3>查询发票</h3>
+                  <p class="hint">按发票号、订单或开票状态查询。</p>
+                  <div class="search-row">
+                    <input type="search" id="invoiceQ" placeholder="发票号 / 订单号 / 税号" />
+                    <button type="button" class="btn btn-primary btn-sm" id="btnSearchInvoice">查询</button>
+                  </div>
+                  <div class="filters-row">
+                    <select id="invoiceStatus">
+                      <option value="all">全部</option>
+                      <option value="ok">已开具</option>
+                      <option value="wait">待开具</option>
+                    </select>
+                    <select id="invoiceType">
+                      <option>专票 + 普票</option>
+                      <option>增值税专用发票</option>
+                      <option>普通发票</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="invoiceList"></div>
+              </section>
             </div>
           </aside>
         </section>
@@ -769,7 +920,8 @@
         filter: "all",
         activeId: "s1",
         quote: [],
-        profileOpen: false,
+        insightOpen: false,
+        quoteSub: "cart",
       };
 
       const sessions = [
@@ -881,6 +1033,8 @@
         const s = sessions.find((x) => x.id === state.activeId);
         $("chatName").textContent = s.name;
         $("chatSub").textContent = `${s.company} · 人工接管中`;
+        $("custAv").textContent = s.av;
+        $("custName").textContent = s.name;
         const msgs = messages[state.activeId] || [];
         $("chatBody").innerHTML = msgs.map((m) => {
           const roleClass = m.role === "me" ? "me" : m.role === "ai" ? "ai" : "cust";
@@ -904,6 +1058,8 @@
       function addToQuote(item) {
         state.quote.push({ ...item });
         renderQuote();
+        switchPane("quote");
+        switchQuoteSub("cart");
         toast(`已加入报价：${item.sku} ${item.spec}`);
       }
 
@@ -911,9 +1067,15 @@
         $("quoteCount").textContent = String(state.quote.length);
         const total = state.quote.reduce((s, i) => s + quoteAmount(i), 0);
         $("quoteTotal").textContent = `¥${total.toLocaleString()}`;
-        $("cartBarAmt").textContent = `${state.quote.length} 项 · ¥${total.toLocaleString()}`;
+        const badge = $("cartBadge");
+        if (state.quote.length) {
+          badge.hidden = false;
+          badge.textContent = String(state.quote.length);
+        } else {
+          badge.hidden = true;
+        }
         if (!state.quote.length) {
-          $("quoteList").innerHTML = `<div class="empty">清单为空，可从库存/历史/上一单加入</div>`;
+          $("quoteList").innerHTML = `<div class="empty">清单为空，可从「库存价格 / 购买历史 / 上一单」加入</div>`;
           return;
         }
         $("quoteList").innerHTML = state.quote.map((q, idx) => `
@@ -928,26 +1090,28 @@
       function renderOrders(list = orders) {
         $("orderList").innerHTML = list.map((o) => `
           <div class="item"><div class="top">${esc(o.id)}<span class="status ${o.status}">${esc(o.statusText)}</span></div>
-          <div class="sub">${esc(o.sub)}</div></div>`).join("");
+          <div class="sub">${esc(o.sub)}</div></div>`).join("") || `<div class="empty">暂无订单</div>`;
       }
 
       function renderStock(list = stocks) {
-        $("stockList").innerHTML = list.map((s, i) => `
-          <div class="item"><div class="top">${esc(s.name)}<span class="price">¥${s.price}/吨</span></div>
+        $("stockList").innerHTML = list.map((s) => {
+          const i = stocks.indexOf(s);
+          return `<div class="item"><div class="top">${esc(s.name)}<span class="price">¥${s.price}/吨</span></div>
           <div class="sub">${esc(s.meta)} · 库存 ${s.ton} 吨</div>
-          <div style="margin-top:5px;text-align:right"><button type="button" class="linkish" data-add-stock="${i}">加入报价</button></div></div>`).join("");
+          <div style="margin-top:5px;text-align:right"><button type="button" class="linkish" data-add-stock="${i}">加入报价清单</button></div></div>`;
+        }).join("") || `<div class="empty">未找到现货</div>`;
       }
 
-      function renderInvoices() {
-        $("invoiceList").innerHTML = invoices.map((inv) => `
+      function renderInvoices(list = invoices) {
+        $("invoiceList").innerHTML = list.map((inv) => `
           <div class="item"><div class="top">${esc(inv.id)}<span class="status ${inv.status}">${esc(inv.statusText)}</span></div>
-          <div class="sub">${esc(inv.sub)}</div></div>`).join("");
+          <div class="sub">${esc(inv.sub)}</div></div>`).join("") || `<div class="empty">暂无发票</div>`;
       }
 
       function renderHistory() {
         $("historyList").innerHTML = history.map((h, i) => `
           <div class="item"><div class="top">${esc(h.sku)} ${esc(h.spec)}<span class="price">¥${h.price}</span></div>
-          <div class="sub">${esc(h.material)} / ${esc(h.origin)} · ${h.weight}吨 · ${esc(h.date)}</div>
+          <div class="sub">${esc(h.material)} / ${esc(h.origin)} · ${h.weight}吨 · ${esc(h.date)} · ${esc(h.order)}</div>
           <div style="margin-top:5px;text-align:right"><button type="button" class="linkish" data-add-hist="${i}">加入报价</button></div></div>`).join("");
       }
 
@@ -991,7 +1155,15 @@
 
       function switchPane(name) {
         document.querySelectorAll("#rtabs button").forEach((b) => b.classList.toggle("active", b.dataset.pane === name));
-        document.querySelectorAll(".rbody .pane").forEach((p) => p.classList.toggle("active", p.id === `pane-${name}`));
+        document.querySelectorAll(".sb-scroll .pane").forEach((p) => p.classList.toggle("active", p.id === `pane-${name}`));
+      }
+
+      function switchQuoteSub(name) {
+        state.quoteSub = name;
+        document.querySelectorAll("#quoteSubtabs button").forEach((b) => b.classList.toggle("on", b.dataset.qsub === name));
+        document.querySelectorAll(".qsub").forEach((el) => {
+          el.hidden = el.id !== `qsub-${name}`;
+        });
       }
 
       // rail
@@ -1021,29 +1193,42 @@
         renderChat();
       });
 
-      $("btnToggleProfile").addEventListener("click", () => {
-        state.profileOpen = !state.profileOpen;
-        $("profile").classList.toggle("expanded", state.profileOpen);
-        $("btnToggleProfile").textContent = state.profileOpen ? "收起" : "展开";
+      $("customerBar").addEventListener("click", () => {
+        state.insightOpen = !state.insightOpen;
+        $("custInsight").classList.toggle("open", state.insightOpen);
+        $("custInsightToggle").textContent = state.insightOpen ? "收起" : "画像";
       });
 
       document.querySelectorAll("#rtabs button").forEach((btn) => {
         btn.addEventListener("click", () => switchPane(btn.dataset.pane));
       });
 
+      document.querySelectorAll("#quoteSubtabs button").forEach((btn) => {
+        btn.addEventListener("click", () => switchQuoteSub(btn.dataset.qsub));
+      });
+
       $("btnSearchOrder").addEventListener("click", () => {
         const q = $("orderQ").value.trim();
-        const list = q ? orders.filter((o) => (o.id + o.sub).includes(q)) : orders;
+        const st = $("orderStatus").value;
+        let list = orders.slice();
+        if (st !== "all") list = list.filter((o) => o.status === st);
+        if (q) list = list.filter((o) => (o.id + o.sub).includes(q));
         renderOrders(list);
         toast(`找到 ${list.length} 笔订单`);
       });
 
       $("btnSearchStock").addEventListener("click", () => {
-        const q = $("stockQ").value.trim();
+        const sku = $("stockSku").value.trim();
+        const spec = $("stockSpec").value.trim();
+        const material = $("stockMaterial").value;
+        const origin = $("stockOrigin").value;
         let list = stocks.slice();
-        if (q) list = list.filter((s) => s.name.includes(q.replace(/\s/g, "")) || s.name.includes(q));
+        if (sku) list = list.filter((s) => s.name.includes(sku));
+        if (spec) list = list.filter((s) => s.name.includes(spec));
+        if (material) list = list.filter((s) => s.meta.includes(material));
+        if (origin) list = list.filter((s) => s.meta.includes(origin));
         renderStock(list.length ? list : stocks);
-        toast("已刷新库存价格");
+        toast(list.length ? `找到 ${list.length} 条现货` : "无精确匹配，已显示全部");
       });
 
       $("stockList").addEventListener("click", (e) => {
@@ -1052,6 +1237,16 @@
         const s = stocks[Number(btn.dataset.addStock)];
         const parts = s.name.split(" ");
         addToQuote({ sku: parts[0], spec: parts.slice(1).join(" "), material: s.meta.split(" / ")[0], origin: "现货", weight: 1, price: s.price });
+      });
+
+      $("btnSearchInvoice").addEventListener("click", () => {
+        const q = $("invoiceQ").value.trim();
+        const st = $("invoiceStatus").value;
+        let list = invoices.slice();
+        if (st !== "all") list = list.filter((inv) => inv.status === st);
+        if (q) list = list.filter((inv) => (inv.id + inv.sub).includes(q));
+        renderInvoices(list);
+        toast(`找到 ${list.length} 条发票`);
       });
 
       $("historyList").addEventListener("click", (e) => {
@@ -1068,8 +1263,11 @@
       });
 
       $("btnAddLastAll").addEventListener("click", () => {
-        lastOrder.forEach((l) => addToQuote({ ...l }));
+        lastOrder.forEach((l) => state.quote.push({ ...l }));
+        renderQuote();
         switchPane("quote");
+        switchQuoteSub("cart");
+        toast("上一单已整单加入报价");
       });
 
       $("quoteList").addEventListener("click", (e) => {
@@ -1093,15 +1291,12 @@
         toast("报价单已发送到会话");
       });
 
-      $("btnGoQuote").addEventListener("click", () => switchPane("quote"));
-
       $("chatBody").addEventListener("click", (e) => {
         const btn = e.target.closest("[data-add-chat]");
         if (!btn) return;
         const s = stocks[Number(btn.dataset.addChat)];
         const parts = s.name.split(" ");
         addToQuote({ sku: parts[0], spec: parts.slice(1).join(" "), material: "Q235B", origin: "现货", weight: 1, price: s.price });
-        switchPane("quote");
       });
 
       function sendReply() {
@@ -1176,6 +1371,7 @@
       $("btnNewQuote").addEventListener("click", () => {
         switchMod("service");
         switchPane("quote");
+        switchQuoteSub("cart");
         toast("请在客服台右侧完善报价清单");
       });
 

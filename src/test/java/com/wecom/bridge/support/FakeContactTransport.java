@@ -27,6 +27,10 @@ public class FakeContactTransport implements HttpTransport {
     private String uploadResponse = "{\"errcode\":0,\"errmsg\":\"ok\",\"type\":\"image\",\"media_id\":\"MEDIA-1\"}";
 
     public FakeContactTransport() {
+        registerDefaults();
+    }
+
+    private void registerDefaults() {
         respond("/cgi-bin/gettoken",
                 "{\"errcode\":0,\"errmsg\":\"ok\",\"access_token\":\"contact-token\",\"expires_in\":7200}");
     }
@@ -49,12 +53,17 @@ public class FakeContactTransport implements HttpTransport {
     @Override
     public String send(String method, String url, String body) throws IOException {
         calls.add(new Call(method, url, body));
-        for (Map.Entry<String, Function<Call, String>> entry : handlers.entrySet()) {
-            if (url.contains(entry.getKey())) {
-                return entry.getValue().apply(new Call(method, url, body));
+        // 取最长匹配：/get_moment_task 是 /get_moment_task_result 的前缀，按插入顺序会匹配错
+        String matched = null;
+        for (String fragment : handlers.keySet()) {
+            if (url.contains(fragment) && (matched == null || fragment.length() > matched.length())) {
+                matched = fragment;
             }
         }
-        throw new IOException("未配置的请求: " + url);
+        if (matched == null) {
+            throw new IOException("未配置的请求: " + url);
+        }
+        return handlers.get(matched).apply(new Call(method, url, body));
     }
 
     @Override
@@ -83,8 +92,11 @@ public class FakeContactTransport implements HttpTransport {
         return uploads;
     }
 
+    /** 清空调用记录与自定义响应，保证同一 Spring 上下文里的用例互不影响。 */
     public void reset() {
         calls.clear();
         uploads.clear();
+        handlers.clear();
+        registerDefaults();
     }
 }

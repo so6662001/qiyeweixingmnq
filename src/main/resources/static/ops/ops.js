@@ -163,13 +163,14 @@
   /* —— 朋友圈 —— */
 
   async function createMoment() {
+    // 服务端 JSON 统一 snake_case，字段名写错会被静默忽略，务必与后端保持一致
     const payload = {
       text: $("momentText").value.trim(),
-      imageMediaIds: state.momentMediaIds,
-      linkTitle: $("momentLinkTitle").value.trim(),
-      linkUrl: $("momentLinkUrl").value.trim(),
-      senderUserIds: splitList($("momentSenders").value),
-      customerTagIds: splitList($("momentTags").value),
+      image_media_ids: state.momentMediaIds,
+      link_title: $("momentLinkTitle").value.trim(),
+      link_url: $("momentLinkUrl").value.trim(),
+      sender_user_ids: splitList($("momentSenders").value),
+      customer_tag_ids: splitList($("momentTags").value),
     };
     const box = $("momentTaskResult");
     box.hidden = false;
@@ -178,17 +179,17 @@
 
     try {
       const created = await postJson("/api/ops/moments/tasks", payload);
-      if (created.dryRun) {
+      if (created.dry_run) {
         box.textContent = "演练模式：任务未真正创建。关闭 dry-run 后再试。";
         return;
       }
-      box.textContent = `任务已提交，jobid=${created.jobId}，查询创建结果中…`;
-      const status = await pollMomentTask(created.jobId);
-      box.innerHTML = `任务状态：${escapeHtml(status.statusText)}${
-        status.momentId ? `，moment_id=<code>${escapeHtml(status.momentId)}</code>` : ""
+      box.textContent = `任务已提交，jobid=${created.job_id}，查询创建结果中…`;
+      const status = await pollMomentTask(created.job_id);
+      box.innerHTML = `任务状态：${escapeHtml(status.status_text)}${
+        status.moment_id ? `，moment_id=<code>${escapeHtml(status.moment_id)}</code>` : ""
       }<br />成员需在企业微信客户端确认后才会真正发表。`;
-      if (status.invalidSenders && status.invalidSenders.length) {
-        box.innerHTML += `<br />不合法的执行者：${escapeHtml(status.invalidSenders.join(", "))}`;
+      if (status.invalid_senders && status.invalid_senders.length) {
+        box.innerHTML += `<br />不合法的执行者：${escapeHtml(status.invalid_senders.join(", "))}`;
       }
     } catch (e) {
       box.className = "result-box error";
@@ -200,6 +201,7 @@
     let status = null;
     for (let i = 0; i < 10; i++) {
       status = await api(`/api/ops/moments/tasks/${encodeURIComponent(jobId)}`);
+      // status=3 表示创建完成
       if (status.status === 3) return status;
       await new Promise((resolve) => setTimeout(resolve, 1500));
     }
@@ -248,21 +250,27 @@
       .map(
         (comment) =>
           `<div class="comment-item"><span class="who">${escapeHtml(
-            comment.externalUserId || comment.userId || "未知"
-          )}</span>：${escapeHtml(comment.content)}　<span>${formatTime(comment.createTime)}</span></div>`
+            comment.external_user_id || comment.user_id || "未知"
+          )}</span>：${escapeHtml(comment.content)}　<span>${formatTime(comment.create_time)}</span></div>`
       )
       .join("");
+
+    const customerNote =
+      item.customer_like_count || item.customer_comment_count
+        ? `<span class="time">其中客户 赞 ${item.customer_like_count} · 评论 ${item.customer_comment_count}</span>`
+        : "";
 
     return `<div class="moment-row">
       <div class="head">
         <span class="creator">${escapeHtml(item.creator || "未知成员")}</span>
-        <span class="time">${formatTime(item.createTime)}</span>
+        <span class="time">${formatTime(item.create_time)}</span>
         <span class="counts">
-          <span class="like">赞 ${item.likeCount}</span>
-          <span class="comment">评论 ${item.commentCount}</span>
+          <span class="like">赞 ${item.like_count}</span>
+          <span class="comment">评论 ${item.comment_count}</span>
         </span>
       </div>
       <div class="text">${escapeHtml(item.text || "（无文案）")}</div>
+      ${customerNote ? `<div class="text">${customerNote}</div>` : ""}
       ${item.error ? `<div class="err">${escapeHtml(item.error)}</div>` : ""}
       ${comments ? `<div class="comments">${comments}</div>` : ""}
     </div>`;
@@ -282,9 +290,11 @@
       listEl.innerHTML = groups
         .map(
           (group) => `<label class="group-item">
-            <input type="checkbox" value="${escapeHtml(group.chatId)}" />
+            <input type="checkbox" value="${escapeHtml(group.chat_id)}" />
             <span>${escapeHtml(group.name || "（未命名群聊）")}</span>
-            <span class="chat-id">${escapeHtml(group.chatId)}</span>
+            <span class="chat-id">${escapeHtml(group.chat_id)}${
+            group.member_count ? ` · ${group.member_count} 人` : ""
+          }</span>
           </label>`
         )
         .join("");
@@ -310,18 +320,18 @@
     box.textContent = "提交中…";
     try {
       const result = await postJson("/api/ops/groups/messages", {
-        chatIds: chatIds,
+        chat_ids: chatIds,
         text: $("groupText").value.trim(),
-        images: state.groupMediaIds.map((mediaId) => ({ mediaId: mediaId })),
-        linkTitle: $("groupLinkTitle").value.trim(),
-        linkUrl: $("groupLinkUrl").value.trim(),
-        linkDescription: $("groupLinkDesc").value.trim(),
+        images: state.groupMediaIds.map((mediaId) => ({ media_id: mediaId })),
+        link_title: $("groupLinkTitle").value.trim(),
+        link_url: $("groupLinkUrl").value.trim(),
+        link_description: $("groupLinkDesc").value.trim(),
         sender: $("groupSender").value.trim(),
       });
       let html = escapeHtml(result.note);
-      if (result.msgId) html += `<br />msgid=<code>${escapeHtml(result.msgId)}</code>`;
-      if (result.failList && result.failList.length) {
-        html += `<br />失败列表：${escapeHtml(result.failList.join(", "))}`;
+      if (result.msg_id) html += `<br />msgid=<code>${escapeHtml(result.msg_id)}</code>`;
+      if (result.fail_list && result.fail_list.length) {
+        html += `<br />失败列表：${escapeHtml(result.fail_list.join(", "))}`;
       }
       box.innerHTML = html;
     } catch (e) {

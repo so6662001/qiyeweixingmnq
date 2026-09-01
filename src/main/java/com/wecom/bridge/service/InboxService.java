@@ -81,10 +81,18 @@ public class InboxService {
      * 在系统内录入回复并通过 OpenClaw 发给对方。发送结果写回同一条消息。
      */
     public InboxMessage reply(String conversationId, String text) {
-        if (text == null || text.isBlank()) {
+        return reply(conversationId, text, null);
+    }
+
+    /**
+     * 录入回复并发出，可附带一个媒体（图片 / 文件，本地路径或 URL）。
+     */
+    public InboxMessage reply(String conversationId, String text, String mediaUrl) {
+        boolean hasMedia = mediaUrl != null && !mediaUrl.isBlank();
+        if ((text == null || text.isBlank()) && !hasMedia) {
             throw new IllegalArgumentException("回复内容不能为空");
         }
-        String trimmed = text.strip();
+        String trimmed = text == null ? "" : text.strip();
         if (trimmed.length() > MAX_TEXT_LENGTH) {
             throw new IllegalArgumentException("回复内容过长，请控制在 " + MAX_TEXT_LENGTH + " 字以内");
         }
@@ -100,7 +108,12 @@ public class InboxService {
             }
         }
 
-        InboxMessage message = recorder.recordOutbound(conversation, trimmed);
+        InboxMessage message = recorder.recordOutbound(conversation,
+                hasMedia && trimmed.isEmpty() ? "[媒体] " + mediaUrl : trimmed);
+        if (hasMedia) {
+            message.setMsgtype("media");
+            message.setMediaId(mediaUrl);
+        }
 
         if (sender == null) {
             recorder.markFailed(conversation, message, "没有可用的发送通道: " + conversation.getChannel().getValue());
@@ -118,7 +131,9 @@ public class InboxService {
 
         ChannelSender.SendOutcome outcome;
         try {
-            outcome = sender.send(conversation, trimmed);
+            outcome = hasMedia && sender instanceof OpenClawSender openClaw
+                    ? openClaw.send(conversation, trimmed, mediaUrl)
+                    : sender.send(conversation, trimmed);
         } catch (RuntimeException e) {
             log.warn("发送失败: {}", e.getMessage());
             recorder.markFailed(conversation, message, "发送异常：" + e.getMessage());

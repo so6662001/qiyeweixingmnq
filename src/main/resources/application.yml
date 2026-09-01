@@ -20,6 +20,8 @@ wecom:
     max-messages: 5000
     # 无真实配置时保留本地演示会话，便于先验证「实时收 → 页面内回」链路
     demo-inbox: ${WECOM_BRIDGE_DEMO_INBOX:true}
+    # 演练模式：出站（发消息/发朋友圈/群发）只记录不真发。真实环境首测建议先开
+    dry-run: ${WECOM_BRIDGE_DRY_RUN:false}
 
     # OpenClaw：个人微信收发 + 企业微信出站
     openclaw:
@@ -51,6 +53,20 @@ wecom:
       member-userids: ${WECOM_ARCHIVE_MEMBER_USERIDS:}
       # 存档身份 → OpenClaw 发送目标（也可在页面上逐个补填）
       target-mapping: {}
+
+    # 企业微信客户联系：朋友圈发表与互动数据、客户群群发
+    contact:
+      enabled: ${WECOM_CONTACT_ENABLED:false}
+      # 留空时复用 archive.corp-id
+      corp-id: ${WECOM_CONTACT_CORP_ID:}
+      secret: ${WECOM_CONTACT_SECRET:}
+      api-base: ${WECOM_CONTACT_API_BASE:https://qyapi.weixin.qq.com}
+      request-timeout: 15s
+      # 朋友圈互动数据（点赞/评论）自动刷新
+      moment-stats-auto-refresh: ${WECOM_MOMENT_STATS_AUTO:true}
+      moment-stats-interval: ${WECOM_MOMENT_STATS_INTERVAL:10m}
+      # 回看天数，官方限制查询区间不超过 30 天
+      moment-lookback-days: ${WECOM_MOMENT_LOOKBACK_DAYS:7}
 
   simulator:
     # 企微通道目录（个人微信使用 data/wechat/*，见 ProductChannel）

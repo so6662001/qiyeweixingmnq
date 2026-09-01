@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>运营台 · 自检 / 朋友圈 / 客户群群发</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/inbox/inbox.css" />
+    <link rel="stylesheet" href="/ops/ops.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">营</div>
+          <div class="brand-text">
+            <h1>运营台</h1>
+            <p>上线自检 · 客户朋友圈 · 客户群群发（企业微信官方能力）</p>
+          </div>
+        </div>
+        <div class="topbar-status" id="capabilityBar" aria-live="polite"></div>
+        <div class="topbar-actions">
+          <a class="btn btn-ghost" href="/inbox/">← 回收件箱</a>
+        </div>
+      </header>
+
+      <div class="ops-body">
+        <nav class="ops-tabs" id="opsTabs">
+          <button type="button" class="on" data-tab="preflight">上线自检</button>
+          <button type="button" data-tab="moments">发朋友圈</button>
+          <button type="button" data-tab="stats">朋友圈互动数据</button>
+          <button type="button" data-tab="groups">客户群群发</button>
+        </nav>
+
+        <!-- 上线自检 -->
+        <section class="ops-pane on" id="pane-preflight">
+          <div class="ops-card">
+            <div class="ops-card-head">
+              <h2>上线自检</h2>
+              <button type="button" class="btn btn-primary" id="btnPreflight">重新检查</button>
+            </div>
+            <p class="card-hint">
+              真实环境联调前先跑一遍。带外部探测会实际执行 <code>openclaw --version</code> 与换取 access_token。
+            </p>
+            <div id="preflightSummary" class="preflight-summary"></div>
+            <div id="preflightList" class="check-list"></div>
+          </div>
+
+          <div class="ops-card">
+            <h2>能力边界</h2>
+            <p class="card-hint">不同通道支持的动作不同，先看清楚再测，省得反复试。</p>
+            <div id="capabilityTable"></div>
+          </div>
+        </section>
+
+        <!-- 发朋友圈 -->
+        <section class="ops-pane" id="pane-moments">
+          <div class="ops-card">
+            <div class="ops-card-head">
+              <h2>发表客户朋友圈</h2>
+              <span class="badge-note">企业微信</span>
+            </div>
+            <p class="card-hint">
+              官方模型是「企业创建任务 → 成员在企微客户端确认后发表」，调用接口不会直接发出去。
+            </p>
+
+            <label class="field">
+              <span>文案</span>
+              <textarea id="momentText" rows="4" placeholder="写朋友圈文案…"></textarea>
+            </label>
+
+            <label class="field">
+              <span>图片（最多 9 张，选择后自动上传取 media_id）</span>
+              <input type="file" id="momentImages" accept="image/*" multiple />
+            </label>
+            <div id="momentMediaList" class="media-list"></div>
+
+            <div class="field-row">
+              <label class="field">
+                <span>链接标题（可选）</span>
+                <input type="text" id="momentLinkTitle" placeholder="图文链接标题" />
+              </label>
+              <label class="field">
+                <span>链接地址（可选）</span>
+                <input type="text" id="momentLinkUrl" placeholder="https://" />
+              </label>
+            </div>
+
+            <div class="field-row">
+              <label class="field">
+                <span>执行成员 UserID（逗号分隔，留空为应用可见范围全部）</span>
+                <input type="text" id="momentSenders" placeholder="huanghaoting,zhangsan" />
+              </label>
+              <label class="field">
+                <span>客户标签 ID（逗号分隔，可选）</span>
+                <input type="text" id="momentTags" placeholder="etXXXX,etYYYY" />
+              </label>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="btnCreateMoment">创建发表任务</button>
+            <div id="momentTaskResult" class="result-box" hidden></div>
+          </div>
+        </section>
+
+        <!-- 朋友圈互动数据 -->
+        <section class="ops-pane" id="pane-stats">
+          <div class="ops-card">
+            <div class="ops-card-head">
+              <h2>朋友圈互动数据</h2>
+              <button type="button" class="btn btn-primary" id="btnRefreshStats">立即刷新</button>
+            </div>
+            <p class="card-hint">
+              点赞数与评论数按「发表成员」维度逐条汇总后缓存，默认定时自动刷新。
+            </p>
+            <div id="statsOverview" class="stat-grid"></div>
+            <div id="statsList" class="stats-list"></div>
+          </div>
+        </section>
+
+        <!-- 客户群群发 -->
+        <section class="ops-pane" id="pane-groups">
+          <div class="ops-card">
+            <div class="ops-card-head">
+              <h2>客户群群发图文</h2>
+              <button type="button" class="btn btn-ghost" id="btnLoadGroups">加载客户群</button>
+            </div>
+            <p class="card-hint">
+              同样是「创建任务 → 群主在企微里确认」。官方对每个客户群每月可接收条数有频控。
+            </p>
+
+            <div id="groupList" class="group-list">
+              <div class="empty">点上方「加载客户群」拉取列表</div>
+            </div>
+
+            <label class="field">
+              <span>文本内容</span>
+              <textarea id="groupText" rows="3" placeholder="要发到群里的文字…"></textarea>
+            </label>
+
+            <label class="field">
+              <span>图片（选择后自动上传取 media_id）</span>
+              <input type="file" id="groupImages" accept="image/*" multiple />
+            </label>
+            <div id="groupMediaList" class="media-list"></div>
+
+            <div class="field-row">
+              <label class="field">
+                <span>图文链接标题</span>
+                <input type="text" id="groupLinkTitle" placeholder="图文消息标题" />
+              </label>
+              <label class="field">
+                <span>图文链接地址</span>
+                <input type="text" id="groupLinkUrl" placeholder="https://" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="field">
+                <span>链接描述（可选）</span>
+                <input type="text" id="groupLinkDesc" placeholder="一句话描述" />
+              </label>
+              <label class="field">
+                <span>指定发送成员 UserID（可选）</span>
+                <input type="text" id="groupSender" placeholder="huanghaoting" />
+              </label>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="btnSendGroups">创建群发任务</button>
+            <div id="groupResult" class="result-box" hidden></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/ops/ops.js"></script>
+  </body>
+</html>

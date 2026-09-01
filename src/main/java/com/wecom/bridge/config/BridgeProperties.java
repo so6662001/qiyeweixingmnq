@@ -27,8 +27,15 @@ public class BridgeProperties {
     /** 演示通道：无真实配置时也能验证「实时收 → 页面内回」链路。 */
     private boolean demoInbox = true;
 
+    /**
+     * 演练模式：所有出站动作（发消息、发朋友圈、群发）只记录不真发。
+     * 真实环境首次联调建议先开着，确认参数无误后再关闭。
+     */
+    private boolean dryRun = false;
+
     private final OpenClaw openclaw = new OpenClaw();
     private final Archive archive = new Archive();
+    private final Contact contact = new Contact();
 
     public boolean isEnabled() {
         return enabled;
@@ -62,12 +69,126 @@ public class BridgeProperties {
         this.demoInbox = demoInbox;
     }
 
+    public boolean isDryRun() {
+        return dryRun;
+    }
+
+    public void setDryRun(boolean dryRun) {
+        this.dryRun = dryRun;
+    }
+
     public OpenClaw getOpenclaw() {
         return openclaw;
     }
 
     public Archive getArchive() {
         return archive;
+    }
+
+    public Contact getContact() {
+        return contact;
+    }
+
+    /** 客户联系未单独配置企业 ID 时，复用会话存档的。 */
+    public String contactCorpId() {
+        return contact.getCorpId().isBlank() ? archive.getCorpId() : contact.getCorpId();
+    }
+
+    /**
+     * 企业微信「客户联系」：朋友圈发表与互动数据、客户群群发。
+     *
+     * <p>用客户联系 Secret 换 access_token，与会话存档的 Secret 不是同一个。</p>
+     */
+    public static class Contact {
+
+        private boolean enabled = false;
+
+        /** 企业 ID。留空时回落到 archive.corp-id。 */
+        private String corpId = "";
+
+        /** 「客户联系」Secret，或已配置到可调用应用列表的自建应用 Secret。 */
+        private String secret = "";
+
+        private String apiBase = "https://qyapi.weixin.qq.com";
+
+        private Duration requestTimeout = Duration.ofSeconds(15);
+
+        /** 朋友圈互动数据（点赞/评论）自动刷新间隔。 */
+        private Duration momentStatsInterval = Duration.ofMinutes(10);
+
+        /** 自动刷新时回看的天数，官方限制起止间隔不超过 30 天。 */
+        private int momentLookbackDays = 7;
+
+        /** 是否开启朋友圈互动数据自动轮询。 */
+        private boolean momentStatsAutoRefresh = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getCorpId() {
+            return corpId;
+        }
+
+        public void setCorpId(String corpId) {
+            this.corpId = corpId == null ? "" : corpId.trim();
+        }
+
+        public String getSecret() {
+            return secret;
+        }
+
+        public void setSecret(String secret) {
+            this.secret = secret == null ? "" : secret.trim();
+        }
+
+        public String getApiBase() {
+            return apiBase;
+        }
+
+        public void setApiBase(String apiBase) {
+            this.apiBase = apiBase == null || apiBase.isBlank() ? "https://qyapi.weixin.qq.com" : apiBase.trim();
+        }
+
+        public Duration getRequestTimeout() {
+            return requestTimeout;
+        }
+
+        public void setRequestTimeout(Duration requestTimeout) {
+            this.requestTimeout = requestTimeout;
+        }
+
+        public Duration getMomentStatsInterval() {
+            return momentStatsInterval;
+        }
+
+        public void setMomentStatsInterval(Duration momentStatsInterval) {
+            this.momentStatsInterval = momentStatsInterval;
+        }
+
+        public int getMomentLookbackDays() {
+            return momentLookbackDays;
+        }
+
+        public void setMomentLookbackDays(int momentLookbackDays) {
+            this.momentLookbackDays = Math.min(Math.max(momentLookbackDays, 1), 30);
+        }
+
+        public boolean isMomentStatsAutoRefresh() {
+            return momentStatsAutoRefresh;
+        }
+
+        public void setMomentStatsAutoRefresh(boolean momentStatsAutoRefresh) {
+            this.momentStatsAutoRefresh = momentStatsAutoRefresh;
+        }
+
+        public boolean isConfigured() {
+            return enabled && !secret.isBlank();
+        }
     }
 
     /**

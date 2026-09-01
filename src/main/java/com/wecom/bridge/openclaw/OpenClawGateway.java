@@ -43,11 +43,23 @@ public class OpenClawGateway {
      * @param target 渠道内的对端标识（个人微信为 OpenClaw 的 peer id）
      */
     public SendResult sendText(String target, String text) {
+        return send(target, text, null);
+    }
+
+    /**
+     * 发送文本与/或媒体。媒体走 OpenClaw 的 {@code --media}，可以是本地路径或 URL。
+     */
+    public SendResult send(String target, String text, String mediaUrl) {
         if (!outboundReady()) {
             return SendResult.failed("OpenClaw 出站未启用：请配置 wecom.bridge.openclaw.enabled 与 cli-path");
         }
         if (target == null || target.isBlank()) {
             return SendResult.failed("缺少发送目标，无法通过 OpenClaw 发送");
+        }
+        boolean hasText = text != null && !text.isBlank();
+        boolean hasMedia = mediaUrl != null && !mediaUrl.isBlank();
+        if (!hasText && !hasMedia) {
+            return SendResult.failed("文本与媒体不能同时为空");
         }
 
         BridgeProperties.OpenClaw config = properties.getOpenclaw();
@@ -55,12 +67,25 @@ public class OpenClawGateway {
                 config.getCliPath(), "message", "send",
                 "--channel", config.getWechatChannel(),
                 "--target", target,
-                "--message", text,
                 "--json"
         ));
+        if (hasText) {
+            command.add("--message");
+            command.add(text);
+        }
+        if (hasMedia) {
+            command.add("--media");
+            command.add(mediaUrl);
+        }
         if (!config.getAccount().isBlank()) {
             command.add("--account");
             command.add(config.getAccount());
+        }
+
+        if (properties.isDryRun()) {
+            log.info("[dry-run] 跳过 OpenClaw 发送，目标 {}，文本 {} 字，媒体 {}",
+                    target, hasText ? text.length() : 0, hasMedia ? mediaUrl : "无");
+            return SendResult.skippedByDryRun();
         }
 
         Duration timeout = config.getCommandTimeout();
@@ -164,14 +189,44 @@ public class OpenClawGateway {
         return null;
     }
 
-    public record SendResult(boolean ok, String messageId, String errorMessage) {
+    /**
+     * 检查 openclaw 是否可执行，用于上线自检。
+     */
+    public ProbeResult probeCli() {
+        BridgeProperties.OpenClaw config = properties.getOpenclaw();
+        try {
+            ProcessRunner.Result result = processRunner.run(
+                    List.of(config.getCliPath(), "--version"), config.getCommandTimeout());
+            if (result.timedOut()) {
+                return new ProbeResult(false, "执行 openclaw --version 超时");
+            }
+            if (!result.ok()) {
+                return new ProbeResult(false, "openclaw --version 退出码 " + result.exitCode());
+            }
+            return new ProbeResult(true, result.stdout().strip());
+        } catch (IOException e) {
+            return new ProbeResult(false, "无法执行 " + config.getCliPath() + "：" + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return new ProbeResult(false, "探测被中断");
+        }
+    }
+
+    public record ProbeResult(boolean ok, String detail) {
+    }
+
+    public record SendResult(boolean ok, String messageId, String errorMessage, boolean dryRun) {
 
         public static SendResult ok(String messageId) {
-            return new SendResult(true, messageId, null);
+            return new SendResult(true, messageId, null, false);
         }
 
         public static SendResult failed(String errorMessage) {
-            return new SendResult(false, null, errorMessage);
+            return new SendResult(false, null, errorMessage, false);
+        }
+
+        public static SendResult skippedByDryRun() {
+            return new SendResult(true, "dry-run", null, true);
         }
     }
 }

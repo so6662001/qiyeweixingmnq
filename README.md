@@ -31,7 +31,28 @@
 不配任何东西也能先看效果：打开 `/inbox/`，用右侧「注入演示消息」验证实时接收与页面内回复。
 
 架构、部署、合规边界、接口清单与排查见 **[docs/openclaw-inbox-setup.md](docs/openclaw-inbox-setup.md)**；
-OpenClaw 转发插件见 **[openclaw-plugin/README.md](openclaw-plugin/README.md)**。
+OpenClaw 转发插件见 **[openclaw-plugin/README.md](openclaw-plugin/README.md)**；
+进真实环境测试按 **[docs/real-world-testing.md](docs/real-world-testing.md)** 分阶段走。
+
+## 运营台（`/ops/`）
+
+| 功能 | 说明 |
+|------|------|
+| 上线自检 | 逐项检查配置与连通性，每条给出**修复动作**；可实际探测 `openclaw --version` 与换取 access_token |
+| 发客户朋友圈 | 上传图片取 media_id → 创建发表任务 → 轮询任务结果。成员需在企微客户端确认后才真正发表 |
+| 朋友圈互动数据 | 自动汇总**点赞数 / 评论数**（区分客户与成员），定时刷新并缓存 |
+| 客户群群发图文 | 选群 → 文本 + 图片 + 图文链接 → 创建群发任务。群主确认后才进群 |
+
+**能力边界（先看这个再测）**：
+
+| 动作 | 个人微信 | 企业微信 |
+|------|---------|---------|
+| 一对一私聊收发 | ✅ | ✅ |
+| 发图片 / 文件 | ✅ | ✅ |
+| 群里发图文 | ❌ 插件只声明支持一对一私聊 | ✅ |
+| 发朋友圈 / 点赞评论数 | ❌ 官方 API 无此能力 | ✅ |
+
+演练模式 `WECOM_BRIDGE_DRY_RUN=true`：所有出站只记录不真发，真实环境首测建议先开。
 
 ```bash
 export WECOM_BRIDGE_ENABLED=true

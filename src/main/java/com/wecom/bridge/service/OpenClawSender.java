@@ -35,6 +35,13 @@ public class OpenClawSender implements ChannelSender {
 
     @Override
     public SendOutcome send(InboxConversation conversation, String text) {
+        return send(conversation, text, null);
+    }
+
+    /**
+     * 带媒体的发送（图片 / 文件）。媒体可以是本地路径或 URL，由 OpenClaw 负责上传。
+     */
+    public SendOutcome send(InboxConversation conversation, String text, String mediaUrl) {
         String target = resolveTarget(conversation);
         if (target == null || target.isBlank()) {
             return SendOutcome.failed(conversation.getChannel() == InboxChannel.WECOM_ARCHIVE
@@ -44,7 +51,7 @@ public class OpenClawSender implements ChannelSender {
                     : "该会话缺少 OpenClaw 发送目标");
         }
 
-        OpenClawGateway.SendResult result = gateway.sendText(target, text);
+        OpenClawGateway.SendResult result = gateway.send(target, text, mediaUrl);
         return result.ok()
                 ? SendOutcome.ok(result.messageId())
                 : SendOutcome.failed(result.errorMessage());

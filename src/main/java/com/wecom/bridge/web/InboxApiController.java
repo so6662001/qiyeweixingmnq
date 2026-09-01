@@ -61,7 +61,9 @@ public class InboxApiController {
      */
     @PostMapping("/conversations/{conversationId}/reply")
     public InboxMessage reply(@PathVariable String conversationId, @RequestBody ReplyRequest request) {
-        return inboxService.reply(conversationId, request == null ? null : request.text());
+        return inboxService.reply(conversationId,
+                request == null ? null : request.text(),
+                request == null ? null : request.media());
     }
 
     /**
@@ -125,7 +127,10 @@ public class InboxApiController {
         return body;
     }
 
-    public record ReplyRequest(String text) {
+    /**
+     * @param media 可选的图片/文件（本地路径或 URL），由 OpenClaw 负责上传
+     */
+    public record ReplyRequest(String text, String media) {
     }
 
     public record TargetRequest(String target) {

@@ -71,10 +71,20 @@
 
   /* —— 状态渲染 —— */
 
+  /** 未读与会话数以本地会话为准，避免标记已读后右侧计数和标签页标题不刷新。 */
+  function derivedCounts() {
+    let unread = 0;
+    state.conversations.forEach((conversation) => {
+      unread += conversation.unread || 0;
+    });
+    return { unread: unread, conversations: state.conversations.size };
+  }
+
   function renderStatus(status) {
     if (!status) return;
     state.status = status;
 
+    const counts = derivedCounts();
     const kf = status.wechat_kf || {};
     const app = status.wecom_app || {};
     const pills = [];
@@ -99,8 +109,8 @@
         kf.servicer_configured ? "ok" : "warn"
       ),
       statusRow("企微应用", app.configured ? `AgentId ${app.agent_id}` : "未配置", app.configured ? "ok" : "off"),
-      statusRow("会话数", String(status.conversation_count || 0), "ok"),
-      statusRow("未读", String(status.total_unread || 0), status.total_unread ? "warn" : "off"),
+      statusRow("会话数", String(counts.conversations), "ok"),
+      statusRow("未读", String(counts.unread), counts.unread ? "warn" : "off"),
     ];
     $("statusDetail").innerHTML = rows.join("");
 
@@ -109,9 +119,7 @@
     $("appCallback").textContent = origin + (app.callback_path || "/callback/wecom/app");
     $("demoCard").hidden = !status.demo_inbox;
 
-    document.title = status.total_unread
-      ? `(${status.total_unread}) 统一收件箱`
-      : "统一收件箱 · 企微 / 微信客服";
+    document.title = counts.unread ? `(${counts.unread}) 统一收件箱` : "统一收件箱 · 企微 / 微信客服";
   }
 
   function pill(kind, text) {
@@ -372,6 +380,7 @@
       await api(`/api/inbox/conversations/${encodeURIComponent(id)}/read`, { method: "POST" });
       conversation.unread = 0;
       renderSessions();
+      renderStatus(state.status);
     } catch (e) {
       // 忽略：不影响主流程
     }
@@ -478,11 +487,7 @@
       if (conversation) upsertConversation(conversation);
       if (message) upsertMessage(message);
 
-      if (state.status && payload.total_unread != null) {
-        state.status.total_unread = payload.total_unread;
-        renderStatus(state.status);
-      }
-
+      renderStatus(state.status);
       renderSessions();
       if (message && message.conversation_id === state.activeId) {
         renderMessages();
@@ -500,6 +505,7 @@
       if (payload.conversation) {
         upsertConversation(payload.conversation);
         renderSessions();
+        renderStatus(state.status);
         if (payload.conversation.id === state.activeId) {
           renderHeader();
         }
@@ -558,6 +564,18 @@
       } catch (e) {
         toast(e.message);
       }
+    });
+
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const text = $(button.dataset.copy).textContent;
+        try {
+          await navigator.clipboard.writeText(text);
+          toast("已复制回调地址");
+        } catch (e) {
+          toast(text);
+        }
+      });
     });
 
     $("btnDemoInbound").addEventListener("click", async () => {

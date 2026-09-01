@@ -642,11 +642,8 @@ code {
 }
 
 .kv {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 0.74rem;
-  padding: 5px 0;
+  padding: 6px 0;
   border-bottom: 1px dashed var(--line);
 }
 
@@ -654,16 +651,37 @@ code {
   border-bottom: none;
 }
 
-.kv span {
-  color: var(--ink-soft);
-  flex-shrink: 0;
+.kv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
+.kv span {
+  color: var(--ink-soft);
+}
+
+/* 地址整行显示并优先在 / 处断行，避免断在路径中间 */
 .kv code {
+  display: block;
   background: #f2f5fa;
-  border-radius: 5px;
-  padding: 2px 5px;
-  word-break: break-all;
+  border-radius: 6px;
+  padding: 5px 6px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.linkish {
+  border: none;
+  background: none;
+  color: var(--brand);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
 }
 
 .compliance {

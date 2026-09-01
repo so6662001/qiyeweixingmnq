@@ -11,6 +11,34 @@ spring:
       max-request-size: 5MB
 
 wecom:
+  # —— 官方通道统一收件箱（真实收发；凭据只从环境变量注入） ——
+  bridge:
+    enabled: ${WECOM_BRIDGE_ENABLED:false}
+    corp-id: ${WECOM_CORP_ID:}
+    api-base: ${WECOM_API_BASE:https://qyapi.weixin.qq.com}
+    data-dir: data/bridge
+    max-messages: 5000
+    request-timeout: 10s
+    # 无凭据时保留本地演示会话，便于先验证「实时收 → 页面内回」链路
+    demo-inbox: ${WECOM_BRIDGE_DEMO_INBOX:true}
+    # 微信客服：与微信个人用户双向收发的官方通道
+    kf:
+      enabled: ${WECOM_KF_ENABLED:false}
+      secret: ${WECOM_KF_SECRET:}
+      callback-token: ${WECOM_KF_CALLBACK_TOKEN:}
+      callback-aes-key: ${WECOM_KF_CALLBACK_AES_KEY:}
+      servicer-userid: ${WECOM_KF_SERVICER_USERID:}
+      auto-take-over: ${WECOM_KF_AUTO_TAKE_OVER:true}
+      sync-limit: 1000
+      reply-window: 48h
+    # 企业微信自建应用：企业成员与应用之间的消息
+    app:
+      enabled: ${WECOM_APP_ENABLED:false}
+      agent-id: ${WECOM_APP_AGENT_ID:0}
+      secret: ${WECOM_APP_SECRET:}
+      callback-token: ${WECOM_APP_CALLBACK_TOKEN:}
+      callback-aes-key: ${WECOM_APP_CALLBACK_AES_KEY:}
+
   simulator:
     # 企微通道目录（个人微信使用 data/wechat/*，见 ProductChannel）
     voice-dir: data/voices
@@ -27,3 +55,4 @@ wecom:
 logging:
   level:
     com.wecom.simulator: INFO
+    com.wecom.bridge: INFO

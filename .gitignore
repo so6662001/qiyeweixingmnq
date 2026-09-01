@@ -26,3 +26,6 @@ data/wechat/files/*
 !data/wechat/files/.gitkeep
 data/wechat/moments/*
 !data/wechat/moments/.gitkeep
+
+data/bridge/*
+!data/bridge/.gitkeep

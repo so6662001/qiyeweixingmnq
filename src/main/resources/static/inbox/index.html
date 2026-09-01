@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>统一收件箱 · 企微 / 微信客服</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/inbox/inbox.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">收</div>
+          <div class="brand-text">
+            <h1>统一收件箱</h1>
+            <p>企业微信成员 + 微信客服（微信用户）· 官方接口</p>
+          </div>
+        </div>
+
+        <div class="topbar-status" id="channelStatus" aria-live="polite"></div>
+
+        <div class="topbar-actions">
+          <span class="conn" id="connState" title="实时连接状态">连接中…</span>
+          <button type="button" class="btn btn-ghost" id="btnSync" title="手动触发一次微信客服增量拉取">立即同步</button>
+        </div>
+      </header>
+
+      <div class="body">
+        <aside class="sessions" aria-label="会话列表">
+          <div class="sessions-head">
+            <div class="filters" id="filters">
+              <button type="button" class="chip on" data-filter="all">全部</button>
+              <button type="button" class="chip" data-filter="wechat_kf">微信用户</button>
+              <button type="button" class="chip" data-filter="wecom_app">企微成员</button>
+              <button type="button" class="chip" data-filter="unread">未读</button>
+            </div>
+            <input type="search" id="searchInput" placeholder="搜索客户 / 成员" />
+          </div>
+          <div class="session-list" id="sessionList"></div>
+        </aside>
+
+        <main class="chat" aria-label="消息与回复">
+          <header class="chat-head">
+            <div class="peer">
+              <div class="avatar" id="peerAvatar">—</div>
+              <div class="peer-text">
+                <strong id="peerName">请选择左侧会话</strong>
+                <span id="peerMeta">收到新消息会自动出现在这里，无需刷新</span>
+              </div>
+            </div>
+            <div class="chat-head-actions">
+              <button type="button" class="btn btn-ghost" id="btnTakeOver" hidden>接入人工</button>
+            </div>
+          </header>
+
+          <div class="notice" id="chatNotice" hidden></div>
+
+          <div class="messages" id="messages">
+            <div class="empty">还没有会话。配置官方凭据后，真实消息会自动出现在这里。</div>
+          </div>
+
+          <footer class="composer">
+            <textarea
+              id="replyInput"
+              rows="3"
+              placeholder="在这里录入回复内容，Enter 发送，Shift+Enter 换行"
+              disabled
+            ></textarea>
+            <div class="composer-foot">
+              <span class="composer-hint" id="composerHint">选择会话后即可直接回复，消息通过官方接口发出。</span>
+              <button type="button" class="btn btn-primary" id="btnSend" disabled>发送</button>
+            </div>
+          </footer>
+        </main>
+
+        <aside class="side" aria-label="通道与配置">
+          <section class="card">
+            <h2>接入状态</h2>
+            <div id="statusDetail" class="status-detail"></div>
+          </section>
+
+          <section class="card">
+            <h2>回调地址</h2>
+            <p class="card-hint">填到企业微信后台对应应用的「接收消息」配置里。</p>
+            <div class="kv">
+              <span>微信客服</span>
+              <code id="kfCallback">/callback/wecom/kf</code>
+            </div>
+            <div class="kv">
+              <span>企微应用</span>
+              <code id="appCallback">/callback/wecom/app</code>
+            </div>
+          </section>
+
+          <section class="card" id="demoCard">
+            <h2>本地演示</h2>
+            <p class="card-hint">
+              没有企业凭据时，可在这里注入一条「客户消息」，验证实时接收与页面内回复链路。不会触达任何真实用户。
+            </p>
+            <input type="text" id="demoText" placeholder="模拟客户发来的内容" />
+            <button type="button" class="btn btn-soft" id="btnDemoInbound">注入演示消息</button>
+          </section>
+
+          <section class="card">
+            <h2>合规要点</h2>
+            <ul class="compliance">
+              <li>仅调用腾讯官方开放接口，不使用任何非官方协议。</li>
+              <li>微信用户消息走「微信客服」官方通道。</li>
+              <li>客户最后消息 48 小时内才可主动回复。</li>
+              <li>凭据来自环境变量，不写入代码库。</li>
+            </ul>
+            <p class="card-hint">
+              详细说明见仓库文档 <code>docs/official-inbox-setup.md</code>。
+            </p>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/inbox/inbox.js"></script>
+  </body>
+</html>

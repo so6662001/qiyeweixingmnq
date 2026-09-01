@@ -1,17 +1,57 @@
-# 微信模拟器（Java）· 企微 + 个微双版本
+# 企微消息工作台（Java）
 
-基于 **Spring Boot 3 / Java 21** 的本地联调模拟器，提供两个互相隔离的版本：
+基于 **Spring Boot 3 / Java 21**，一套服务包含两部分：
 
-| 版本 | UI | API 前缀 | WebSocket |
-|------|----|----------|-----------|
-| 企业微信 | http://127.0.0.1:8000/wecom/ | `/api` | `/ws` |
-| 个人微信 | http://127.0.0.1:8000/wechat/ | `/api/wechat` | `/ws/wechat` |
+| 模块 | 用途 | UI | API 前缀 | WebSocket |
+|------|------|----|----------|-----------|
+| **统一收件箱** | **接真实消息**（腾讯官方接口） | http://127.0.0.1:8000/inbox/ | `/api/inbox` | `/ws/inbox` |
+| 企业微信模拟器 | 本地联调，不联网 | http://127.0.0.1:8000/wecom/ | `/api` | `/ws` |
+| 个人微信模拟器 | 本地联调，不联网 | http://127.0.0.1:8000/wechat/ | `/api/wechat` | `/ws/wechat` |
 
-入口页：http://127.0.0.1:8000 （选择版本）
+入口页：http://127.0.0.1:8000
 
-> 个人微信侧为**本地假实现**，不对接真实个微协议；回调 JSON 仅用于联调。
+---
 
-## 功能（两套版本均具备）
+## 统一收件箱（真实收发）
+
+**实时收到消息 → 在页面里录入回复 → 自动发给对方，全程不用离开本系统。**
+
+| 通道 | 对应谁 | 收 | 发 |
+|------|--------|----|----|
+| 微信客服 | **微信（个人号）用户** | `kf/sync_msg` | `kf/send_msg` |
+| 企业微信自建应用 | 企微成员 | 接收消息回调 | `message/send` |
+| 本地演示 | 无（本机自造数据） | — | 仅记录本地 |
+
+- 只调用腾讯官方开放接口（`qyapi.weixin.qq.com`），**不使用任何非官方协议 / 逆向手段**。
+- 微信个人号没有对企业开放的收发接口，官方合规路径是「微信客服」；`itchat` / `WeChatFerry` 一类协议逆向方案违反微信个人账号使用规范，本项目不包含。
+- 官方规则已落到产品里：48 小时可回复窗口提前拦截并提示、人工接待自动转接、回调 5 秒内响应（拉取放后台）、msgid 去重、游标持久化、access_token 缓存复用。
+- 凭据只从环境变量注入，不写进仓库；消息落在 `data/bridge/`（已 gitignore），不落地媒体文件。
+
+不配任何凭据也能先看效果：打开 `/inbox/`，用右侧「注入演示消息」验证实时接收与页面内回复。
+
+配置步骤、合规说明、接口清单与错误码排查见 **[docs/official-inbox-setup.md](docs/official-inbox-setup.md)**。
+
+```bash
+export WECOM_BRIDGE_ENABLED=true
+export WECOM_CORP_ID=ww...
+export WECOM_KF_ENABLED=true
+export WECOM_KF_SECRET=... WECOM_KF_CALLBACK_TOKEN=... WECOM_KF_CALLBACK_AES_KEY=...
+export WECOM_KF_SERVICER_USERID=...
+mvn spring-boot:run
+```
+
+回调地址填到企业微信后台：
+
+- 微信客服：`https://你的域名/callback/wecom/kf`
+- 企微应用：`https://你的域名/callback/wecom/app`
+
+---
+
+## 模拟器部分
+
+> 个人微信模拟器为**本地假实现**，不对接真实个微协议；回调 JSON 仅用于联调。
+
+## 功能（两套模拟器均具备）
 
 - 聊天界面发送文字 / 语音 / 图片 / 文件
 - **私聊 + 群聊**：群内可回复指定人、@提及；消息可按 `chat_type` / `group_id` 过滤

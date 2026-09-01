@@ -1,16 +1,18 @@
 package com.wecom.bridge.service;
 
+import com.wecom.bridge.archive.SessionArchivePoller;
+import com.wecom.bridge.archive.SessionArchiveService;
 import com.wecom.bridge.config.BridgeProperties;
 import com.wecom.bridge.model.InboxChannel;
 import com.wecom.bridge.model.InboxConversation;
 import com.wecom.bridge.model.InboxMessage;
 import com.wecom.bridge.model.MessageDirection;
+import com.wecom.bridge.openclaw.OpenClawGateway;
 import com.wecom.bridge.store.InboxStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,32 +20,43 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
- * 统一收件箱：页面所有读写都经过这里，按会话所属通道路由到对应官方接口。
+ * 统一收件箱：页面所有读写都经过这里。
+ *
+ * <p>入站有两条来源（OpenClaw 个人微信、企微会话存档），出站统一由 OpenClaw 发出。</p>
  */
 @Service
 public class InboxService {
 
     private static final Logger log = LoggerFactory.getLogger(InboxService.class);
 
-    /** 官方文本消息长度上限约 2048 字节，这里保守限制字符数并给出可读提示。 */
+    /** 文本长度上限，避免把超长内容丢给外部命令。 */
     private static final int MAX_TEXT_LENGTH = 2000;
 
     private final InboxStore store;
     private final InboxRecorder recorder;
     private final BridgeProperties properties;
-    private final WechatKfService wechatKfService;
-    private final Map<InboxChannel, ChannelSender> senders = new EnumMap<>(InboxChannel.class);
+    private final SessionArchiveService archiveService;
+    private final SessionArchivePoller archivePoller;
+    private final OpenClawGateway openClawGateway;
+    private final OpenClawSender openClawSender;
+    private final List<ChannelSender> senders;
 
     public InboxService(InboxStore store,
                         InboxRecorder recorder,
                         BridgeProperties properties,
-                        WechatKfService wechatKfService,
-                        List<ChannelSender> channelSenders) {
+                        SessionArchiveService archiveService,
+                        SessionArchivePoller archivePoller,
+                        OpenClawGateway openClawGateway,
+                        OpenClawSender openClawSender,
+                        List<ChannelSender> senders) {
         this.store = store;
         this.recorder = recorder;
         this.properties = properties;
-        this.wechatKfService = wechatKfService;
-        channelSenders.forEach(sender -> senders.put(sender.channel(), sender));
+        this.archiveService = archiveService;
+        this.archivePoller = archivePoller;
+        this.openClawGateway = openClawGateway;
+        this.openClawSender = openClawSender;
+        this.senders = senders;
     }
 
     public List<InboxConversation> conversations() {
@@ -65,7 +78,7 @@ public class InboxService {
     }
 
     /**
-     * 在系统内录入回复并发往对方。发送结果写回同一条消息，页面通过 WebSocket 立即看到。
+     * 在系统内录入回复并通过 OpenClaw 发给对方。发送结果写回同一条消息。
      */
     public InboxMessage reply(String conversationId, String text) {
         if (text == null || text.isBlank()) {
@@ -77,17 +90,29 @@ public class InboxService {
         }
 
         InboxConversation conversation = conversation(conversationId);
-        ChannelSender sender = senders.get(conversation.getChannel());
-        String servicer = properties.getKf().getServicerUserid();
-        InboxMessage message = recorder.recordOutbound(conversation, "text", trimmed, servicer);
+        ChannelSender sender = resolveSender(conversation.getChannel());
+
+        // 发送前把解析出的目标写回会话，页面与失败排查都能看到实际用了哪个目标
+        if (conversation.getChannel().sendsViaOpenClaw()) {
+            String resolved = openClawSender.resolveTarget(conversation);
+            if (resolved != null && !resolved.isBlank() && !resolved.equals(conversation.getOpenclawTarget())) {
+                conversation.setOpenclawTarget(resolved);
+            }
+        }
+
+        InboxMessage message = recorder.recordOutbound(conversation, trimmed);
 
         if (sender == null) {
             recorder.markFailed(conversation, message, "没有可用的发送通道: " + conversation.getChannel().getValue());
             return message;
         }
-
         if (conversation.getChannel() == InboxChannel.DEMO) {
             recorder.markLocal(conversation, message);
+            return message;
+        }
+        if (!sender.ready()) {
+            recorder.markFailed(conversation, message,
+                    "OpenClaw 出站未就绪：请确认 openclaw 已安装、微信渠道已登录，并开启 wecom.bridge.openclaw.enabled");
             return message;
         }
 
@@ -101,43 +126,46 @@ public class InboxService {
         }
 
         if (outcome.ok()) {
-            recorder.markSent(conversation, message, outcome.officialMsgId());
+            recorder.markSent(conversation, message, outcome.outboundMessageId());
         } else {
             recorder.markFailed(conversation, message, outcome.errorMessage());
         }
         return message;
     }
 
+    private ChannelSender resolveSender(InboxChannel channel) {
+        return senders.stream().filter(sender -> sender.supports(channel)).findFirst().orElse(null);
+    }
+
     /**
-     * 手动触发一次微信客服增量拉取（回调偶发丢失时的兜底）。
+     * 手动触发一次企微会话存档增量拉取。个人微信是插件实时回推，不需要手动同步。
      */
-    public int syncWechatKf() {
-        if (!wechatKfService.configured()) {
-            throw new IllegalStateException("微信客服通道未配置，无法同步");
+    public int pullArchive() {
+        if (!archiveService.configured()) {
+            throw new IllegalStateException("企微会话存档未配置，无法拉取");
         }
-        return wechatKfService.syncAllAccounts();
-    }
-
-    public void takeOver(String conversationId, String servicerUserid) {
-        InboxConversation conversation = conversation(conversationId);
-        if (conversation.getChannel() != InboxChannel.WECHAT_KF) {
-            throw new IllegalArgumentException("只有微信客服会话需要接入人工");
-        }
-        String servicer = servicerUserid == null || servicerUserid.isBlank()
-                ? properties.getKf().getServicerUserid()
-                : servicerUserid.trim();
-        if (servicer.isBlank()) {
-            throw new IllegalArgumentException("未配置接待人员 UserID（wecom.bridge.kf.servicer-userid）");
-        }
-        wechatKfService.transferToHuman(conversation, servicer);
+        return archiveService.pull();
     }
 
     /**
-     * 演示通道：本地注入一条「客户消息」，用于验证实时接收链路。不触达任何真实用户。
+     * 为会话设置 OpenClaw 发送目标。企微存档身份不能直接当发送目标，需要人工补映射。
+     */
+    public InboxConversation setOpenclawTarget(String conversationId, String target) {
+        if (target == null || target.isBlank()) {
+            throw new IllegalArgumentException("发送目标不能为空");
+        }
+        InboxConversation conversation = conversation(conversationId);
+        conversation.setOpenclawTarget(target.strip());
+        recorder.publishConversation(conversation);
+        return conversation;
+    }
+
+    /**
+     * 演示通道：本地注入一条「客户消息」，用于验证实时接收。不触达任何真实用户。
      */
     public Optional<InboxMessage> injectDemoInbound(String peerId, String peerName, String text) {
         String id = peerId == null || peerId.isBlank() ? "demo-customer" : peerId.trim();
-        return recorder.recordInbound(InboxRecorder.InboundRecord
+        return recorder.record(InboxRecorder.InboundRecord
                 .builder(InboxChannel.DEMO, id)
                 .messageId("demo-" + System.nanoTime())
                 .peerName(peerName == null || peerName.isBlank() ? "演示客户" : peerName)
@@ -149,31 +177,35 @@ public class InboxService {
     }
 
     /**
-     * 页面顶部状态条所需的配置与连通性信息。
+     * 页面状态条所需的配置与连通性信息。
      */
     public Map<String, Object> status() {
         Map<String, Object> status = new LinkedHashMap<>();
         status.put("enabled", properties.isEnabled());
-        status.put("corp_id_configured", !properties.getCorpId().isBlank());
         status.put("demo_inbox", properties.isDemoInbox());
         status.put("total_unread", store.totalUnread());
         status.put("conversation_count", store.listConversations().size());
 
-        Map<String, Object> kf = new LinkedHashMap<>();
-        kf.put("enabled", properties.getKf().isEnabled());
-        kf.put("configured", properties.getKf().isConfigured());
-        kf.put("servicer_configured", !properties.getKf().getServicerUserid().isBlank());
-        kf.put("auto_take_over", properties.getKf().isAutoTakeOver());
-        kf.put("reply_window_hours", properties.getKf().getReplyWindow().toHours());
-        kf.put("callback_path", "/callback/wecom/kf");
-        status.put("wechat_kf", kf);
+        BridgeProperties.OpenClaw openclaw = properties.getOpenclaw();
+        Map<String, Object> openclawStatus = new LinkedHashMap<>();
+        openclawStatus.put("enabled", openclaw.isEnabled());
+        openclawStatus.put("outbound_ready", openClawGateway.outboundReady());
+        openclawStatus.put("inbound_ready", openclaw.isInboundReady());
+        openclawStatus.put("wechat_channel", openclaw.getWechatChannel());
+        openclawStatus.put("cli_path", openclaw.getCliPath());
+        openclawStatus.put("inbound_path", "/api/openclaw/inbound");
+        status.put("openclaw", openclawStatus);
 
-        Map<String, Object> app = new LinkedHashMap<>();
-        app.put("enabled", properties.getApp().isEnabled());
-        app.put("configured", properties.getApp().isConfigured());
-        app.put("agent_id", properties.getApp().getAgentId());
-        app.put("callback_path", "/callback/wecom/app");
-        status.put("wecom_app", app);
+        BridgeProperties.Archive archive = properties.getArchive();
+        Map<String, Object> archiveStatus = new LinkedHashMap<>();
+        archiveStatus.put("enabled", archive.isEnabled());
+        archiveStatus.put("configured", archive.isConfigured());
+        archiveStatus.put("sdk_ready", archiveService.sdkReady());
+        archiveStatus.put("seq", archiveService.currentSeq());
+        archiveStatus.put("poll_interval_seconds", archive.getPollInterval().toSeconds());
+        archiveStatus.put("include_room_chats", archive.isIncludeRoomChats());
+        archiveStatus.put("last_error", archivePoller.lastError());
+        status.put("archive", archiveStatus);
 
         return status;
     }

@@ -23,10 +23,11 @@ class InboxStoreTest {
 
         InboxStore first = new InboxStore(properties, objectMapper);
         first.start();
-        InboxConversation conversation = first.upsertConversation(
-                InboxChannel.WECHAT_KF, "wm-user-1", "李工", "wk-open-1");
+        InboxConversation conversation = first.upsertConversation(InboxChannel.WECHAT, "wm-user-1");
+        conversation.setPeerName("李工");
+        conversation.setOpenclawTarget("o9cq808_abc@im.wechat");
         first.append(message(conversation.getId(), "msg-1", "方管有现货吗？"));
-        first.saveCursor("wk-open-1", "cursor-9");
+        first.saveCursor("wecom_archive_seq", "205");
         first.stop();
 
         assertThat(Files.exists(tempDir.resolve("inbox.json"))).isTrue();
@@ -37,9 +38,9 @@ class InboxStoreTest {
             assertThat(second.listConversations()).hasSize(1);
             InboxConversation restored = second.findConversation(conversation.getId()).orElseThrow();
             assertThat(restored.getPeerName()).isEqualTo("李工");
-            assertThat(restored.getOpenKfid()).isEqualTo("wk-open-1");
+            assertThat(restored.getOpenclawTarget()).isEqualTo("o9cq808_abc@im.wechat");
             assertThat(second.listMessages(conversation.getId(), 10)).hasSize(1);
-            assertThat(second.cursor("wk-open-1")).isEqualTo("cursor-9");
+            assertThat(second.cursor("wecom_archive_seq")).isEqualTo("205");
             // 恢复后仍能去重
             assertThat(second.markSeen("msg-1")).isFalse();
         } finally {
@@ -53,8 +54,7 @@ class InboxStoreTest {
         properties.setMaxMessages(3);
         InboxStore store = new InboxStore(properties, new ObjectMapper());
 
-        InboxConversation conversation = store.upsertConversation(
-                InboxChannel.DEMO, "demo-1", "演示客户", null);
+        InboxConversation conversation = store.upsertConversation(InboxChannel.DEMO, "demo-1");
         for (int i = 1; i <= 5; i++) {
             InboxMessage message = message(conversation.getId(), "msg-" + i, "第 " + i + " 条");
             message.setCreateTime(1_700_000_000_000L + i);
@@ -70,8 +70,7 @@ class InboxStoreTest {
     @Test
     void 未读计数只统计入站消息(@TempDir Path tempDir) {
         InboxStore store = new InboxStore(properties(tempDir), new ObjectMapper());
-        InboxConversation conversation = store.upsertConversation(
-                InboxChannel.DEMO, "demo-1", "演示客户", null);
+        InboxConversation conversation = store.upsertConversation(InboxChannel.DEMO, "demo-1");
 
         store.append(message(conversation.getId(), "in-1", "你好"));
         InboxMessage outbound = message(conversation.getId(), "out-1", "您好");
@@ -92,7 +91,7 @@ class InboxStoreTest {
     private static InboxMessage message(String conversationId, String id, String content) {
         InboxMessage message = new InboxMessage();
         message.setId(id);
-        message.setChannel(InboxChannel.WECHAT_KF);
+        message.setChannel(InboxChannel.WECHAT);
         message.setConversationId(conversationId);
         message.setDirection(MessageDirection.INBOUND);
         message.setMsgtype("text");

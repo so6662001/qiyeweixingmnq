@@ -1,7 +1,7 @@
 package com.wecom.bridge.model;
 
 /**
- * 统一会话：一个客户/成员对应一条会话，页面左侧列表即由此渲染。
+ * 统一会话：一个对端（微信好友 / 企微联系人）对应一条会话，页面左侧列表即由此渲染。
  */
 public class InboxConversation {
 
@@ -10,13 +10,23 @@ public class InboxConversation {
 
     private InboxChannel channel;
 
-    /** 微信客服为 external_userid；企微成员为 UserID。 */
+    /**
+     * 对端标识。个人微信为 OpenClaw 的 peer id；企业微信为存档里的 userid / external_userid。
+     */
     private String peerId;
 
     private String peerName;
 
-    /** 微信客服专用：客服账号 ID，回复时必传。 */
-    private String openKfid;
+    /**
+     * OpenClaw 发送目标。个人微信默认等于 peerId；企业微信需要映射后才能发送。
+     */
+    private String openclawTarget;
+
+    /** 企业微信侧本方成员 UserID（存档消息中的企业成员），用于显示归属。 */
+    private String ownerUserid;
+
+    /** 存档群聊 id，一对一为空。 */
+    private String roomId;
 
     private long lastMessageAt;
 
@@ -24,17 +34,8 @@ public class InboxConversation {
 
     private int unread;
 
-    /**
-     * 对方最后一条消息时间，用于判断官方 48 小时可回复窗口。
-     */
+    /** 对方最后一条消息时间。 */
     private long lastInboundAt;
-
-    /**
-     * 微信客服接待状态：0 未处理 / 1 智能助手 / 2 排队中 / 3 人工接待 / 4 已结束。
-     */
-    private Integer serviceState;
-
-    private String servicerUserid;
 
     public static String buildId(InboxChannel channel, String peerId) {
         return channel.getValue() + ":" + peerId;
@@ -72,12 +73,28 @@ public class InboxConversation {
         this.peerName = peerName;
     }
 
-    public String getOpenKfid() {
-        return openKfid;
+    public String getOpenclawTarget() {
+        return openclawTarget;
     }
 
-    public void setOpenKfid(String openKfid) {
-        this.openKfid = openKfid;
+    public void setOpenclawTarget(String openclawTarget) {
+        this.openclawTarget = openclawTarget;
+    }
+
+    public String getOwnerUserid() {
+        return ownerUserid;
+    }
+
+    public void setOwnerUserid(String ownerUserid) {
+        this.ownerUserid = ownerUserid;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
     public long getLastMessageAt() {
@@ -112,26 +129,15 @@ public class InboxConversation {
         this.lastInboundAt = lastInboundAt;
     }
 
-    public Integer getServiceState() {
-        return serviceState;
-    }
-
-    public void setServiceState(Integer serviceState) {
-        this.serviceState = serviceState;
-    }
-
-    public String getServicerUserid() {
-        return servicerUserid;
-    }
-
-    public void setServicerUserid(String servicerUserid) {
-        this.servicerUserid = servicerUserid;
-    }
-
     public String displayName() {
         if (peerName != null && !peerName.isBlank()) {
             return peerName;
         }
         return peerId == null ? "" : peerId;
+    }
+
+    /** 是否已具备发送条件（有 OpenClaw 目标）。 */
+    public boolean sendable() {
+        return openclawTarget != null && !openclawTarget.isBlank();
     }
 }

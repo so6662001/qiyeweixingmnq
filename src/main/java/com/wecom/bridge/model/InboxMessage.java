@@ -1,11 +1,11 @@
 package com.wecom.bridge.model;
 
 /**
- * 统一消息模型：不同通道的官方消息结构统一成同一份，前端只需渲染一种。
+ * 统一消息模型：OpenClaw 入站与会话存档入站都归一到这份结构，前端只渲染一种。
  */
 public class InboxMessage {
 
-    /** 本地消息 ID（官方 msgid 优先，缺失时本地生成）。 */
+    /** 本地消息 ID（来源侧 msgid 优先，缺失时本地生成）。 */
     private String id;
 
     private InboxChannel channel;
@@ -14,23 +14,20 @@ public class InboxMessage {
 
     private MessageDirection direction = MessageDirection.INBOUND;
 
-    /** text / image / voice / file / event 等，沿用官方 msgtype 取值。 */
+    /** text / image / voice / video / file / link / revoke / event 等。 */
     private String msgtype = "text";
 
     private String content = "";
 
-    /** 官方媒体 ID；本服务不落地媒体内容，仅记录引用。 */
+    /**
+     * 媒体引用。个人微信为 OpenClaw 的媒体标识；企业微信存档为 sdkfileid。
+     * 本服务不落地媒体内容，只记录引用。
+     */
     private String mediaId;
 
     private String senderId;
 
     private String senderName;
-
-    /** 微信客服专用：客服账号 ID。 */
-    private String openKfid;
-
-    /** 出站消息的接待人员 UserID。 */
-    private String servicerUserid;
 
     /** 毫秒时间戳。 */
     private long createTime;
@@ -39,6 +36,12 @@ public class InboxMessage {
 
     /** 发送失败原因，仅出站消息使用。 */
     private String errorMessage;
+
+    /** 出站消息实际使用的 OpenClaw 目标，便于排查发错人。 */
+    private String openclawTarget;
+
+    /** 会话存档序号，便于与官方数据对齐排查。 */
+    private Long archiveSeq;
 
     public String getId() {
         return id;
@@ -112,22 +115,6 @@ public class InboxMessage {
         this.senderName = senderName;
     }
 
-    public String getOpenKfid() {
-        return openKfid;
-    }
-
-    public void setOpenKfid(String openKfid) {
-        this.openKfid = openKfid;
-    }
-
-    public String getServicerUserid() {
-        return servicerUserid;
-    }
-
-    public void setServicerUserid(String servicerUserid) {
-        this.servicerUserid = servicerUserid;
-    }
-
     public long getCreateTime() {
         return createTime;
     }
@@ -152,6 +139,22 @@ public class InboxMessage {
         this.errorMessage = errorMessage;
     }
 
+    public String getOpenclawTarget() {
+        return openclawTarget;
+    }
+
+    public void setOpenclawTarget(String openclawTarget) {
+        this.openclawTarget = openclawTarget;
+    }
+
+    public Long getArchiveSeq() {
+        return archiveSeq;
+    }
+
+    public void setArchiveSeq(Long archiveSeq) {
+        this.archiveSeq = archiveSeq;
+    }
+
     /**
      * 会话列表用的一行摘要。
      */
@@ -166,9 +169,13 @@ public class InboxMessage {
             case "file" -> "[文件]";
             case "location" -> "[位置]";
             case "link" -> "[链接]";
-            case "miniprogram" -> "[小程序]";
+            case "card" -> "[名片]";
+            case "emotion" -> "[表情]";
+            case "weapp" -> "[小程序]";
+            case "chatrecord" -> "[聊天记录]";
+            case "revoke" -> "[撤回消息]";
             case "event" -> content == null || content.isBlank() ? "[事件]" : content;
-            default -> "[" + msgtype + "]";
+            default -> content == null || content.isBlank() ? "[" + msgtype + "]" : content;
         };
     }
 }

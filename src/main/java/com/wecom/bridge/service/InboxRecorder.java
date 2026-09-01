@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * 消息入库与实时推送的唯一入口，供各通道复用（避免通道之间互相依赖）。
+ * 消息入库与实时推送的唯一入口，供 OpenClaw 入站与会话存档入站复用。
  */
 @Component
 public class InboxRecorder {
@@ -33,16 +33,16 @@ public class InboxRecorder {
     }
 
     /**
-     * 记录对方发来的消息。重复 msgid 会被丢弃（官方回调与游标重放都可能重复）。
+     * 记录一条来源侧消息。重复 msgid 会被丢弃（重投、游标重放都可能重复）。
      */
-    public Optional<InboxMessage> recordInbound(InboundRecord record) {
+    public Optional<InboxMessage> record(InboundRecord record) {
         if (!store.markSeen(record.messageId())) {
             log.debug("忽略重复消息 {}", record.messageId());
             return Optional.empty();
         }
 
-        InboxConversation conversation = store.upsertConversation(
-                record.channel(), record.peerId(), record.peerName(), record.openKfid());
+        InboxConversation conversation = store.upsertConversation(record.channel(), record.peerId());
+        applyConversationFields(conversation, record);
 
         InboxMessage message = new InboxMessage();
         message.setId(record.messageId() == null || record.messageId().isBlank()
@@ -53,11 +53,12 @@ public class InboxRecorder {
         message.setMsgtype(record.msgtype());
         message.setContent(record.content());
         message.setMediaId(record.mediaId());
-        message.setSenderId(record.peerId());
-        message.setSenderName(conversation.displayName());
-        message.setOpenKfid(record.openKfid());
-        message.setServicerUserid(record.servicerUserid());
+        message.setSenderId(record.direction() == MessageDirection.OUTBOUND
+                ? record.ownerUserid() : record.peerId());
+        message.setSenderName(record.direction() == MessageDirection.OUTBOUND
+                ? "我" : conversation.displayName());
         message.setCreateTime(record.createTime() > 0 ? record.createTime() : System.currentTimeMillis());
+        message.setArchiveSeq(record.archiveSeq());
         message.setSendState(record.direction() == MessageDirection.OUTBOUND ? SendState.SENT : SendState.NONE);
 
         store.append(message);
@@ -65,32 +66,45 @@ public class InboxRecorder {
         return Optional.of(message);
     }
 
+    private void applyConversationFields(InboxConversation conversation, InboundRecord record) {
+        if (record.peerName() != null && !record.peerName().isBlank()) {
+            conversation.setPeerName(record.peerName());
+        }
+        if (record.openclawTarget() != null && !record.openclawTarget().isBlank()) {
+            conversation.setOpenclawTarget(record.openclawTarget());
+        }
+        if (record.ownerUserid() != null && !record.ownerUserid().isBlank()) {
+            conversation.setOwnerUserid(record.ownerUserid());
+        }
+        if (record.roomId() != null && !record.roomId().isBlank()) {
+            conversation.setRoomId(record.roomId());
+        }
+    }
+
     /**
-     * 记录本系统内录入、即将发往官方接口的消息。
+     * 记录本系统内录入、即将通过 OpenClaw 发出的消息。
      */
-    public InboxMessage recordOutbound(InboxConversation conversation, String msgtype, String content, String servicerUserid) {
+    public InboxMessage recordOutbound(InboxConversation conversation, String text) {
         InboxMessage message = new InboxMessage();
         message.setId("out-" + UUID.randomUUID());
         message.setChannel(conversation.getChannel());
         message.setConversationId(conversation.getId());
         message.setDirection(MessageDirection.OUTBOUND);
-        message.setMsgtype(msgtype);
-        message.setContent(content);
-        message.setSenderId(servicerUserid);
+        message.setMsgtype("text");
+        message.setContent(text);
         message.setSenderName("我");
-        message.setOpenKfid(conversation.getOpenKfid());
-        message.setServicerUserid(servicerUserid);
+        message.setOpenclawTarget(conversation.getOpenclawTarget());
         message.setCreateTime(System.currentTimeMillis());
         message.setSendState(SendState.NONE);
         store.append(message);
         return message;
     }
 
-    public void markSent(InboxConversation conversation, InboxMessage message, String officialMsgId) {
+    public void markSent(InboxConversation conversation, InboxMessage message, String outboundMessageId) {
         message.setSendState(SendState.SENT);
         message.setErrorMessage(null);
-        if (officialMsgId != null && !officialMsgId.isBlank()) {
-            store.markSeen(officialMsgId);
+        if (outboundMessageId != null && !outboundMessageId.isBlank()) {
+            store.markSeen(outboundMessageId);
         }
         store.markDirty();
         publish(conversation, message);
@@ -132,13 +146,15 @@ public class InboxRecorder {
             String messageId,
             String peerId,
             String peerName,
-            String openKfid,
-            String servicerUserid,
+            String openclawTarget,
+            String ownerUserid,
+            String roomId,
             MessageDirection direction,
             String msgtype,
             String content,
             String mediaId,
-            long createTime
+            long createTime,
+            Long archiveSeq
     ) {
         public static Builder builder(InboxChannel channel, String peerId) {
             return new Builder(channel, peerId);
@@ -149,13 +165,15 @@ public class InboxRecorder {
             private final String peerId;
             private String messageId;
             private String peerName;
-            private String openKfid;
-            private String servicerUserid;
+            private String openclawTarget;
+            private String ownerUserid;
+            private String roomId;
             private MessageDirection direction = MessageDirection.INBOUND;
             private String msgtype = "text";
             private String content = "";
             private String mediaId;
             private long createTime;
+            private Long archiveSeq;
 
             private Builder(InboxChannel channel, String peerId) {
                 this.channel = channel;
@@ -172,13 +190,18 @@ public class InboxRecorder {
                 return this;
             }
 
-            public Builder openKfid(String value) {
-                this.openKfid = value;
+            public Builder openclawTarget(String value) {
+                this.openclawTarget = value;
                 return this;
             }
 
-            public Builder servicerUserid(String value) {
-                this.servicerUserid = value;
+            public Builder ownerUserid(String value) {
+                this.ownerUserid = value;
+                return this;
+            }
+
+            public Builder roomId(String value) {
+                this.roomId = value;
                 return this;
             }
 
@@ -207,9 +230,14 @@ public class InboxRecorder {
                 return this;
             }
 
+            public Builder archiveSeq(Long value) {
+                this.archiveSeq = value;
+                return this;
+            }
+
             public InboundRecord build() {
-                return new InboundRecord(channel, messageId, peerId, peerName, openKfid, servicerUserid,
-                        direction, msgtype, content, mediaId, createTime);
+                return new InboundRecord(channel, messageId, peerId, peerName, openclawTarget, ownerUserid,
+                        roomId, direction, msgtype, content, mediaId, createTime, archiveSeq);
             }
         }
     }

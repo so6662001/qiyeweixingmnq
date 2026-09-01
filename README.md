@@ -16,34 +16,36 @@
 
 **实时收到消息 → 在页面里录入回复 → 自动发给对方，全程不用离开本系统。**
 
-| 通道 | 对应谁 | 收 | 发 |
-|------|--------|----|----|
-| 微信客服 | **微信（个人号）用户** | `kf/sync_msg` | `kf/send_msg` |
-| 企业微信自建应用 | 企微成员 | 接收消息回调 | `message/send` |
-| 本地演示 | 无（本机自造数据） | — | 仅记录本地 |
+| 通道 | 对应谁 | 入站 | 出站 |
+|------|--------|------|------|
+| 个人微信 | 微信好友（一对一私聊） | **OpenClaw**（腾讯官方 iLink Bot API，扫码授权） | **OpenClaw** |
+| 企业微信 | 企微联系人 / 外部客户 | **会话内容存档**（官方 SDK，seq 增量拉取） | **OpenClaw** |
+| 本地演示 | 无（本机自造数据） | 本地 | 仅记录本地 |
 
-- 只调用腾讯官方开放接口（`qyapi.weixin.qq.com`），**不使用任何非官方协议 / 逆向手段**。
-- 微信个人号没有对企业开放的收发接口，官方合规路径是「微信客服」；`itchat` / `WeChatFerry` 一类协议逆向方案违反微信个人账号使用规范，本项目不包含。
-- 官方规则已落到产品里：48 小时可回复窗口提前拦截并提示、人工接待自动转接、回调 5 秒内响应（拉取放后台）、msgid 去重、游标持久化、access_token 缓存复用。
-- 凭据只从环境变量注入，不写进仓库；消息落在 `data/bridge/`（已 gitignore），不落地媒体文件。
+- 个人微信走 [OpenClaw](https://github.com/openclaw/openclaw) 的腾讯官方渠道插件 `@tencent-weixin/openclaw-weixin`，底层是官方 iLink Bot API，**不是协议逆向**。
+- 企业微信入站用官方**会话内容存档**（需管理端开通、成员与客户已授权），只读拉取。
+- 两个通道**出站完全一致**：都调 `openclaw message send`，直接投递人工录入的原文，不触发大模型回合。
+- 不采用 `itchat` / `wechaty puppet-xp` / `WeChatFerry` 等逆向方案，也不使用微信客服模型。
+- 凭据只从环境变量注入；消息落在 `data/bridge/`（已 gitignore），不下载媒体文件。
 
-不配任何凭据也能先看效果：打开 `/inbox/`，用右侧「注入演示消息」验证实时接收与页面内回复。
+不配任何东西也能先看效果：打开 `/inbox/`，用右侧「注入演示消息」验证实时接收与页面内回复。
 
-配置步骤、合规说明、接口清单与错误码排查见 **[docs/official-inbox-setup.md](docs/official-inbox-setup.md)**。
+架构、部署、合规边界、接口清单与排查见 **[docs/openclaw-inbox-setup.md](docs/openclaw-inbox-setup.md)**；
+OpenClaw 转发插件见 **[openclaw-plugin/README.md](openclaw-plugin/README.md)**。
 
 ```bash
 export WECOM_BRIDGE_ENABLED=true
-export WECOM_CORP_ID=ww...
-export WECOM_KF_ENABLED=true
-export WECOM_KF_SECRET=... WECOM_KF_CALLBACK_TOKEN=... WECOM_KF_CALLBACK_AES_KEY=...
-export WECOM_KF_SERVICER_USERID=...
-mvn spring-boot:run
+# 个人微信收发 + 企微出站
+export WECOM_OPENCLAW_ENABLED=true
+export WECOM_OPENCLAW_INBOUND_TOKEN=$(openssl rand -hex 24)
+# 企微入站（会话存档）
+export WECOM_ARCHIVE_ENABLED=true WECOM_CORP_ID=ww... \
+       WECOM_ARCHIVE_SECRET=... WECOM_ARCHIVE_PRIVATE_KEY_V1="$(cat pkcs8_private.pem)" \
+       WECOM_ARCHIVE_SDK_LIB=/opt/wework/libWeWorkFinanceSdk_Java.so
+mvn spring-boot:run   # 打开 /inbox/
 ```
 
-回调地址填到企业微信后台：
-
-- 微信客服：`https://你的域名/callback/wecom/kf`
-- 企微应用：`https://你的域名/callback/wecom/app`
+OpenClaw 插件把私聊回推到 `POST /api/openclaw/inbound`（带共享密钥）。
 
 ---
 

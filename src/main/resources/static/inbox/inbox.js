@@ -14,8 +14,8 @@
   };
 
   const CHANNEL_LABEL = {
-    wechat_kf: "微信用户",
-    wecom_app: "企微成员",
+    wechat: "个人微信",
+    wecom_archive: "企业微信",
     demo: "本地演示",
   };
 
@@ -64,7 +64,7 @@
   }
 
   function channelClass(channel) {
-    if (channel === "wechat_kf") return "kf";
+    if (channel === "wechat") return "kf";
     if (channel === "demo") return "demo";
     return "";
   }
@@ -85,15 +85,20 @@
     state.status = status;
 
     const counts = derivedCounts();
-    const kf = status.wechat_kf || {};
-    const app = status.wecom_app || {};
+    const openclaw = status.openclaw || {};
+    const archive = status.archive || {};
     const pills = [];
 
     if (!status.enabled) {
-      pills.push(pill("off", "官方通道未启用"));
+      pills.push(pill("off", "总开关未启用"));
     }
-    pills.push(pill(kf.configured ? "ok" : "off", `微信客服 ${kf.configured ? "已接入" : "未配置"}`));
-    pills.push(pill(app.configured ? "ok" : "off", `企微应用 ${app.configured ? "已接入" : "未配置"}`));
+    pills.push(
+      pill(openclaw.inbound_ready ? "ok" : "off", `个人微信收 ${openclaw.inbound_ready ? "已接入" : "未配置"}`)
+    );
+    pills.push(
+      pill(openclaw.outbound_ready ? "ok" : "off", `OpenClaw 发 ${openclaw.outbound_ready ? "就绪" : "未就绪"}`)
+    );
+    pills.push(pill(archive.sdk_ready ? "ok" : "off", `企微存档 ${archiveStateText(archive)}`));
     if (status.demo_inbox) {
       pills.push(pill("off", "演示通道开启"));
     }
@@ -101,25 +106,34 @@
 
     const rows = [
       statusRow("总开关", status.enabled ? "已开启" : "未开启", status.enabled ? "ok" : "off"),
-      statusRow("企业 ID", status.corp_id_configured ? "已配置" : "未配置", status.corp_id_configured ? "ok" : "off"),
-      statusRow("微信客服", kf.configured ? "已配置" : "未配置", kf.configured ? "ok" : "off"),
       statusRow(
-        "接待人员",
-        kf.servicer_configured ? (kf.auto_take_over ? "自动接入人工" : "已配置") : "未配置",
-        kf.servicer_configured ? "ok" : "warn"
+        "OpenClaw 入站",
+        openclaw.inbound_ready ? "已配置密钥" : "未配置密钥",
+        openclaw.inbound_ready ? "ok" : "off"
       ),
-      statusRow("企微应用", app.configured ? `AgentId ${app.agent_id}` : "未配置", app.configured ? "ok" : "off"),
+      statusRow("OpenClaw 出站", openclaw.outbound_ready ? "就绪" : "未就绪", openclaw.outbound_ready ? "ok" : "off"),
+      statusRow("微信渠道", openclaw.wechat_channel || "-", "ok"),
+      statusRow("存档配置", archive.configured ? "已配置" : "未配置", archive.configured ? "ok" : "off"),
+      statusRow("存档 SDK", archive.sdk_ready ? "已加载" : "未加载", archive.sdk_ready ? "ok" : "warn"),
+      statusRow("存档 seq", String(archive.seq == null ? 0 : archive.seq), "ok"),
       statusRow("会话数", String(counts.conversations), "ok"),
       statusRow("未读", String(counts.unread), counts.unread ? "warn" : "off"),
     ];
+    if (archive.last_error) {
+      rows.push(statusRow("存档最近错误", String(archive.last_error), "warn"));
+    }
     $("statusDetail").innerHTML = rows.join("");
 
-    const origin = location.origin;
-    $("kfCallback").textContent = origin + (kf.callback_path || "/callback/wecom/kf");
-    $("appCallback").textContent = origin + (app.callback_path || "/callback/wecom/app");
+    $("inboundPath").textContent = location.origin + (openclaw.inbound_path || "/api/openclaw/inbound");
     $("demoCard").hidden = !status.demo_inbox;
 
-    document.title = counts.unread ? `(${counts.unread}) 统一收件箱` : "统一收件箱 · 企微 / 微信客服";
+    document.title = counts.unread ? `(${counts.unread}) 统一收件箱` : "统一收件箱 · 个人微信 / 企业微信";
+  }
+
+  function archiveStateText(archive) {
+    if (!archive.enabled) return "未启用";
+    if (!archive.configured) return "未配置";
+    return archive.sdk_ready ? "已接入" : "SDK 未加载";
   }
 
   function pill(kind, text) {
@@ -173,7 +187,7 @@
     container.innerHTML = list
       .map((item) => {
         const name = item.peer_name || item.peer_id || "";
-        const tagClass = item.channel === "wechat_kf" ? "kf" : item.channel === "wecom_app" ? "app" : "";
+        const tagClass = item.channel === "wechat" ? "kf" : item.channel === "wecom_archive" ? "app" : "";
         return `<div class="session ${item.id === state.activeId ? "active" : ""}" data-id="${escapeHtml(item.id)}">
           <div class="avatar ${channelClass(item.channel)}">${escapeHtml(initials(name))}</div>
           <div class="session-main">
@@ -275,9 +289,9 @@
       $("peerAvatar").className = "avatar";
       $("peerName").textContent = "请选择左侧会话";
       $("peerMeta").textContent = "收到新消息会自动出现在这里，无需刷新";
-      $("btnTakeOver").hidden = true;
+      $("btnSetTarget").hidden = true;
       notice.hidden = true;
-      setComposerEnabled(false, "选择会话后即可直接回复，消息通过官方接口发出。");
+      setComposerEnabled(false, "选择会话后即可直接回复，消息通过 OpenClaw 发出。");
       return;
     }
 
@@ -288,62 +302,46 @@
 
     const metaParts = [CHANNEL_LABEL[conversation.channel] || conversation.channel];
     if (conversation.peer_id) metaParts.push(conversation.peer_id);
-    if (conversation.service_state != null) {
-      metaParts.push(serviceStateLabel(conversation.service_state));
-    }
+    if (conversation.owner_userid) metaParts.push("归属 " + conversation.owner_userid);
+    if (conversation.openclaw_target) metaParts.push("发送目标 " + conversation.openclaw_target);
     $("peerMeta").textContent = metaParts.join(" · ");
 
-    $("btnTakeOver").hidden = conversation.channel !== "wechat_kf";
+    // 企微存档身份不是 OpenClaw 目标，需要人工补映射
+    $("btnSetTarget").hidden = conversation.channel !== "wecom_archive";
 
-    const warning = replyWarning(conversation);
-    if (warning) {
+    const missingTarget = needsTarget(conversation);
+    if (missingTarget) {
       notice.hidden = false;
       notice.className = "notice";
-      notice.textContent = warning;
+      notice.textContent =
+        "这条企微会话还没有 OpenClaw 发送目标。存档里的 " +
+        conversation.peer_id +
+        " 不能直接当作发送目标，请点右上「设置发送目标」补填对应的微信对端标识。";
     } else {
       notice.hidden = true;
     }
 
     if (conversation.channel === "demo") {
       setComposerEnabled(true, "演示通道：内容只记录在本地，不会发往真实用户。");
-    } else if (!channelReady(conversation.channel)) {
-      setComposerEnabled(false, "该通道尚未配置官方凭据，无法发送。请先在环境变量中配置后重启服务。");
+    } else if (!outboundReady()) {
+      setComposerEnabled(
+        false,
+        "OpenClaw 出站未就绪：请确认 openclaw 已安装、微信渠道已登录，并开启 wecom.bridge.openclaw.enabled。"
+      );
+    } else if (missingTarget) {
+      setComposerEnabled(false, "补填发送目标后即可回复。");
     } else {
-      setComposerEnabled(true, "Enter 发送，Shift+Enter 换行。消息通过官方接口直接发给对方。");
+      setComposerEnabled(true, "Enter 发送，Shift+Enter 换行。消息通过 OpenClaw 直接发给对方。");
     }
   }
 
-  function serviceStateLabel(value) {
-    const map = {
-      0: "未处理",
-      1: "智能助手接待",
-      2: "排队中",
-      3: "人工接待中",
-      4: "已结束",
-    };
-    return map[value] || `状态 ${value}`;
+  function outboundReady() {
+    return !!(state.status && state.status.openclaw && state.status.openclaw.outbound_ready);
   }
 
-  function channelReady(channel) {
-    if (!state.status) return false;
-    if (channel === "wechat_kf") return !!(state.status.wechat_kf && state.status.wechat_kf.configured);
-    if (channel === "wecom_app") return !!(state.status.wecom_app && state.status.wecom_app.configured);
-    return true;
-  }
-
-  function replyWarning(conversation) {
-    if (conversation.channel !== "wechat_kf" || !state.status) return "";
-    const hours = (state.status.wechat_kf && state.status.wechat_kf.reply_window_hours) || 48;
-    const last = conversation.last_inbound_at || 0;
-    if (!last) return "";
-    const elapsedHours = (Date.now() - last) / 3600000;
-    if (elapsedHours > hours) {
-      return `客户最后一条消息已超过 ${hours} 小时，按官方规则暂不能主动发送，需等客户再次发起会话。`;
-    }
-    if (elapsedHours > hours - 6) {
-      return `距官方 ${hours} 小时可回复窗口结束还有约 ${Math.max(0, Math.round(hours - elapsedHours))} 小时。`;
-    }
-    return "";
+  function needsTarget(conversation) {
+    if (conversation.channel !== "wecom_archive") return false;
+    return !conversation.openclaw_target;
   }
 
   function setComposerEnabled(enabled, hint) {
@@ -544,23 +542,38 @@
       }
     });
 
-    $("btnSync").addEventListener("click", async () => {
+    $("btnPullArchive").addEventListener("click", async () => {
       try {
-        const result = await api("/api/inbox/sync", { method: "POST" });
-        toast(`同步完成，新增 ${result.imported || 0} 条`);
+        const result = await api("/api/inbox/archive/pull", { method: "POST" });
+        toast(`存档拉取完成，新增 ${result.imported || 0} 条`);
       } catch (e) {
         toast(e.message);
       }
     });
 
-    $("btnTakeOver").addEventListener("click", async () => {
+    $("btnSetTarget").addEventListener("click", async () => {
       if (!state.activeId) return;
+      const conversation = state.conversations.get(state.activeId);
+      const current = (conversation && conversation.openclaw_target) || "";
+      const target = window.prompt(
+        "填写该联系人在 OpenClaw 里的发送目标（个人微信对端标识）：",
+        current
+      );
+      if (target === null) return;
+      const trimmed = target.trim();
+      if (!trimmed) {
+        toast("发送目标不能为空");
+        return;
+      }
       try {
-        await api(`/api/inbox/conversations/${encodeURIComponent(state.activeId)}/take-over`, {
-          method: "POST",
-          body: JSON.stringify({}),
-        });
-        toast("已接入人工接待");
+        const updated = await api(
+          `/api/inbox/conversations/${encodeURIComponent(state.activeId)}/openclaw-target`,
+          { method: "PUT", body: JSON.stringify({ target: trimmed }) }
+        );
+        upsertConversation(updated);
+        renderSessions();
+        renderHeader();
+        toast("发送目标已保存");
       } catch (e) {
         toast(e.message);
       }

@@ -37,17 +37,17 @@ public class DemoInboxSeeder implements ApplicationRunner {
             return;
         }
 
-        recorder.recordInbound(InboxRecorder.InboundRecord
+        recorder.record(InboxRecorder.InboundRecord
                 .builder(InboxChannel.DEMO, DEMO_PEER)
                 .messageId("demo-seed-1")
                 .peerName("演示客户")
                 .direction(MessageDirection.SYSTEM)
                 .msgtype("event")
-                .content("这是本地演示会话，消息不会发往任何真实用户。配置官方凭据后，真实会话会出现在上方。")
+                .content("这是本地演示会话，消息不会发往任何真实用户。配置 OpenClaw 与会话存档后，真实会话会出现在上方。")
                 .createTime(System.currentTimeMillis())
                 .build());
 
-        recorder.recordInbound(InboxRecorder.InboundRecord
+        recorder.record(InboxRecorder.InboundRecord
                 .builder(InboxChannel.DEMO, DEMO_PEER)
                 .messageId("demo-seed-2")
                 .peerName("演示客户")

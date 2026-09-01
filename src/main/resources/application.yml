@@ -11,33 +11,46 @@ spring:
       max-request-size: 5MB
 
 wecom:
-  # —— 官方通道统一收件箱（真实收发；凭据只从环境变量注入） ——
+  # —— 统一收件箱（真实收发；凭据只从环境变量注入） ——
+  # 入站：个人微信来自 OpenClaw 插件回推，企业微信来自会话内容存档
+  # 出站：两个通道都通过 OpenClaw 发送
   bridge:
     enabled: ${WECOM_BRIDGE_ENABLED:false}
-    corp-id: ${WECOM_CORP_ID:}
-    api-base: ${WECOM_API_BASE:https://qyapi.weixin.qq.com}
     data-dir: data/bridge
     max-messages: 5000
-    request-timeout: 10s
-    # 无凭据时保留本地演示会话，便于先验证「实时收 → 页面内回」链路
+    # 无真实配置时保留本地演示会话，便于先验证「实时收 → 页面内回」链路
     demo-inbox: ${WECOM_BRIDGE_DEMO_INBOX:true}
-    # 微信客服：与微信个人用户双向收发的官方通道
-    kf:
-      enabled: ${WECOM_KF_ENABLED:false}
-      secret: ${WECOM_KF_SECRET:}
-      callback-token: ${WECOM_KF_CALLBACK_TOKEN:}
-      callback-aes-key: ${WECOM_KF_CALLBACK_AES_KEY:}
-      servicer-userid: ${WECOM_KF_SERVICER_USERID:}
-      auto-take-over: ${WECOM_KF_AUTO_TAKE_OVER:true}
-      sync-limit: 1000
-      reply-window: 48h
-    # 企业微信自建应用：企业成员与应用之间的消息
-    app:
-      enabled: ${WECOM_APP_ENABLED:false}
-      agent-id: ${WECOM_APP_AGENT_ID:0}
-      secret: ${WECOM_APP_SECRET:}
-      callback-token: ${WECOM_APP_CALLBACK_TOKEN:}
-      callback-aes-key: ${WECOM_APP_CALLBACK_AES_KEY:}
+
+    # OpenClaw：个人微信收发 + 企业微信出站
+    openclaw:
+      enabled: ${WECOM_OPENCLAW_ENABLED:false}
+      cli-path: ${WECOM_OPENCLAW_CLI:openclaw}
+      wechat-channel: ${WECOM_OPENCLAW_WECHAT_CHANNEL:openclaw-weixin}
+      account: ${WECOM_OPENCLAW_ACCOUNT:}
+      command-timeout: 20s
+      # 与 OpenClaw 插件配置里的 token 保持一致；为空则拒绝所有入站请求
+      inbound-token: ${WECOM_OPENCLAW_INBOUND_TOKEN:}
+
+    # 企业微信会话内容存档：入站唯一来源
+    archive:
+      enabled: ${WECOM_ARCHIVE_ENABLED:false}
+      corp-id: ${WECOM_CORP_ID:}
+      secret: ${WECOM_ARCHIVE_SECRET:}
+      # 公钥版本号 → PKCS#8 私钥 PEM，例如 WECOM_ARCHIVE_PRIVATE_KEYS_1
+      private-keys:
+        "1": ${WECOM_ARCHIVE_PRIVATE_KEY_V1:}
+      sdk-library-path: ${WECOM_ARCHIVE_SDK_LIB:}
+      poll-interval: 5s
+      batch-limit: 1000
+      proxy: ${WECOM_ARCHIVE_PROXY:}
+      proxy-passwd: ${WECOM_ARCHIVE_PROXY_PASSWD:}
+      request-timeout-seconds: 10
+      external-only: ${WECOM_ARCHIVE_EXTERNAL_ONLY:false}
+      include-room-chats: ${WECOM_ARCHIVE_INCLUDE_ROOMS:false}
+      # 本企业成员 UserID，用于判断消息方向；留空按 external_userid 形态推断
+      member-userids: ${WECOM_ARCHIVE_MEMBER_USERIDS:}
+      # 存档身份 → OpenClaw 发送目标（也可在页面上逐个补填）
+      target-mapping: {}
 
   simulator:
     # 企微通道目录（个人微信使用 data/wechat/*，见 ProductChannel）

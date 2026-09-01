@@ -99,22 +99,14 @@ public class InboxStore {
         return seenMessageIds.put(messageId, Boolean.TRUE) == null;
     }
 
-    public InboxConversation upsertConversation(InboxChannel channel, String peerId, String peerName, String openKfid) {
+    public InboxConversation upsertConversation(InboxChannel channel, String peerId) {
         String id = InboxConversation.buildId(channel, peerId);
-        return conversations.compute(id, (key, existing) -> {
-            InboxConversation conversation = existing;
-            if (conversation == null) {
-                conversation = new InboxConversation();
-                conversation.setId(key);
-                conversation.setChannel(channel);
-                conversation.setPeerId(peerId);
-            }
-            if (peerName != null && !peerName.isBlank()) {
-                conversation.setPeerName(peerName);
-            }
-            if (openKfid != null && !openKfid.isBlank()) {
-                conversation.setOpenKfid(openKfid);
-            }
+        return conversations.computeIfAbsent(id, key -> {
+            InboxConversation conversation = new InboxConversation();
+            conversation.setId(key);
+            conversation.setChannel(channel);
+            conversation.setPeerId(peerId);
+            dirty.set(true);
             return conversation;
         });
     }

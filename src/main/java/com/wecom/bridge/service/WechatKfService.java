@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,9 @@ public class WechatKfService implements ChannelSender {
 
     private static final int MAX_SYNC_ROUNDS = 20;
     private static final int NAME_BATCH = 100;
+
+    /** 未指定客服账号时使用的游标键。 */
+    private static final String ALL_ACCOUNTS_CURSOR = "__all__";
 
     private final BridgeProperties properties;
     private final WecomApiClient apiClient;
@@ -82,10 +86,48 @@ public class WechatKfService implements ChannelSender {
     }
 
     /**
+     * 手动兜底同步：按已知客服账号逐个拉取，各自复用自己的游标。
+     *
+     * <p>不能用「不带 open_kfid 的一次拉取」代替，否则游标对不上，会从最早的消息重新拉。</p>
+     */
+    public int syncAllAccounts() {
+        Set<String> openKfids = new LinkedHashSet<>();
+        store.listConversations().stream()
+                .filter(conversation -> conversation.getChannel() == InboxChannel.WECHAT_KF)
+                .map(InboxConversation::getOpenKfid)
+                .filter(id -> id != null && !id.isBlank())
+                .forEach(openKfids::add);
+        store.cursorKeys().stream()
+                .filter(key -> !ALL_ACCOUNTS_CURSOR.equals(key))
+                .forEach(openKfids::add);
+
+        if (openKfids.isEmpty()) {
+            try {
+                listAccounts().stream()
+                        .map(account -> account.get("open_kfid"))
+                        .filter(id -> id != null && !id.isBlank())
+                        .forEach(openKfids::add);
+            } catch (WecomApiException e) {
+                log.info("读取客服账号列表失败，退化为不指定账号拉取: {}", e.getMessage());
+            }
+        }
+
+        if (openKfids.isEmpty()) {
+            return syncMessages(null, null);
+        }
+
+        int total = 0;
+        for (String openKfid : openKfids) {
+            total += syncMessages(null, openKfid);
+        }
+        return total;
+    }
+
+    /**
      * 增量拉取消息。游标持久化在本地，避免重复拉取或漏消息。
      */
     public int syncMessages(String token, String openKfid) {
-        String cursorKey = openKfid == null || openKfid.isBlank() ? "__all__" : openKfid;
+        String cursorKey = openKfid == null || openKfid.isBlank() ? ALL_ACCOUNTS_CURSOR : openKfid;
         String cursor = store.cursor(cursorKey);
         int imported = 0;
 

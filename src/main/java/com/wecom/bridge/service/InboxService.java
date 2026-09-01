@@ -115,7 +115,7 @@ public class InboxService {
         if (!wechatKfService.configured()) {
             throw new IllegalStateException("微信客服通道未配置，无法同步");
         }
-        return wechatKfService.syncMessages(null, null);
+        return wechatKfService.syncAllAccounts();
     }
 
     public void takeOver(String conversationId, String servicerUserid) {

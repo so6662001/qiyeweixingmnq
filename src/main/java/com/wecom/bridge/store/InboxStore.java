@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -185,6 +186,11 @@ public class InboxStore {
 
     public String cursor(String openKfid) {
         return cursors.getOrDefault(openKfid, "");
+    }
+
+    /** 已保存过游标的客服账号，用于手动同步时按账号复用各自的游标。 */
+    public Set<String> cursorKeys() {
+        return Set.copyOf(cursors.keySet());
     }
 
     public void saveCursor(String openKfid, String cursor) {

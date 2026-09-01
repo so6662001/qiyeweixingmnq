@@ -100,6 +100,36 @@ class WechatKfServiceTest {
     }
 
     @Test
+    void 手动同步按客服账号复用各自游标() {
+        transport.respond("/cgi-bin/kf/sync_msg", SYNC_ONE_TEXT)
+                .respond("/cgi-bin/kf/customer/batchget", "{\"errcode\":0,\"errmsg\":\"ok\",\"customer_list\":[]}");
+        service.handleCallbackEvent("event-token", "wk-open-1");
+        assertThat(store.cursor("wk-open-1")).isEqualTo("cursor-1");
+
+        transport.reset();
+        service.syncAllAccounts();
+
+        // 必须带上该账号已保存的游标，而不是空游标从头拉
+        var lastSync = transport.lastCallTo("/cgi-bin/kf/sync_msg");
+        assertThat(lastSync.body())
+                .contains("\"cursor\":\"cursor-1\"")
+                .contains("\"open_kfid\":\"wk-open-1\"");
+    }
+
+    @Test
+    void 没有任何已知账号时先查客服账号列表() {
+        transport.respond("/cgi-bin/kf/account/list", """
+                {"errcode":0,"errmsg":"ok","account_list":[{"open_kfid":"wk-from-list","name":"客服A"}]}
+                """).respond("/cgi-bin/kf/sync_msg",
+                "{\"errcode\":0,\"errmsg\":\"ok\",\"next_cursor\":\"c9\",\"has_more\":0,\"msg_list\":[]}");
+
+        service.syncAllAccounts();
+
+        assertThat(transport.callsTo("/cgi-bin/kf/account/list")).hasSize(1);
+        assertThat(transport.lastCallTo("/cgi-bin/kf/sync_msg").body()).contains("\"open_kfid\":\"wk-from-list\"");
+    }
+
+    @Test
     void 相同msgid不会重复入库() {
         transport.respond("/cgi-bin/kf/sync_msg", SYNC_ONE_TEXT)
                 .respond("/cgi-bin/kf/customer/batchget", "{\"errcode\":0,\"errmsg\":\"ok\",\"customer_list\":[]}");

@@ -723,6 +723,24 @@ code {
   }
 }
 
+/*
+ * 返回键只在手机单栏时出现。
+ * 基础规则必须写在媒体查询之前，否则同优先级下后写的会把手机端覆盖掉。
+ */
+.back-to-list {
+  display: none;
+  align-items: center;
+  border: none;
+  background: #eef2f8;
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* 中等屏：收起右侧信息栏，保留会话列表 */
 @media (max-width: 1024px) {
   .body {
@@ -787,16 +805,6 @@ code {
 
   .back-to-list {
     display: inline-flex;
-    align-items: center;
-    border: none;
-    background: #eef2f8;
-    color: var(--ink);
-    border-radius: 8px;
-    padding: 7px 10px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    cursor: pointer;
-    flex-shrink: 0;
   }
 
   .row {
@@ -817,7 +825,3 @@ code {
   }
 }
 
-/* 桌面端不需要返回键 */
-.back-to-list {
-  display: none;
-}

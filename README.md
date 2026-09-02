@@ -54,6 +54,23 @@ OpenClaw 转发插件见 **[openclaw-plugin/README.md](openclaw-plugin/README.md
 
 演练模式 `WECOM_BRIDGE_DRY_RUN=true`：所有出站只记录不真发，真实环境首测建议先开。
 
+## 手机访问与部署位置
+
+收件箱和运营台都做了手机适配，浏览器打开即可用。但要注意两点：
+
+1. **网关必须跑在常开的机器上**。OpenClaw 官方手机 App 是 companion node，
+   [明确不托管 Gateway](https://docs.openclaw.ai/platforms/android)，顶不了这个角色。
+   办公电脑会关机的话，把服务搬到云主机 / NAS / 常开旧机器上，手机就只当操作端。
+2. **必须设置访问口令**。收件箱能看全部客户会话并以你的身份发消息：
+
+```bash
+export WECOM_ACCESS_CODE=$(openssl rand -base64 18)
+export WECOM_AUTH_COOKIE_SECURE=true   # 走 HTTPS 时开
+```
+
+安全默认：**不配口令时只接受本机回环访问**，外部请求直接拒绝，不会出现裸奔在公网的情况。
+外网访问建议走 Tailscale 或 HTTPS 反代，详见 [docs/real-world-testing.md](docs/real-world-testing.md#电脑关机了怎么办--手机能不能顶上)。
+
 ```bash
 export WECOM_BRIDGE_ENABLED=true
 # 个人微信收发 + 企微出站

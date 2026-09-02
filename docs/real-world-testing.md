@@ -94,6 +94,66 @@ openclaw gateway restart
 
 ---
 
+### 电脑关机了怎么办 / 手机能不能顶上
+
+先说结论：**手机顶不了网关，但可以完全替代「操作端」**。
+
+OpenClaw 官方的 iOS / Android App 是 **companion node（外设节点）**，文档写得很明确：
+「Android does not host the Gateway」。它给网关补充摄像头、定位、语音、Canvas 等能力，
+通过 WebSocket 以 `role: node` 配对，**不能自己收发微信**。iOS 更是完全不可能托管网关。
+
+所以正确的做法不是「让手机顶上」，而是**把网关从会关机的电脑上搬走**：
+
+| 方案 | 适合谁 | 说明 |
+| --- | --- | --- |
+| **云主机 / VPS** | 大多数人，推荐 | 2 核 2G 足够。天生常开，公网可达，配 HTTPS 就能从手机用 |
+| **公司内网服务器 / NAS** | 已有机器 | 常开、稳定；外网访问要额外做（见下） |
+| **一台旧电脑常插电** | 成本最低 | 关掉休眠、设开机自启；断电就停 |
+| **安卓机 + Termux** | 想「口袋里的常开网关」 | 社区方案（`openclaw-termux` 用 proot 装 Ubuntu）。能跑，但不是官方支持路径，自担风险 |
+
+搬过去之后：**你的办公电脑关不关机都无所谓**，手机浏览器打开收件箱就能收发。
+
+#### 无头服务器怎么扫码登录
+
+扫码必须在跑网关的那台机器上执行，但服务器没有图形界面——没关系，二维码会直接打在终端里：
+
+```bash
+ssh 你的服务器
+openclaw channels login --channel openclaw-weixin
+# 终端里出现二维码，用手机微信扫
+```
+
+手机上装个 SSH 客户端（Termius 等），**在外面也能重新扫码**，这就解决了「登录失效必须回公司」的问题。
+
+#### 手机怎么安全访问
+
+收件箱能看到全部客户会话、还能以你的身份发消息，**绝不能裸奔在公网上**。三选一：
+
+| 方式 | 做法 | 评价 |
+| --- | --- | --- |
+| **Tailscale（推荐）** | 服务器和手机装同一个 tailnet，手机访问 `http://<tailnet-ip>:8000` | 不暴露公网，零配置证书，最省事 |
+| HTTPS + 反向代理 | Nginx/Caddy 配证书，转发到 8000 | 需要域名和证书；务必同时配口令 |
+| 内网 + VPN | 公司已有 VPN 就直接用 | 取决于现有网络 |
+
+无论哪种，**都必须设置访问口令**：
+
+```bash
+export WECOM_ACCESS_CODE=$(openssl rand -base64 18)   # 记下来，手机上要输
+export WECOM_AUTH_COOKIE_SECURE=true                  # 走 HTTPS 时开
+```
+
+安全默认：**不配口令时服务只接受本机回环访问**，外部请求直接拒绝并告诉你原因。
+所以不会出现「忘了配口令，客户聊天记录裸奔在公网」这种事。
+
+登录一次后 7 天内免输（`WECOM_AUTH_SESSION_TTL` 可调），改口令会让所有旧登录态立即失效。
+
+#### 手机上的界面
+
+收件箱和运营台都做了手机适配：单栏布局、会话列表与聊天用返回键切换、
+输入框字号避免 iOS 自动缩放、底部留出安全区。顶部右侧有「退出」。
+
+---
+
 ### 人不在电脑旁（常见场景）
 
 典型用法：办公室/机房一台机器常开，跑 OpenClaw 网关；人在外面用手机微信。**这样是可以正常收发的**，原理是：
@@ -238,6 +298,10 @@ export WECOM_MOMENT_LOOKBACK_DAYS=7          # 官方限制查询区间 ≤ 30 �
 | `WECOM_BRIDGE_ENABLED` | 总开关 |
 | `WECOM_BRIDGE_DRY_RUN` | 演练模式，出站只记录不真发 |
 | `WECOM_BRIDGE_DEMO_INBOX` | 是否保留本地演示会话 |
+| **`WECOM_ACCESS_CODE`** | **访问口令。不配则只允许本机访问；要从手机用必须配** |
+| `WECOM_AUTH_COOKIE_SECURE` | 走 HTTPS 时置 true |
+| `WECOM_AUTH_SESSION_TTL` | 登录态有效期，默认 7d |
+| `WECOM_OPENCLAW_HEALTH_INTERVAL` | 渠道存活探测间隔，默认 60s |
 | `WECOM_OPENCLAW_ENABLED` / `_CLI` / `_INBOUND_TOKEN` | 个人微信收发 + 企微出站 |
 | `WECOM_OPENCLAW_WECHAT_CHANNEL` / `_ACCOUNT` | 渠道 id 与多账号 |
 | `WECOM_ARCHIVE_ENABLED` / `_SECRET` / `_PRIVATE_KEY_V1` / `_SDK_LIB` | 企微入站（会话存档） |
@@ -251,6 +315,8 @@ export WECOM_MOMENT_LOOKBACK_DAYS=7          # 官方限制查询区间 ≤ 30 �
 ## 七、上线前检查清单
 
 - [ ] 运营台自检**没有红色项**
+- [ ] **已设置 `WECOM_ACCESS_CODE`**，且服务不是以明文 HTTP 暴露在公网
+- [ ] 网关跑在常开的机器上，不依赖某台会关机的办公电脑
 - [ ] 演练模式验证过一轮后才关闭 `dry-run`
 - [ ] 存档已取得成员与客户授权，欢迎语/服务协议里已告知客户消息会被企业系统处理
 - [ ] 凭据都在环境变量里，没有写进代码或配置文件提交

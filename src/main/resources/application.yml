@@ -32,6 +32,9 @@ wecom:
       command-timeout: 20s
       # 与 OpenClaw 插件配置里的 token 保持一致；为空则拒绝所有入站请求
       inbound-token: ${WECOM_OPENCLAW_INBOUND_TOKEN:}
+      # 定期探测网关与微信渠道是否还活着；人不在电脑旁时靠它判断能不能用
+      health-check-enabled: ${WECOM_OPENCLAW_HEALTH_CHECK:true}
+      health-check-interval: ${WECOM_OPENCLAW_HEALTH_INTERVAL:60s}
 
     # 企业微信会话内容存档：入站唯一来源
     archive:

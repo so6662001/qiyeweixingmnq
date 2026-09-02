@@ -10,6 +10,7 @@ import com.wecom.bridge.model.InboxConversation;
 import com.wecom.bridge.model.InboxMessage;
 import com.wecom.bridge.model.SendState;
 import com.wecom.bridge.openclaw.OpenClawGateway;
+import com.wecom.bridge.openclaw.OpenClawHealthService;
 import com.wecom.bridge.store.InboxStore;
 import com.wecom.bridge.support.FakeProcessRunner;
 import com.wecom.bridge.support.FakeWeWorkFinanceSdk;
@@ -55,8 +56,9 @@ class InboxServiceTest {
                 recorder, store, objectMapper);
         SessionArchivePoller poller = new SessionArchivePoller(properties, archiveService);
 
+        OpenClawHealthService health = new OpenClawHealthService(properties, gateway);
         inboxService = new InboxService(store, recorder, properties, archiveService, poller,
-                gateway, openClawSender, List.of(openClawSender, demoSender));
+                gateway, health, openClawSender, List.of(openClawSender, demoSender));
     }
 
     @Test

@@ -213,6 +213,14 @@ public class BridgeProperties {
         /** 插件回推入站消息时使用的共享密钥；为空则拒绝所有入站请求。 */
         private String inboundToken = "";
 
+        /**
+         * 定期探测网关与微信渠道是否还活着。
+         * 人在外面、收发靠另一台机器时，这是判断「还能不能用」的依据。
+         */
+        private boolean healthCheckEnabled = true;
+
+        private Duration healthCheckInterval = Duration.ofSeconds(60);
+
         public boolean isEnabled() {
             return enabled;
         }
@@ -260,6 +268,22 @@ public class BridgeProperties {
 
         public void setInboundToken(String inboundToken) {
             this.inboundToken = inboundToken == null ? "" : inboundToken.trim();
+        }
+
+        public boolean isHealthCheckEnabled() {
+            return healthCheckEnabled;
+        }
+
+        public void setHealthCheckEnabled(boolean healthCheckEnabled) {
+            this.healthCheckEnabled = healthCheckEnabled;
+        }
+
+        public Duration getHealthCheckInterval() {
+            return healthCheckInterval;
+        }
+
+        public void setHealthCheckInterval(Duration healthCheckInterval) {
+            this.healthCheckInterval = healthCheckInterval;
         }
 
         /** 出站可用（发送）。 */

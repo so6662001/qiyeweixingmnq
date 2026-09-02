@@ -8,6 +8,7 @@ import com.wecom.bridge.model.InboxConversation;
 import com.wecom.bridge.model.InboxMessage;
 import com.wecom.bridge.model.MessageDirection;
 import com.wecom.bridge.openclaw.OpenClawGateway;
+import com.wecom.bridge.openclaw.OpenClawHealthService;
 import com.wecom.bridge.store.InboxStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class InboxService {
     private final SessionArchiveService archiveService;
     private final SessionArchivePoller archivePoller;
     private final OpenClawGateway openClawGateway;
+    private final OpenClawHealthService openClawHealth;
     private final OpenClawSender openClawSender;
     private final List<ChannelSender> senders;
 
@@ -47,6 +49,7 @@ public class InboxService {
                         SessionArchiveService archiveService,
                         SessionArchivePoller archivePoller,
                         OpenClawGateway openClawGateway,
+                        OpenClawHealthService openClawHealth,
                         OpenClawSender openClawSender,
                         List<ChannelSender> senders) {
         this.store = store;
@@ -55,6 +58,7 @@ public class InboxService {
         this.archiveService = archiveService;
         this.archivePoller = archivePoller;
         this.openClawGateway = openClawGateway;
+        this.openClawHealth = openClawHealth;
         this.openClawSender = openClawSender;
         this.senders = senders;
     }
@@ -209,6 +213,7 @@ public class InboxService {
         openclawStatus.put("wechat_channel", openclaw.getWechatChannel());
         openclawStatus.put("cli_path", openclaw.getCliPath());
         openclawStatus.put("inbound_path", "/api/openclaw/inbound");
+        openclawStatus.put("health", openClawHealth.describe());
         status.put("openclaw", openclawStatus);
 
         BridgeProperties.Archive archive = properties.getArchive();

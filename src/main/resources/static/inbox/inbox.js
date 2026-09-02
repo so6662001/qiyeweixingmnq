@@ -99,6 +99,14 @@
       pill(openclaw.outbound_ready ? "ok" : "off", `OpenClaw 发 ${openclaw.outbound_ready ? "就绪" : "未就绪"}`)
     );
     pills.push(pill(archive.sdk_ready ? "ok" : "off", `企微存档 ${archiveStateText(archive)}`));
+
+    // 人在外面时，这条最关键：网关那台机器还活着吗
+    const health = openclaw.health || {};
+    if (openclaw.enabled && health.enabled) {
+      const healthy = health.probe_ok && health.channel_listed && !health.stale;
+      pills.push(pill(healthy ? "ok" : "off", `渠道 ${healthText(health)}`));
+    }
+
     if (status.demo_inbox) {
       pills.push(pill("off", "演示通道开启"));
     }
@@ -113,6 +121,11 @@
       ),
       statusRow("OpenClaw 出站", openclaw.outbound_ready ? "就绪" : "未就绪", openclaw.outbound_ready ? "ok" : "off"),
       statusRow("微信渠道", openclaw.wechat_channel || "-", "ok"),
+      statusRow(
+        "渠道存活",
+        health.enabled === false ? "未开启探测" : healthText(health),
+        health.probe_ok && health.channel_listed && !health.stale ? "ok" : "warn"
+      ),
       statusRow("存档配置", archive.configured ? "已配置" : "未配置", archive.configured ? "ok" : "off"),
       statusRow("存档 SDK", archive.sdk_ready ? "已加载" : "未加载", archive.sdk_ready ? "ok" : "warn"),
       statusRow("存档 seq", String(archive.seq == null ? 0 : archive.seq), "ok"),
@@ -134,6 +147,21 @@
     if (!archive.enabled) return "未启用";
     if (!archive.configured) return "未配置";
     return archive.sdk_ready ? "已接入" : "SDK 未加载";
+  }
+
+  function healthText(health) {
+    if (!health.checked_at) return "待探测";
+    if (health.stale) return "探测已停";
+    if (!health.probe_ok) return "网关无响应";
+    if (!health.channel_listed) return "渠道掉线";
+    return `在线 · ${sinceText(health.checked_at)}`;
+  }
+
+  function sinceText(millis) {
+    const seconds = Math.max(0, Math.round((Date.now() - millis) / 1000));
+    if (seconds < 60) return `${seconds} 秒前`;
+    if (seconds < 3600) return `${Math.round(seconds / 60)} 分钟前`;
+    return `${Math.round(seconds / 3600)} 小时前`;
   }
 
   function pill(kind, text) {
@@ -626,6 +654,16 @@
       toast(e.message);
     }
     connectWs();
+
+    // 没有新消息时 WebSocket 不会推状态，这里定期刷新，
+    // 保证「渠道存活」在人不在电脑旁时也是新鲜的
+    setInterval(async () => {
+      try {
+        renderStatus(await api("/api/inbox/status"));
+      } catch (e) {
+        // 拉不到状态本身就说明服务不可达，页面顶部的连接状态已经能体现
+      }
+    }, 60000);
   }
 
   boot();

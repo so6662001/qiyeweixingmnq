@@ -6,6 +6,11 @@
   background: var(--bg);
 }
 
+/* 运营台不需要收件箱那套三栏最小宽度 */
+.shell:has(.ops-body) {
+  min-width: 320px;
+}
+
 .ops-tabs {
   display: flex;
   gap: 6px;
@@ -427,8 +432,67 @@ table.caps th {
 }
 
 @media (max-width: 900px) {
-  .field-row,
-  .stat-grid {
+  .field-row {
     grid-template-columns: 1fr;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .ops-body {
+    padding: 12px 12px calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .ops-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .ops-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ops-tabs button {
+    flex-shrink: 0;
+  }
+
+  .ops-card {
+    padding: 14px;
+  }
+
+  .ops-card-head {
+    flex-wrap: wrap;
+  }
+
+  /* 小于 16px 时 iOS 会自动放大页面 */
+  .field input[type="text"],
+  .field textarea {
+    font-size: 16px;
+  }
+
+  table.caps {
+    font-size: 0.74rem;
+  }
+
+  table.caps th,
+  table.caps td {
+    padding: 7px 6px;
+  }
+
+  .group-item .chat-id {
+    display: none;
+  }
+
+  .moment-row .counts {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .moment-row .head {
+    flex-wrap: wrap;
   }
 }

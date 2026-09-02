@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>统一收件箱 · 个人微信 / 企业微信</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,6 +31,7 @@
           <button type="button" class="btn btn-ghost" id="btnPullArchive" title="手动触发一次企微会话存档增量拉取">
             拉取存档
           </button>
+          <button type="button" class="btn btn-ghost" id="btnLogout" title="退出登录">退出</button>
         </div>
       </header>
 
@@ -50,6 +51,7 @@
 
         <main class="chat" aria-label="消息与回复">
           <header class="chat-head">
+            <button type="button" class="back-to-list" id="btnBackToList" aria-label="返回会话列表">←</button>
             <div class="peer">
               <div class="avatar" id="peerAvatar">—</div>
               <div class="peer-text">

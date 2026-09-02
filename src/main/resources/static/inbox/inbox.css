@@ -42,7 +42,9 @@ code {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  min-width: 1080px;
+  /* 用动态视口高度，避免手机浏览器地址栏收起时底部输入框被顶出屏幕 */
+  height: 100dvh;
+  min-width: 320px;
 }
 
 /* —— 顶部栏 —— */
@@ -719,4 +721,103 @@ code {
   .body {
     grid-template-columns: 260px minmax(0, 1fr) 290px;
   }
+}
+
+/* 中等屏：收起右侧信息栏，保留会话列表 */
+@media (max-width: 1024px) {
+  .body {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .side {
+    display: none;
+  }
+}
+
+/* —— 手机：单栏，会话列表与聊天用返回键切换 —— */
+@media (max-width: 720px) {
+  .topbar {
+    height: auto;
+    min-height: var(--topbar);
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .brand-text p {
+    display: none;
+  }
+
+  .topbar-status {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .topbar-status::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topbar-actions {
+    margin-left: auto;
+  }
+
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* 默认只显示会话列表；选中会话后由 JS 加 .show-chat 切到聊天 */
+  .sessions {
+    border-right: none;
+  }
+
+  .chat {
+    display: none;
+  }
+
+  .shell.show-chat .sessions {
+    display: none;
+  }
+
+  .shell.show-chat .chat {
+    display: flex;
+  }
+
+  .back-to-list {
+    display: inline-flex;
+    align-items: center;
+    border: none;
+    background: #eef2f8;
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .row {
+    max-width: 88%;
+  }
+
+  .composer {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .composer textarea {
+    /* 小于 16px 时 iOS 会自动放大页面 */
+    font-size: 16px;
+  }
+
+  .sessions-head input[type="search"] {
+    font-size: 16px;
+  }
+}
+
+/* 桌面端不需要返回键 */
+.back-to-list {
+  display: none;
 }

@@ -36,6 +36,10 @@
         body = { error: text };
       }
     }
+    if (response.status === 401 && body && body.login_required) {
+      location.href = "/login";
+      throw new Error("登录已过期");
+    }
     if (!response.ok) {
       throw new Error((body && (body.error || body.message)) || `请求失败（${response.status}）`);
     }

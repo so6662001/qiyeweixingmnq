@@ -38,6 +38,10 @@
         body = { error: text };
       }
     }
+    if (response.status === 401 && body && body.login_required) {
+      location.href = "/login";
+      throw new Error("登录已过期");
+    }
     if (!response.ok) {
       const message = (body && (body.error || body.message)) || `请求失败（${response.status}）`;
       throw new Error(message);
@@ -380,8 +384,14 @@
 
   /* —— 交互 —— */
 
+  /** 手机上是单栏，选中会话后要切到聊天视图。 */
+  function showChatView(show) {
+    document.querySelector(".shell").classList.toggle("show-chat", show);
+  }
+
   async function selectConversation(id) {
     state.activeId = id;
+    showChatView(true);
     renderSessions();
     renderHeader();
 
@@ -561,6 +571,17 @@
       renderSessions();
     });
 
+    $("btnBackToList").addEventListener("click", () => showChatView(false));
+
+    $("btnLogout").addEventListener("click", async () => {
+      try {
+        await api("/api/auth/logout", { method: "POST" });
+      } catch (e) {
+        // 即使退出接口失败也跳登录页
+      }
+      location.href = "/login";
+    });
+
     $("btnSend").addEventListener("click", send);
 
     $("replyInput").addEventListener("keydown", (event) => {
@@ -646,6 +667,10 @@
       const first = visibleConversations()[0];
       if (first) {
         await selectConversation(first.id);
+        // 手机上首屏应该先看到会话列表，而不是直接钻进某个会话
+        if (window.matchMedia("(max-width: 720px)").matches) {
+          showChatView(false);
+        }
       } else {
         renderHeader();
         renderMessages();

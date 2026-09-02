@@ -23,6 +23,15 @@ wecom:
     # 演练模式：出站（发消息/发朋友圈/群发）只记录不真发。真实环境首测建议先开
     dry-run: ${WECOM_BRIDGE_DRY_RUN:false}
 
+    # 访问鉴权：收件箱能看全部客户会话并以你的身份发消息，
+    # 要从手机/外网访问必须设置口令；留空则只允许本机回环访问
+    auth:
+      enabled: ${WECOM_AUTH_ENABLED:true}
+      access-code: ${WECOM_ACCESS_CODE:}
+      session-ttl: ${WECOM_AUTH_SESSION_TTL:7d}
+      # 走 HTTPS 时置 true
+      cookie-secure: ${WECOM_AUTH_COOKIE_SECURE:false}
+
     # OpenClaw：个人微信收发 + 企业微信出站
     openclaw:
       enabled: ${WECOM_OPENCLAW_ENABLED:false}

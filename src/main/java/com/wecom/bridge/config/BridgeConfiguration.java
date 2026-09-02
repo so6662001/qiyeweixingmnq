@@ -29,5 +29,7 @@ public class BridgeConfiguration implements WebSocketConfigurer, WebMvcConfigure
         registry.addViewController("/inbox/").setViewName("forward:/inbox/index.html");
         registry.addViewController("/ops").setViewName("forward:/ops/index.html");
         registry.addViewController("/ops/").setViewName("forward:/ops/index.html");
+        registry.addViewController("/login").setViewName("forward:/login/index.html");
+        registry.addViewController("/login/").setViewName("forward:/login/index.html");
     }
 }

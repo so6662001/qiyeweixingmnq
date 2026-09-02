@@ -33,9 +33,72 @@ public class BridgeProperties {
      */
     private boolean dryRun = false;
 
+    private final Auth auth = new Auth();
     private final OpenClaw openclaw = new OpenClaw();
     private final Archive archive = new Archive();
     private final Contact contact = new Contact();
+
+    public Auth getAuth() {
+        return auth;
+    }
+
+    /**
+     * 访问鉴权。收件箱能读到全部客户聊天、还能以你的身份发消息，
+     * 一旦要从手机/外网访问就必须先过这一关。
+     */
+    public static class Auth {
+
+        private boolean enabled = true;
+
+        /**
+         * 访问口令。**留空时只允许本机回环访问**，外部请求一律拒绝——
+         * 这样「忘了配口令就把客户聊天暴露到公网」不会发生。
+         */
+        private String accessCode = "";
+
+        /** 登录态有效期。 */
+        private Duration sessionTtl = Duration.ofDays(7);
+
+        /** 生产环境走 HTTPS 时置 true，Cookie 加 Secure 标记。 */
+        private boolean cookieSecure = false;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getAccessCode() {
+            return accessCode;
+        }
+
+        public void setAccessCode(String accessCode) {
+            this.accessCode = accessCode == null ? "" : accessCode.trim();
+        }
+
+        public Duration getSessionTtl() {
+            return sessionTtl;
+        }
+
+        public void setSessionTtl(Duration sessionTtl) {
+            this.sessionTtl = sessionTtl;
+        }
+
+        public boolean isCookieSecure() {
+            return cookieSecure;
+        }
+
+        public void setCookieSecure(boolean cookieSecure) {
+            this.cookieSecure = cookieSecure;
+        }
+
+        /** 配了口令才能对外提供访问。 */
+        public boolean hasAccessCode() {
+            return !accessCode.isEmpty();
+        }
+    }
 
     public boolean isEnabled() {
         return enabled;

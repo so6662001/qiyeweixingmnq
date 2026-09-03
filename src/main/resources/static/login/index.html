@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>登录 · 统一收件箱</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand: #2b6de5;
+        --brand-deep: #1d54b8;
+        --ink: #16233a;
+        --ink-soft: #5b6b7c;
+        --line: #dde5f0;
+        --danger: #d14343;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        font-family: "Noto Sans SC", system-ui, sans-serif;
+        color: var(--ink);
+        background: linear-gradient(160deg, #21599f, #1a4578 55%, #143255);
+      }
+      body {
+        display: grid;
+        place-items: center;
+        padding: 24px 18px calc(24px + env(safe-area-inset-bottom));
+        min-height: 100vh;
+      }
+      .card {
+        width: min(380px, 100%);
+        background: #fff;
+        border-radius: 16px;
+        padding: 26px 22px 22px;
+        box-shadow: 0 20px 50px rgba(8, 22, 44, 0.3);
+      }
+      .mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 700;
+        background: linear-gradient(145deg, #4a8af5, #2b6de5);
+        margin-bottom: 14px;
+      }
+      h1 { margin: 0 0 4px; font-size: 1.15rem; }
+      p.sub { margin: 0 0 20px; font-size: 0.8rem; color: var(--ink-soft); line-height: 1.55; }
+      label { display: block; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 6px; }
+      input {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px 13px;
+        font: inherit;
+        font-size: 1rem;
+        outline: none;
+      }
+      input:focus {
+        border-color: #8eb0f0;
+        box-shadow: 0 0 0 3px rgba(43, 109, 229, 0.14);
+      }
+      button {
+        width: 100%;
+        margin-top: 14px;
+        border: none;
+        border-radius: 10px;
+        padding: 13px;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(180deg, #3a7aef, var(--brand));
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.6; }
+      .msg {
+        margin-top: 12px;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        border-radius: 9px;
+        padding: 9px 11px;
+        display: none;
+      }
+      .msg.show { display: block; }
+      .msg.error { background: #fdecec; color: #9a2f2f; border: 1px solid #f2cccc; }
+      .msg.info { background: #f2f7ff; color: var(--brand-deep); border: 1px solid #d3e2f8; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="mark" aria-hidden="true">收</div>
+      <h1>统一收件箱</h1>
+      <p class="sub">这里能看到全部客户会话并以你的身份发消息，请输入访问口令。</p>
+
+      <label for="code">访问口令</label>
+      <input id="code" type="password" inputmode="text" autocomplete="current-password" placeholder="输入口令" />
+      <button type="button" id="btnLogin">登录</button>
+      <div class="msg" id="msg"></div>
+    </main>
+
+    <script>
+      const codeInput = document.getElementById("code");
+      const button = document.getElementById("btnLogin");
+      const msg = document.getElementById("msg");
+
+      function show(text, kind) {
+        msg.textContent = text;
+        msg.className = "msg show " + kind;
+      }
+
+      async function checkState() {
+        try {
+          const state = await (await fetch("/api/auth/state")).json();
+          if (!state.access_code_configured) {
+            show(
+              "服务端还没设置访问口令，目前只有本机能访问。要从手机使用，请在服务器上配置 WECOM_ACCESS_CODE 后重启。",
+              "info"
+            );
+            button.disabled = true;
+          }
+        } catch (e) {
+          show("无法连接服务，请确认服务是否在运行。", "error");
+        }
+      }
+
+      async function login() {
+        const code = codeInput.value.trim();
+        if (!code) {
+          show("请输入口令", "error");
+          return;
+        }
+        button.disabled = true;
+        try {
+          const response = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: code }),
+          });
+          const body = await response.json();
+          if (response.ok && body.ok) {
+            location.href = "/inbox/";
+            return;
+          }
+          show(body.error || "登录失败", "error");
+        } catch (e) {
+          show("登录请求失败：" + e.message, "error");
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      button.addEventListener("click", login);
+      codeInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") login();
+      });
+      checkState();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>统一收件箱 · 个人微信 / 企业微信</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/inbox/inbox.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">收</div>
+          <div class="brand-text">
+            <h1>统一收件箱</h1>
+            <p>个人微信私聊 · 企微会话存档 · 回复统一走 OpenClaw</p>
+          </div>
+        </div>
+
+        <div class="topbar-status" id="channelStatus" aria-live="polite"></div>
+
+        <div class="topbar-actions">
+          <span class="conn" id="connState" title="实时连接状态">连接中…</span>
+          <a class="btn btn-ghost" href="/ops/" title="上线自检 / 发朋友圈 / 客户群群发">运营台</a>
+          <button type="button" class="btn btn-ghost" id="btnPullArchive" title="手动触发一次企微会话存档增量拉取">
+            拉取存档
+          </button>
+          <button type="button" class="btn btn-ghost" id="btnLogout" title="退出登录">退出</button>
+        </div>
+      </header>
+
+      <div class="body">
+        <aside class="sessions" aria-label="会话列表">
+          <div class="sessions-head">
+            <div class="filters" id="filters">
+              <button type="button" class="chip on" data-filter="all">全部</button>
+              <button type="button" class="chip" data-filter="wechat">个人微信</button>
+              <button type="button" class="chip" data-filter="wecom_archive">企业微信</button>
+              <button type="button" class="chip" data-filter="unread">未读</button>
+            </div>
+            <input type="search" id="searchInput" placeholder="搜索客户 / 成员" />
+          </div>
+          <div class="session-list" id="sessionList"></div>
+        </aside>
+
+        <main class="chat" aria-label="消息与回复">
+          <header class="chat-head">
+            <button type="button" class="back-to-list" id="btnBackToList" aria-label="返回会话列表">←</button>
+            <div class="peer">
+              <div class="avatar" id="peerAvatar">—</div>
+              <div class="peer-text">
+                <strong id="peerName">请选择左侧会话</strong>
+                <span id="peerMeta">收到新消息会自动出现在这里，无需刷新</span>
+              </div>
+            </div>
+            <div class="chat-head-actions">
+              <button type="button" class="btn btn-ghost" id="btnSetTarget" hidden>设置发送目标</button>
+            </div>
+          </header>
+
+          <div class="notice" id="chatNotice" hidden></div>
+
+          <div class="messages" id="messages">
+            <div class="empty">还没有会话。配置 OpenClaw 与会话存档后，真实消息会自动出现在这里。</div>
+          </div>
+
+          <footer class="composer">
+            <textarea
+              id="replyInput"
+              rows="3"
+              placeholder="在这里录入回复内容，Enter 发送，Shift+Enter 换行"
+              disabled
+            ></textarea>
+            <div class="composer-foot">
+              <span class="composer-hint" id="composerHint">选择会话后即可直接回复，消息通过 OpenClaw 发出。</span>
+              <button type="button" class="btn btn-primary" id="btnSend" disabled>发送</button>
+            </div>
+          </footer>
+        </main>
+
+        <aside class="side" aria-label="通道与配置">
+          <section class="card">
+            <h2>接入状态</h2>
+            <div id="statusDetail" class="status-detail"></div>
+          </section>
+
+          <section class="card">
+            <h2>OpenClaw 入站地址</h2>
+            <p class="card-hint">填到 OpenClaw 插件配置的 <code>endpoint</code> 里，插件把私聊回推到这里。</p>
+            <div class="kv">
+              <div class="kv-head">
+                <span>入站地址</span>
+                <button type="button" class="linkish" data-copy="inboundPath">复制</button>
+              </div>
+              <code id="inboundPath">/api/openclaw/inbound</code>
+            </div>
+          </section>
+
+          <section class="card" id="demoCard">
+            <h2>本地演示</h2>
+            <p class="card-hint">
+              没有真实配置时，可在这里注入一条「客户消息」，验证实时接收与页面内回复链路。不会触达任何真实用户。
+            </p>
+            <input type="text" id="demoText" placeholder="模拟客户发来的内容" />
+            <button type="button" class="btn btn-soft" id="btnDemoInbound">注入演示消息</button>
+          </section>
+
+          <section class="card">
+            <h2>架构与合规</h2>
+            <ul class="compliance">
+              <li>个人微信：OpenClaw 收发，走腾讯官方 iLink Bot API，非逆向。</li>
+              <li>企业微信：会话内容存档只读入站，需成员与客户已授权。</li>
+              <li>回复统一由 OpenClaw 发出，两个通道行为一致。</li>
+              <li>凭据来自环境变量，消息不落媒体文件。</li>
+            </ul>
+            <p class="card-hint">
+              详细说明见仓库文档 <code>docs/openclaw-inbox-setup.md</code>。
+            </p>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="/inbox/inbox.js"></script>
+  </body>
+</html>

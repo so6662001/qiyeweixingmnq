@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>微信模拟器 · 双版本入口</title>
+    <title>企微消息工作台 · 入口</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -86,6 +86,23 @@
       }
       .wecom .kicker { color: #8ec5ff; }
       .wechat .kicker { color: #7dffa8; }
+      .inbox .kicker { color: #ffd479; }
+      a.card.inbox {
+        background: rgba(255, 212, 121, 0.12);
+        border-color: rgba(255, 212, 121, 0.28);
+      }
+      a.card.inbox:hover { background: rgba(255, 212, 121, 0.18); }
+      .badge-real {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(7, 193, 96, 0.22);
+        border: 1px solid rgba(125, 255, 168, 0.35);
+        font-size: 0.68rem;
+        font-weight: 700;
+        vertical-align: middle;
+      }
       a.card h2 {
         margin: 0 0 10px;
         font-size: 1.45rem;
@@ -106,25 +123,43 @@
   </head>
   <body>
     <main class="hero">
-      <h1 class="brand">微信模拟器</h1>
+      <h1 class="brand">企微消息工作台</h1>
       <p class="lead">
-        同一套本地联调服务，提供两个独立版本：企业微信与个人微信。会话、朋友圈与媒体数据互相隔离。
+        一套服务同时提供：接真实消息的<strong>统一收件箱</strong>（腾讯官方接口），
+        以及不联网的<strong>本地模拟器</strong>（企业微信 / 个人微信）用于联调。
       </p>
       <div class="grid">
+        <a class="card inbox" href="/inbox/">
+          <span class="kicker">Unified Inbox</span>
+          <h2>统一收件箱<span class="badge-real">真实收发</span></h2>
+          <p>
+            个人微信一对一私聊由 OpenClaw 收发，企业微信消息来自会话内容存档；
+            在页面内录入回复即通过 OpenClaw 自动发出，全程不用离开本系统。
+          </p>
+        </a>
+        <a class="card inbox" href="/ops/">
+          <span class="kicker">Ops Console</span>
+          <h2>运营台</h2>
+          <p>
+            上线自检（逐项给出修复动作）、客户朋友圈发表与点赞评论统计、客户群群发图文。
+            均为企业微信官方能力。
+          </p>
+        </a>
         <a class="card wecom" href="/wecom/">
-          <span class="kicker">WeCom</span>
+          <span class="kicker">WeCom Simulator</span>
           <h2>企业微信模拟器</h2>
           <p>私聊 / 群聊、文字语音图片文件、朋友圈与 CRM 线索同步；回调载荷为企业微信风格。</p>
         </a>
         <a class="card wechat" href="/wechat/">
-          <span class="kicker">WeChat</span>
+          <span class="kicker">WeChat Simulator</span>
           <h2>个人微信模拟器</h2>
-          <p>好友私聊 / 群聊、朋友圈互动与本地 Webhook；回调载荷为个人微信风格假实现，便于联调。</p>
+          <p>好友私聊 / 群聊、朋友圈互动与本地 Webhook；本地假实现，不连接真实微信。</p>
         </a>
       </div>
       <p class="foot">
         效果图预览：<a href="/mockups/">/mockups/</a>
-        · API：<code>/api/*</code>（企微）与 <code>/api/wechat/*</code>（个微）
+        · 收件箱接口：<code>/api/inbox/*</code>
+        · 模拟器接口：<code>/api/*</code>、<code>/api/wechat/*</code>
       </p>
     </main>
   </body>

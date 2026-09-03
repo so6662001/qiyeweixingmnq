@@ -1,0 +1,37 @@
+{
+  "id": "wecom-inbox-forwarder",
+  "name": "统一收件箱转发",
+  "description": "把 OpenClaw 收到的个人微信一对一私聊转发到统一收件箱，并接管会话交由人工回复。",
+  "activation": { "onStartup": true },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "endpoint": {
+        "type": "string",
+        "description": "统一收件箱入站地址，例如 http://127.0.0.1:8000/api/openclaw/inbound"
+      },
+      "token": {
+        "type": "string",
+        "description": "与服务端 wecom.bridge.openclaw.inbound-token 一致的共享密钥"
+      },
+      "channels": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "只转发这些渠道 id，默认 [\"openclaw-weixin\"]"
+      },
+      "claimInbound": {
+        "type": "boolean",
+        "description": "是否接管会话，阻止大模型自动回复（人工在收件箱里回）。默认 true"
+      },
+      "mirrorOutbound": {
+        "type": "boolean",
+        "description": "是否把本方发出的消息也回传给收件箱，默认 true"
+      },
+      "timeoutMs": {
+        "type": "number",
+        "description": "转发请求超时毫秒数，默认 5000"
+      }
+    }
+  }
+}

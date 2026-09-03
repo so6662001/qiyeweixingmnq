@@ -1,17 +1,109 @@
-# 微信模拟器（Java）· 企微 + 个微双版本
+# 企微消息工作台（Java）
 
-基于 **Spring Boot 3 / Java 21** 的本地联调模拟器，提供两个互相隔离的版本：
+基于 **Spring Boot 3 / Java 21**，一套服务包含两部分：
 
-| 版本 | UI | API 前缀 | WebSocket |
-|------|----|----------|-----------|
-| 企业微信 | http://127.0.0.1:8000/wecom/ | `/api` | `/ws` |
-| 个人微信 | http://127.0.0.1:8000/wechat/ | `/api/wechat` | `/ws/wechat` |
+| 模块 | 用途 | UI | API 前缀 | WebSocket |
+|------|------|----|----------|-----------|
+| **统一收件箱** | **接真实消息**（腾讯官方接口） | http://127.0.0.1:8000/inbox/ | `/api/inbox` | `/ws/inbox` |
+| 企业微信模拟器 | 本地联调，不联网 | http://127.0.0.1:8000/wecom/ | `/api` | `/ws` |
+| 个人微信模拟器 | 本地联调，不联网 | http://127.0.0.1:8000/wechat/ | `/api/wechat` | `/ws/wechat` |
 
-入口页：http://127.0.0.1:8000 （选择版本）
+入口页：http://127.0.0.1:8000
 
-> 个人微信侧为**本地假实现**，不对接真实个微协议；回调 JSON 仅用于联调。
+---
 
-## 功能（两套版本均具备）
+## 统一收件箱（真实收发）
+
+**实时收到消息 → 在页面里录入回复 → 自动发给对方，全程不用离开本系统。**
+
+| 通道 | 对应谁 | 入站 | 出站 |
+|------|--------|------|------|
+| 个人微信 | 微信好友（一对一私聊） | **OpenClaw**（腾讯官方 iLink Bot API，扫码授权） | **OpenClaw** |
+| 企业微信 | 企微联系人 / 外部客户 | **会话内容存档**（官方 SDK，seq 增量拉取） | **OpenClaw** |
+| 本地演示 | 无（本机自造数据） | 本地 | 仅记录本地 |
+
+- 个人微信走 [OpenClaw](https://github.com/openclaw/openclaw) 的腾讯官方渠道插件 `@tencent-weixin/openclaw-weixin`，底层是官方 iLink Bot API，**不是协议逆向**。
+- 企业微信入站用官方**会话内容存档**（需管理端开通、成员与客户已授权），只读拉取。
+- 两个通道**出站完全一致**：都调 `openclaw message send`，直接投递人工录入的原文，不触发大模型回合。
+- 不采用 `itchat` / `wechaty puppet-xp` / `WeChatFerry` 等逆向方案，也不使用微信客服模型。
+- 凭据只从环境变量注入；消息落在 `data/bridge/`（已 gitignore），不下载媒体文件。
+
+不配任何东西也能先看效果：打开 `/inbox/`，用右侧「注入演示消息」验证实时接收与页面内回复。
+
+架构、部署、合规边界、接口清单与排查见 **[docs/openclaw-inbox-setup.md](docs/openclaw-inbox-setup.md)**；
+OpenClaw 转发插件见 **[openclaw-plugin/README.md](openclaw-plugin/README.md)**；
+进真实环境测试按 **[docs/real-world-testing.md](docs/real-world-testing.md)** 分阶段走。
+
+## 运营台（`/ops/`）
+
+| 功能 | 说明 |
+|------|------|
+| 上线自检 | 逐项检查配置与连通性，每条给出**修复动作**；可实际探测 `openclaw --version` 与换取 access_token |
+| 发客户朋友圈 | 上传图片取 media_id → 创建发表任务 → 轮询任务结果。成员需在企微客户端确认后才真正发表 |
+| 朋友圈互动数据 | 自动汇总**点赞数 / 评论数**（区分客户与成员），定时刷新并缓存 |
+| 客户群群发图文 | 选群 → 文本 + 图片 + 图文链接 → 创建群发任务。群主确认后才进群 |
+
+**能力边界（先看这个再测）**：
+
+| 动作 | 个人微信 | 企业微信 |
+|------|---------|---------|
+| 一对一私聊收发 | ✅ | ✅ |
+| 发图片 / 文件 | ✅ | ✅ |
+| 群里发图文 | ❌ 插件只声明支持一对一私聊 | ✅ |
+| 发朋友圈 / 点赞评论数 | ❌ 官方 API 无此能力 | ✅ |
+
+演练模式 `WECOM_BRIDGE_DRY_RUN=true`：所有出站只记录不真发，真实环境首测建议先开。
+
+## 客户向自有 APP 迁移
+
+把微信里用自然语言询价的客户逐步迁到自有 APP 自助询价的转化链路设计，
+见 **[docs/app-migration-design.md](docs/app-migration-design.md)**。要点：
+
+- **五层漏斗**：微信聊天 → 小程序报价单（零安装的桥）→ 手机号成账号 → APP 登录 → APP 自助询价，微信永不关闭作为兜底。
+- **发动机**：每一次微信询价都产出一张小程序报价单。客户行为不变，但每次被动接触线上化体验。
+- **身份打通**：以**手机号为主键**；小程序与 APP 绑同一微信开放平台账号用 unionid 打通。
+  `unionid ↔ external_userid` 的官方转换接口**自建应用不可用**（凭证只接受第三方/代开发应用），不作为依赖。
+- **最大风险是销售抵制**，对策是机制性的：客户归属与业绩不变、迁移纳入过程考核、报价工具先让销售受益。
+- 一期先在 1～2 个销售的小范围验证「线上化率」和「报价单打开率」，跑通再投 APP 开发。
+
+## 手机访问与部署位置
+
+收件箱和运营台都做了手机适配，浏览器打开即可用。但要注意两点：
+
+1. **网关必须跑在常开的机器上**。OpenClaw 官方手机 App 是 companion node，
+   [明确不托管 Gateway](https://docs.openclaw.ai/platforms/android)，顶不了这个角色。
+   办公电脑会关机的话，把服务搬到云主机 / NAS / 常开旧机器上，手机就只当操作端。
+2. **必须设置访问口令**。收件箱能看全部客户会话并以你的身份发消息：
+
+```bash
+export WECOM_ACCESS_CODE=$(openssl rand -base64 18)
+export WECOM_AUTH_COOKIE_SECURE=true   # 走 HTTPS 时开
+```
+
+安全默认：**不配口令时只接受本机回环访问**，外部请求直接拒绝，不会出现裸奔在公网的情况。
+外网访问建议走 Tailscale 或 HTTPS 反代，详见 [docs/real-world-testing.md](docs/real-world-testing.md#电脑关机了怎么办--手机能不能顶上)。
+
+```bash
+export WECOM_BRIDGE_ENABLED=true
+# 个人微信收发 + 企微出站
+export WECOM_OPENCLAW_ENABLED=true
+export WECOM_OPENCLAW_INBOUND_TOKEN=$(openssl rand -hex 24)
+# 企微入站（会话存档）
+export WECOM_ARCHIVE_ENABLED=true WECOM_CORP_ID=ww... \
+       WECOM_ARCHIVE_SECRET=... WECOM_ARCHIVE_PRIVATE_KEY_V1="$(cat pkcs8_private.pem)" \
+       WECOM_ARCHIVE_SDK_LIB=/opt/wework/libWeWorkFinanceSdk_Java.so
+mvn spring-boot:run   # 打开 /inbox/
+```
+
+OpenClaw 插件把私聊回推到 `POST /api/openclaw/inbound`（带共享密钥）。
+
+---
+
+## 模拟器部分
+
+> 个人微信模拟器为**本地假实现**，不对接真实个微协议；回调 JSON 仅用于联调。
+
+## 功能（两套模拟器均具备）
 
 - 聊天界面发送文字 / 语音 / 图片 / 文件
 - **私聊 + 群聊**：群内可回复指定人、@提及；消息可按 `chat_type` / `group_id` 过滤

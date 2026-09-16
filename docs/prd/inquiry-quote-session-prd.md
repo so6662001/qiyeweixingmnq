@@ -1,10 +1,10 @@
-# 微信会话中的询价单 / 报价单归并与状态管理 · PRD 与技术设计
+# 企微会话中的询价单 / 报价单归并与状态管理 · PRD 与技术设计
 
 | 项目 | 内容 |
 | --- | --- |
 | 模块 | 普讯AI销售 · 询价会话（Inquiry Session） |
 | 版本 | v1.0 草案 |
-| 适用渠道 | 个人微信（OpenClaw 私聊）、企业微信（会话存档入站） |
+| 适用渠道 | 企业微信（入站：会话存档；出站：企微右侧栏发送报价卡片）。本版不含个人微信 |
 | 配套效果图 | `docs/mockups/puxun-inquiry-quote-hifi.html` |
 | 相关效果图 | 销售聊天台 `puxun-sales-desk-hifi.html`、企微右侧栏 `puxun-ai-sales-sidebar-hifi.html` |
 
@@ -12,7 +12,7 @@
 
 ## 1. 背景与问题
 
-一个微信对话里客户会连续发起 N 次询价。典型场景：
+一个企业微信对话里客户会连续发起 N 次询价。典型场景：
 
 > 09:00 客户问「100 方管多少钱」 → 09:01 销售回「3000」
 > 09:02 客户又问「100×200×2.75 矩管呢」 → 09:03 销售回「3150」
@@ -40,14 +40,18 @@
 ### 2.2 非目标
 
 - 不做自动报价定价（价格由销售或现有报价引擎给出，本模块只负责归并与状态）。
-- 不改变现有收件箱的收发通道（OpenClaw / 会话存档）。
-- 不处理群聊询价（v1 仅一对一私聊）。
+- 不涉及个人微信；不引入企微之外的收发通道。
+- 不改变会话存档拉取 / 解密链路本身，本模块只消费已解密的消息。
+- 不处理客户群询价（v1 仅员工与外部联系人的单聊）。
 
 ## 3. 术语
 
 | 术语 | 英文 | 定义 |
 | --- | --- | --- |
-| 询价单 | InquiryTicket | 一次交易意向的容器，同客户同渠道同时只能有一张活跃单 |
+| 询价单 | InquiryTicket | 一次交易意向的容器，同一「客户 × 销售」会话同时只能有一张活跃单 |
+| 客户 | external_userid | 企微外部联系人 ID，会话存档消息中的客户侧标识 |
+| 销售 | userid | 企微成员 ID，会话存档消息中的员工侧标识 |
+| 会话存档 | Chat Archive | 企微官方能力，拉取员工与客户之间**双向**的全部消息（含销售在手机企微上回的内容），每条带唯一 `msgid` |
 | 询价行 | InquiryLine | 客户问到的一个规格（品名 + 规格 + 壁厚 + 材质 + 数量） |
 | 报价版本 | QuoteVersion | 销售一次报价形成的快照，含本单全部已报行的价格 |
 | 报价行 | QuoteLine | 报价版本中某一询价行的价格 |
@@ -84,8 +88,8 @@ Customer ──1:N──▶ InquiryTicket ──1:N──▶ InquiryLine
 
 **约束**
 
-- `InquiryTicket`：`UNIQUE (customer_id, channel) WHERE status IN (活跃状态集)`。
-- `InquiryLine`：`UNIQUE (channel, source_msg_id)`；同单内 `spec_key` 唯一。
+- `InquiryTicket`：`UNIQUE (external_userid, owner_userid) WHERE status IN (活跃状态集)`。会话存档按「客户 × 员工」成对出现，询价单也按这一对归并。
+- `InquiryLine`：`UNIQUE (source_msg_id)`（会话存档 `msgid` 全局唯一）；同单内 `spec_key` 唯一。
 - `QuoteVersion`：同单内 `version_no` 递增，任意时刻 **最多一个** `CURRENT`。
 - `QuoteLine.inquiry_line_id` 非空 —— 没有对应询价行的价格不允许落库。
 
@@ -184,11 +188,12 @@ CURRENT ──客户确认并转单──▶ ACCEPTED（冻结）
 
 ## 8. 报价 ↔ 询价配对算法
 
-输入：一条销售出站消息（文本或报价卡片）。输出：`(inquiry_line_id, price)` 列表，或"待确认"。
+输入：会话存档中一条 **员工 → 客户** 方向的消息（`from` 为成员 userid）。会话存档同时记录销售在电脑侧栏、手机企微上发出的全部内容，所以不论销售在哪里回复，都会进入此算法。输出：`(inquiry_line_id, price)` 列表，或"待确认"。
 
 ```
-1. 若消息来自系统内报价卡片 → 消息自带 quote_version_id，直接确定，结束。
-2. 抽取消息中的 (品名/规格片段, 价格) 对。
+1. 若消息是从侧栏发出的报价卡片（msgtype = link / miniprogram，URL 或 pagepath 带 qv=<quote_version_id>）
+   → 解析出 quote_version_id，回填 sent_msg_id，直接确定，结束。
+2. 否则视为自由文本（多为手机企微直接回复），抽取消息中的 (品名/规格片段, 价格) 对。
 3. 取本单 status ∈ {PENDING, QUOTED} 的行作为候选。
 4. 对每个价格：
    a. 若抽到品名/规格 → 按 spec_key 相似度匹配，score ≥ 0.85 唯一命中 → 配对
@@ -239,11 +244,11 @@ CURRENT ──客户确认并转单──▶ ACCEPTED（冻结）
 
 | # | 防线 | 实现 |
 | --- | --- | --- |
-| 1 | 消息级幂等 | 询价行、报价行都记录 `source_msg_id`；`UNIQUE (channel, source_msg_id)`。存档重放、重试不产生重复行 |
+| 1 | 消息级幂等 | 询价行、报价行都记录会话存档 `msgid` 为 `source_msg_id`，加唯一索引。存档按 `seq` 断点续拉造成的重叠区间、任务重试都不会产生重复行 |
 | 2 | 规格键去重 | 同单内 `spec_key` 唯一，见第 9 节 |
 | 3 | 配对强约束 | `QuoteLine.inquiry_line_id NOT NULL`；配不上不落库，见第 8 节 |
-| 4 | 出站结构化 | 从收件箱用报价卡片发出的消息携带 `quote_version_id`，配对确定；自由文本（含手机端）走模糊配对并要求确认 |
-| 5 | 单活跃单约束 | 部分唯一索引保证同客户同渠道只有一张活跃单，并发消息也不会开出两张 |
+| 4 | 出站结构化 | 侧栏发出的报价卡片链接携带 `quote_version_id`，存档回流时解析即可确定配对；手机企微自由文本走模糊配对并要求确认 |
+| 5 | 单活跃单约束 | 部分唯一索引保证同一「客户 × 销售」只有一张活跃单，并发消息也不会开出两张 |
 
 另：AI 抽取结果均带 `confidence` 与 `confirmed_by`，未经销售确认的行在 UI 上显示"AI 识别"角标，转订单前必须全部确认。
 
@@ -253,19 +258,18 @@ CURRENT ──客户确认并转单──▶ ACCEPTED（冻结）
 CREATE TABLE inquiry_ticket (
   id                        BIGSERIAL PRIMARY KEY,
   ticket_no                 VARCHAR(32) NOT NULL UNIQUE,      -- IQ-20260916-001
-  customer_id               BIGINT NOT NULL,
-  channel                   VARCHAR(16) NOT NULL,             -- wechat | wecom
+  external_userid           VARCHAR(64) NOT NULL,             -- 企微外部联系人
+  owner_userid              VARCHAR(64) NOT NULL,             -- 归属销售（企微成员）
   status                    VARCHAR(20) NOT NULL,
   opened_at                 TIMESTAMPTZ NOT NULL,
   last_activity_at          TIMESTAMPTZ NOT NULL,
   current_quote_version_id  BIGINT,
   order_id                  BIGINT,
-  owner_user_id             BIGINT NOT NULL,                  -- 归属销售
   closed_at                 TIMESTAMPTZ,
   close_reason              VARCHAR(32)
 );
 CREATE UNIQUE INDEX ux_ticket_active
-  ON inquiry_ticket (customer_id, channel)
+  ON inquiry_ticket (external_userid, owner_userid)
   WHERE status IN ('OPEN','QUOTING','QUOTED','CONFIRMING','PARTIAL_ORDERED');
 
 CREATE TABLE inquiry_line (
@@ -282,13 +286,13 @@ CREATE TABLE inquiry_line (
   unit             VARCHAR(8),
   status           VARCHAR(16) NOT NULL,
   pairing_pending  BOOLEAN NOT NULL DEFAULT FALSE,
-  channel          VARCHAR(16) NOT NULL,
-  source_msg_id    VARCHAR(128) NOT NULL,
+  source_msg_id    VARCHAR(128) NOT NULL,       -- 会话存档 msgid（一条消息抽出多行时加 #序号后缀）
+  source_seq       BIGINT,                      -- 会话存档 seq，便于回溯
   raw_text         TEXT,
   confidence       NUMERIC(4,3),
-  confirmed_by     BIGINT,
+  confirmed_by     VARCHAR(64),                 -- 确认人 userid
   created_at       TIMESTAMPTZ NOT NULL,
-  UNIQUE (channel, source_msg_id),
+  UNIQUE (source_msg_id),
   UNIQUE (ticket_id, spec_key)
 );
 
@@ -298,9 +302,9 @@ CREATE TABLE quote_version (
   version_no      SMALLINT NOT NULL,
   status          VARCHAR(16) NOT NULL,        -- CURRENT | SUPERSEDED | EXPIRED | ACCEPTED
   valid_until     TIMESTAMPTZ NOT NULL,
-  created_by      BIGINT NOT NULL,
+  created_by      VARCHAR(64) NOT NULL,        -- 报价人 userid
   created_at      TIMESTAMPTZ NOT NULL,
-  sent_msg_id     VARCHAR(128),                -- 通过收件箱发出时回填
+  sent_msg_id     VARCHAR(128),                -- 侧栏发出报价卡片后，存档回流解析到 qv 参数时回填
   UNIQUE (ticket_id, version_no)
 );
 CREATE UNIQUE INDEX ux_quote_current
@@ -327,17 +331,24 @@ CREATE TABLE ticket_event (
   created_at  TIMESTAMPTZ NOT NULL
 );
 CREATE INDEX ix_event_ticket ON ticket_event (ticket_id, created_at);
+
+-- 会话存档拉取游标：按企业维度记录已消费到的 seq，重启后从此续拉
+CREATE TABLE archive_cursor (
+  corp_id     VARCHAR(64) PRIMARY KEY,
+  last_seq    BIGINT NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL
+);
 ```
 
 ## 13. 接口草案
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/api/inquiry/tickets/active?customer_id=&channel=` | 取当前活跃单（摘要卡数据源） |
+| GET | `/api/inquiry/tickets/active?external_userid=&owner_userid=` | 取当前活跃单（侧栏摘要卡数据源；侧栏通过 JS-SDK `getCurExternalContact` 取得 external_userid） |
 | GET | `/api/inquiry/tickets/{id}` | 单详情：行、版本、事件、提醒 |
 | POST | `/api/inquiry/tickets/{id}/lines` | 手动追加行 |
 | PATCH | `/api/inquiry/lines/{id}` | 修改规格 / 数量 / 确认 AI 识别 |
-| POST | `/api/inquiry/tickets/{id}/quotes` | 提交报价（行 + 价格），生成新版本；可选 `send=true` 经收件箱发卡片 |
+| POST | `/api/inquiry/tickets/{id}/quotes` | 提交报价（行 + 价格），生成新版本，返回报价卡片参数（title / desc / url 含 `qv=`），由侧栏调用 JS-SDK `sendChatMessage` 发出 |
 | POST | `/api/inquiry/lines/{id}/pair` | 解决配对歧义：`{ price, source_msg_id }` |
 | POST | `/api/inquiry/tickets/{id}/confirm` | 转订单：`{ line_ids[], quote_version_id }` |
 | POST | `/api/inquiry/tickets/{id}/split` | 拆单：`{ line_ids[] }` |
@@ -345,26 +356,40 @@ CREATE INDEX ix_event_ticket ON ticket_event (ticket_id, created_at);
 | POST | `/api/inquiry/tickets/{id}/close` | 标记 LOST / 手动收口 |
 | GET | `/api/inquiry/config` · PUT | 读写第 7 节参数 |
 
-内部事件（供收件箱调用）：
+内部事件（由会话存档消费者触发）：
 
-- `InboundMessageReceived(channel, msg_id, customer, text, ts)` → 意图识别 → 抽取 → 归并。
-- `OutboundMessageSent(channel, msg_id, text, quote_version_id?)` → 配对。
+- `ArchiveMessageReceived(msgid, seq, from, tolist, msgtype, content, msgtime)`
+  - `from` 为外部联系人 → 客户消息：意图识别 → 抽取 → 归并。
+  - `from` 为成员 userid → 销售消息：走第 8 节配对（卡片直接确定，自由文本模糊配对）。
+  - 群聊消息（`roomid` 非空）跳过。
 - 定时任务：`price_cutoff` 到点批量过期版本；`idle_gap` / `auto_expire` 扫描。
 
-## 14. 与收件箱 / 龙虾的集成点
+## 14. 与企微会话存档 / 右侧栏的集成点
 
 ```
-OpenClaw 私聊 / 企微会话存档 ──入站──▶ 收件箱 ──InboundMessageReceived──▶ 询价会话服务
-                                                                       │
-                                        右侧栏「本单摘要卡」◀── 提醒事件 ┘
-                                                 │
-                              销售点「报价卡片」/「转订单」
-                                                 │
-                    收件箱 ──经 OpenClaw 发出（消息带 quote_version_id）──▶ 客户
+                    ┌──────────────── 企业微信 ────────────────┐
+客户 ◀── 单聊 ──▶ 销售（电脑 / 手机企微）                          │
+                    │                                            │
+                    │ 会话存档 SDK 拉取（seq 游标）→ RSA 解密       │
+                    ▼                                            │
+             询价会话服务 ── 意图 / 抽取 / 归并 / 配对 / 版本 ──┐   │
+                    │                                        │   │
+                    │ 提醒事件                                │   │
+                    ▼                                        │   │
+        企微右侧栏「本单摘要卡」（JS-SDK 取当前客户）            │   │
+                    │                                        │   │
+        销售点「报价卡片」→ 服务生成版本 vN + 卡片链接（qv=vN）   │   │
+                    │                                        │   │
+        JS-SDK sendChatMessage 发卡片 ─────────────────────▶ 客户  │
+                    │                                            │
+        该卡片消息进入会话存档 → 回流 → 解析 qv → 回填 sent_msg_id  │
+                    └────────────────────────────────────────────┘
 ```
 
-- 摘要卡挂在聊天台右侧栏"报价"页签顶部，替代原"报价清单"的顶部区域；原报价清单成为"当前版本编辑器"。
-- 报价卡片发出成功后回填 `quote_version.sent_msg_id`，形成闭环。
+- 会话存档是**双向**的：客户消息和销售消息（无论电脑侧栏还是手机企微）都经同一条链路进入服务，不需要单独的出站上报。
+- 摘要卡挂在企微右侧栏"报价"页签顶部，替代原"报价清单"的顶部区域；原报价清单成为"当前版本编辑器"。
+- 报价卡片链接形如 `https://<域名>/q/<ticket_no>?qv=<version_no>`，客户点开是报价 H5 / 小程序页；服务端从存档回流的 `link.url` 解析 `qv`，形成闭环。
+- 前置条件：企业已开通会话存档并为相关销售开启；客户端首次会收到企微官方的存档提示，这是合规要求，不可绕过。
 
 ## 15. 配置项
 
@@ -386,12 +411,12 @@ OpenClaw 私聊 / 企微会话存档 ──入站──▶ 收件箱 ──Inbou
 
 | 步 | 时间 | 事件 | 期望 |
 | --- | --- | --- | --- |
-| 1 | 09:00 | 客户：100 的方管多少钱一吨 | 新建 IQ-…-001 OPEN；行1 方管 100×100 PENDING |
+| 1 | 09:00 | 客户：100 的方管多少钱一吨 | 该「客户 × 销售」无活跃单 → 新建 IQ-…-001 OPEN；行1 方管 100×100 PENDING |
 | 2 | 09:01 | 销售：3000 | 唯一 PENDING → 配对行1；v1 CURRENT {行1 3000}；单 QUOTED |
 | 3 | 09:02 | 客户：100\*200\*2.75 的矩管呢 | 行2 PENDING；单 QUOTED→QUOTING；事件 `LINE_ADDED_AFTER_QUOTE` |
 | 4 | 09:03 | 销售：矩管 3150 | 品名命中行2；v2 CURRENT {3000, 3150}；v1 SUPERSEDED；单 QUOTED |
 | 5 | 09:05 | 客户：行，下单吧 | 意图 CONFIRM ≥0.75；单 CONFIRMING；事件 `CONFIRM_READY`（提示缺数量） |
-| 6 | 09:06 | 销售补数量并点转订单 | 订单 1 张 2 行；v2 ACCEPTED；单 ORDERED |
+| 6 | 09:06 | 销售补数量并点转订单，侧栏发出订单确认卡片 | 订单 1 张 2 行；v2 ACCEPTED；单 ORDERED；卡片经存档回流，解析 `qv=2` 回填 `sent_msg_id` |
 | 7 | 15:30 | 客户：再要点 50 角钢 | 无活跃单 → 新建 IQ-…-002 OPEN，不混入 001 |
 
 ### 场景 B · 配对歧义
@@ -399,7 +424,7 @@ OpenClaw 私聊 / 企微会话存档 ──入站──▶ 收件箱 ──Inbou
 | 步 | 事件 | 期望 |
 | --- | --- | --- |
 | 1 | 客户：100 方管和 80 方管各多少 | 行1、行2 PENDING |
-| 2 | 销售：3000 | 两个 PENDING 且无品名 → 不生成版本；行1、行2 `pairing_pending`；事件 `PAIRING_AMBIGUOUS` |
+| 2 | 销售在手机企微回：3000（经存档回流） | 两个 PENDING 且无品名 → 不生成版本；行1、行2 `pairing_pending`；事件 `PAIRING_AMBIGUOUS` |
 | 3 | 销售在侧栏选"100 方管" | v1 CURRENT {行1 3000}；行2 仍 PENDING；单 QUOTING |
 
 ### 场景 C · 盘价过期 + 未报阻断
@@ -413,8 +438,9 @@ OpenClaw 私聊 / 企微会话存档 ──入站──▶ 收件箱 ──Inbou
 
 ### 场景 D · 幂等
 
-- 同一 `source_msg_id` 重复投递 3 次 → 仅 1 条询价行。
-- 同一销售回复被存档与 OpenClaw 各推一次（不同 msg_id、相同文本、时间差 < 5s）→ 视为同一出站消息，仅生成 1 个版本（按 `channel + hash(text) + 时间窗` 去重）。
+- 同一 `msgid` 重复消费 3 次（存档按 seq 断点续拉出现重叠区间）→ 仅 1 条询价行、1 个版本。
+- 服务重启后从 `archive_cursor.last_seq` 续拉，期间到达的消息不丢、不重。
+- 一条客户消息抽出 2 行 → `source_msg_id` 分别为 `<msgid>#1`、`<msgid>#2`，重放同样只保留 2 行。
 
 ## 17. 指标
 
@@ -430,9 +456,11 @@ OpenClaw 私聊 / 企微会话存档 ──入站──▶ 收件箱 ──Inbou
 
 | 风险 / 问题 | 应对 |
 | --- | --- |
-| 手机端自由文本报价配对不准 | 产品上引导用报价卡片；模糊配对全部要求确认 |
+| 手机企微自由文本报价配对不准 | 产品上引导在侧栏用报价卡片；模糊配对全部要求确认 |
+| 会话存档有秒级延迟，销售刚回完价侧栏可能晚几秒才显示配对结果 | 侧栏轮询 / 推送刷新；提示"正在同步会话记录" |
+| 会话存档未对某销售开启，其会话无法归并 | 预检自查列出未开启成员；摘要卡显示"该会话未开通存档" |
 | 盘价截止时间因品类不同 | v1 全局一个时刻；v2 支持按品类配置 |
-| 客户同时在个微与企微两条渠道询价 | v1 按渠道分单；v2 打通 customer_id 后合并提示 |
+| 同一客户同时和两个销售聊 | 按「客户 × 销售」分单是设计使然；v2 在摘要卡提示"该客户在同事 X 处有活跃单" |
 | 意图识别误判"下单" | 阈值 0.75 + 销售确认，CONFIRMING 不自动转单 |
 | 部分成交后剩余行长期挂着 | PARTIAL_ORDERED 同样受 `auto_expire` 约束 |
 | 价格单位混用（元/吨 vs 元/支） | `QuoteLine.unit` 必填；抽取不到单位时默认按品类配置并标黄 |
@@ -443,5 +471,5 @@ OpenClaw 私聊 / 企微会话存档 ──入站──▶ 收件箱 ──Inbou
 2. **抽取与归一化**：规格解析、`spec_key`、意图分类；用真实聊天样本做回归集。
 3. **配对与版本**：第 8 节算法 + 全量快照生成；场景 A/B/D 测试。
 4. **边界与定时**：盘价过期、空闲扫描、复活建议；场景 C 测试。
-5. **提醒与 UI**：右侧栏摘要卡、配对确认弹层、拆合操作；对齐效果图。
-6. **收件箱集成**：入站 / 出站事件挂接，报价卡片回填 `sent_msg_id`。
+5. **提醒与 UI**：企微右侧栏摘要卡、配对确认弹层、拆合操作；对齐效果图。
+6. **会话存档与侧栏集成**：存档消费者按 `from` 分流到归并 / 配对；侧栏 JS-SDK 发报价卡片，存档回流解析 `qv` 回填 `sent_msg_id`。

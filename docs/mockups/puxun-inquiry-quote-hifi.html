@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>普讯AI销售 · 询价单归并与报价版本 · 高保真</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --brand: #2b6de5;
+        --brand-deep: #1d54b8;
+        --brand-soft: #e8f0ff;
+        --ink: #1a2332;
+        --ink-soft: #5b6b7c;
+        --ink-faint: #8b98a8;
+        --line: #e3e9f2;
+        --bg: #eef2f7;
+        --panel: #ffffff;
+        --ok: #1a9f5c;
+        --ok-soft: #e4f6ec;
+        --warn: #c98512;
+        --warn-soft: #fff4de;
+        --danger: #d14343;
+        --danger-soft: #fde9e9;
+        --purple: #6f4fd8;
+        --purple-soft: #efe9ff;
+        --gray-soft: #eef1f5;
+        --font: "Noto Sans SC", "Sora", sans-serif;
+        --display: "Sora", "Noto Sans SC", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; font-family: var(--font); color: var(--ink); background: var(--bg); }
+      button { font: inherit; cursor: pointer; }
+
+      .app { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100vh; min-width: 1240px; }
+
+      /* ---------- 顶部 ---------- */
+      .topbar {
+        background: linear-gradient(135deg, #2b6de5, #1d54b8 60%, #184a9e);
+        color: #fff;
+        padding: 12px 20px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 24px;
+      }
+      .brand { display: flex; gap: 12px; align-items: center; }
+      .brand-mark {
+        width: 38px; height: 38px; border-radius: 11px;
+        background: linear-gradient(145deg, rgba(255,255,255,0.35), rgba(255,255,255,0.08)), #3d82f5;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.28);
+        display: grid; place-items: center;
+        font-family: var(--display); font-size: 0.78rem; font-weight: 700;
+      }
+      .brand h1 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+      .brand p { margin: 2px 0 0; font-size: 0.74rem; opacity: 0.82; }
+
+      .scenarios { display: flex; gap: 8px; justify-content: center; }
+      .scenarios button {
+        border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.12);
+        color: #e8f0ff; border-radius: 999px; padding: 7px 14px; font-size: 0.8rem;
+      }
+      .scenarios button.active { background: #fff; color: var(--brand-deep); font-weight: 600; border-color: #fff; }
+
+      .stepper { display: flex; align-items: center; gap: 10px; }
+      .stepper .ctrl {
+        border: none; border-radius: 9px; padding: 7px 12px; font-size: 0.8rem;
+        background: rgba(255,255,255,0.16); color: #fff;
+      }
+      .stepper .ctrl.primary { background: #fff; color: var(--brand-deep); font-weight: 600; }
+      .stepper .ctrl:disabled { opacity: 0.4; cursor: default; }
+      .dots { display: flex; gap: 5px; }
+      .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+      .dots i.done { background: rgba(255,255,255,0.65); }
+      .dots i.now { background: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.28); }
+
+      /* ---------- 主体三栏 ---------- */
+      .main { display: grid; grid-template-columns: 380px minmax(0, 1fr) 320px; min-height: 0; }
+      .col { min-height: 0; display: flex; flex-direction: column; }
+
+      .col-head {
+        padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+        display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0;
+      }
+      .col-head h2 { margin: 0; font-size: 0.92rem; font-weight: 600; }
+      .col-head .sub { font-size: 0.74rem; color: var(--ink-soft); }
+
+      /* 聊天 */
+      .chat { background: #f3f6fb; border-right: 1px solid var(--line); }
+      .chat-body { flex: 1; overflow-y: auto; padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+      .msg { display: flex; flex-direction: column; gap: 6px; max-width: 86%; animation: pop 0.25s ease; }
+      .msg.customer { align-self: flex-start; }
+      .msg.sales { align-self: flex-end; align-items: flex-end; }
+      .msg.system { align-self: center; max-width: 100%; align-items: center; }
+      .msg .meta { font-size: 0.7rem; color: var(--ink-faint); display: flex; gap: 6px; align-items: center; }
+      .bubble {
+        padding: 9px 12px; border-radius: 12px; font-size: 0.88rem; line-height: 1.5; background: #fff;
+        border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(20, 40, 80, 0.04);
+      }
+      .msg.sales .bubble { background: var(--brand); color: #fff; border-color: var(--brand); }
+      .msg.system .bubble {
+        background: #e9eef7; color: var(--ink-soft); border: none; font-size: 0.76rem; padding: 6px 12px; border-radius: 999px;
+      }
+      .tag {
+        font-size: 0.72rem; padding: 5px 9px; border-radius: 8px; line-height: 1.45;
+        background: var(--brand-soft); color: var(--brand-deep); border-left: 3px solid var(--brand);
+      }
+      .tag.warn { background: var(--warn-soft); color: #8a5a06; border-left-color: var(--warn); }
+      .tag.danger { background: var(--danger-soft); color: #9c2b2b; border-left-color: var(--danger); }
+      .tag.ok { background: var(--ok-soft); color: #126b3e; border-left-color: var(--ok); }
+      .tag.purple { background: var(--purple-soft); color: #4b32a8; border-left-color: var(--purple); }
+      .tag b { font-weight: 600; }
+      .step-note {
+        margin: 0 16px 12px; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px dashed #c9d6ea;
+        font-size: 0.78rem; color: var(--ink-soft); line-height: 1.55; flex-shrink: 0;
+      }
+      .step-note b { color: var(--ink); }
+
+      @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+      /* 摘要卡 */
+      .center { background: var(--bg); }
+      .center-body { flex: 1; overflow-y: auto; padding: 16px 20px 28px; display: flex; flex-direction: column; gap: 14px; }
+
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; flex-shrink: 0; }
+      .alerts { flex-shrink: 0; }
+      .card-h { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .card-h h3 { margin: 0; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+      .card-h .hint { font-size: 0.72rem; color: var(--ink-faint); }
+      .card-b { padding: 14px 16px; }
+
+      .ticket-head { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
+      .ticket-no { font-family: var(--display); font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+      .ticket-kv { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 0.76rem; color: var(--ink-soft); }
+      .ticket-kv b { color: var(--ink); font-weight: 500; }
+
+      .pill {
+        display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+        font-size: 0.74rem; font-weight: 600; white-space: nowrap;
+      }
+      .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+      .pill.OPEN { background: var(--brand-soft); color: var(--brand-deep); }
+      .pill.QUOTING { background: var(--warn-soft); color: #8a5a06; }
+      .pill.QUOTED { background: var(--ok-soft); color: #126b3e; }
+      .pill.CONFIRMING { background: var(--purple-soft); color: #4b32a8; }
+      .pill.ORDERED { background: #d9f2e4; color: #0d5c34; }
+      .pill.PARTIAL_ORDERED { background: #d9f2e4; color: #0d5c34; }
+      .pill.EXPIRED { background: var(--gray-soft); color: var(--ink-soft); }
+      .pill.LOST { background: var(--gray-soft); color: var(--ink-soft); }
+      .pill.big { font-size: 0.86rem; padding: 6px 14px; }
+
+      .lstat { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+      .lstat.PENDING { background: var(--warn-soft); color: #8a5a06; }
+      .lstat.QUOTED { background: var(--ok-soft); color: #126b3e; }
+      .lstat.ACCEPTED { background: #d9f2e4; color: #0d5c34; }
+      .lstat.REJECTED, .lstat.CANCELLED { background: var(--gray-soft); color: var(--ink-soft); }
+      .lstat.PAIRING { background: var(--danger-soft); color: #9c2b2b; }
+
+      table.lines { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+      table.lines th { text-align: left; font-weight: 500; color: var(--ink-faint); font-size: 0.72rem; padding: 0 8px 8px; border-bottom: 1px solid var(--line); }
+      table.lines td { padding: 10px 8px; border-bottom: 1px solid #f0f3f8; vertical-align: top; }
+      table.lines tr:last-child td { border-bottom: none; }
+      table.lines .spec { font-weight: 600; }
+      table.lines .sub { font-size: 0.72rem; color: var(--ink-faint); margin-top: 2px; }
+      table.lines .price { font-family: var(--display); font-weight: 700; font-size: 0.92rem; }
+      table.lines .price small { font-family: var(--font); font-weight: 400; font-size: 0.7rem; color: var(--ink-faint); margin-left: 2px; }
+      table.lines .muted { color: var(--ink-faint); }
+      .ai-badge { display: inline-block; font-size: 0.64rem; padding: 1px 5px; border-radius: 4px; background: #eef1f5; color: var(--ink-soft); margin-left: 6px; vertical-align: middle; }
+      .empty { padding: 26px 16px; text-align: center; color: var(--ink-faint); font-size: 0.82rem; }
+
+      /* 版本 */
+      .versions { display: flex; flex-direction: column; gap: 10px; }
+      .ver { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+      .ver.CURRENT { border-color: #9fd3b6; background: #f4fbf7; }
+      .ver.ACCEPTED { border-color: #7fc79f; background: #eef9f2; }
+      .ver.EXPIRED { border-color: #f0b8b8; background: #fff6f6; }
+      .ver.SUPERSEDED { opacity: 0.72; }
+      .ver-no { font-family: var(--display); font-weight: 700; font-size: 1rem; width: 34px; }
+      .ver-lines { font-size: 0.78rem; color: var(--ink-soft); line-height: 1.55; }
+      .ver-lines b { color: var(--ink); font-weight: 600; }
+      .ver-meta { font-size: 0.7rem; color: var(--ink-faint); text-align: right; line-height: 1.5; }
+      .vstat { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; margin-bottom: 4px; }
+      .vstat.CURRENT { background: var(--ok-soft); color: #126b3e; }
+      .vstat.ACCEPTED { background: #d9f2e4; color: #0d5c34; }
+      .vstat.SUPERSEDED { background: var(--gray-soft); color: var(--ink-soft); }
+      .vstat.EXPIRED { background: var(--danger-soft); color: #9c2b2b; }
+
+      /* 提醒 */
+      .alerts { display: flex; flex-direction: column; gap: 10px; }
+      .alert { border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: 26px 1fr; gap: 10px; border: 1px solid; animation: pop 0.25s ease; }
+      .alert .ico { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; color: #fff; }
+      .alert h4 { margin: 0 0 3px; font-size: 0.86rem; font-weight: 600; }
+      .alert p { margin: 0; font-size: 0.78rem; line-height: 1.55; color: var(--ink-soft); }
+      .alert .ctas { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+      .alert .ctas button { border-radius: 8px; padding: 6px 12px; font-size: 0.76rem; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+      .alert .ctas button.primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600; }
+      .alert.info { background: #f6f9ff; border-color: #cfdcf5; } .alert.info .ico { background: var(--brand); }
+      .alert.warn { background: #fffaf0; border-color: #f2ddb0; } .alert.warn .ico { background: var(--warn); }
+      .alert.danger { background: #fff5f5; border-color: #f2c4c4; } .alert.danger .ico { background: var(--danger); }
+      .alert.purple { background: #f8f5ff; border-color: #d9cdfa; } .alert.purple .ico { background: var(--purple); }
+      .alert.ok { background: #f3fbf6; border-color: #bfe6cf; } .alert.ok .ico { background: var(--ok); }
+      .alert.danger .ctas button.primary { background: var(--danger); border-color: var(--danger); }
+      .alert.purple .ctas button.primary { background: var(--purple); border-color: var(--purple); }
+      .alert.ok .ctas button.primary { background: var(--ok); border-color: var(--ok); }
+
+      /* 订单 */
+      .order { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; background: #eef9f2; border: 1px solid #bfe6cf; border-radius: 10px; }
+      .order b { font-family: var(--display); }
+      .order .total { font-family: var(--display); font-weight: 700; font-size: 1.1rem; color: #0d5c34; }
+
+      /* 时间线 */
+      .timeline { display: flex; flex-direction: column; gap: 0; }
+      .tl { display: grid; grid-template-columns: 52px 18px 1fr; gap: 8px; font-size: 0.78rem; }
+      .tl .t { color: var(--ink-faint); font-variant-numeric: tabular-nums; padding-top: 2px; }
+      .tl .dot { position: relative; }
+      .tl .dot::before { content: ""; position: absolute; left: 6px; top: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); }
+      .tl .dot::after { content: ""; position: absolute; left: 9px; top: 15px; bottom: -6px; width: 1px; background: var(--line); }
+      .tl:last-child .dot::after { display: none; }
+      .tl .dot.customer::before { background: var(--ink-soft); }
+      .tl .dot.sales::before { background: var(--brand); }
+      .tl .dot.system::before { background: var(--ok); }
+      .tl .dot.ai::before { background: var(--purple); }
+      .tl .txt { padding-bottom: 12px; line-height: 1.5; }
+      .tl .who { font-size: 0.68rem; color: var(--ink-faint); margin-right: 6px; }
+      .tl code { font-size: 0.68rem; background: #f0f3f8; padding: 1px 5px; border-radius: 4px; color: var(--ink-soft); }
+
+      .history { display: flex; flex-direction: column; gap: 8px; }
+      .hist { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 0.78rem; background: #fafbfd; }
+      .hist .no { font-family: var(--display); font-weight: 600; }
+      .hist .sum { color: var(--ink-soft); }
+
+      /* 右侧 */
+      .right { background: var(--panel); border-left: 1px solid var(--line); }
+      .right-body { flex: 1; overflow-y: auto; padding: 14px 16px 24px; display: flex; flex-direction: column; gap: 18px; }
+      .sec h4 { margin: 0 0 10px; font-size: 0.78rem; font-weight: 600; color: var(--ink-soft); letter-spacing: 0.02em; display: flex; align-items: center; justify-content: space-between; }
+      .sec h4 span { font-weight: 400; font-size: 0.7rem; color: var(--ink-faint); }
+
+      .sm { display: flex; flex-direction: column; gap: 0; }
+      .sm-row { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; }
+      .sm-rail { position: relative; height: 100%; }
+      .sm-rail::before { content: ""; position: absolute; left: 8px; top: 9px; width: 8px; height: 8px; border-radius: 50%; background: #cfd8e6; border: 2px solid #fff; box-shadow: 0 0 0 1px #cfd8e6; }
+      .sm-rail::after { content: ""; position: absolute; left: 11.5px; top: 20px; bottom: -4px; width: 1px; background: #dfe6f0; }
+      .sm-row:last-child .sm-rail::after { display: none; }
+      .sm-row.now .sm-rail::before { background: var(--brand); box-shadow: 0 0 0 1px var(--brand), 0 0 0 5px rgba(43,109,229,0.18); }
+      .sm-row.done .sm-rail::before { background: var(--ok); box-shadow: 0 0 0 1px var(--ok); }
+      .sm-node { padding: 6px 10px 12px; }
+      .sm-node .n { font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+      .sm-node .d { font-size: 0.7rem; color: var(--ink-faint); margin-top: 2px; line-height: 1.45; }
+      .sm-row.now .sm-node .n { color: var(--brand-deep); }
+      .sm-row.now .sm-node { background: var(--brand-soft); border-radius: 8px; margin-bottom: 4px; }
+      .sm-side { margin: 6px 0 0 28px; display: flex; gap: 6px; flex-wrap: wrap; }
+      .sm-side span { font-size: 0.68rem; padding: 3px 8px; border-radius: 6px; background: var(--gray-soft); color: var(--ink-soft); }
+      .sm-side span.now { background: var(--brand-soft); color: var(--brand-deep); font-weight: 600; }
+
+      .rule { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+      .rule:last-child { border-bottom: none; }
+      .rule .k { font-size: 0.78rem; }
+      .rule .k small { display: block; font-size: 0.68rem; color: var(--ink-faint); margin-top: 1px; }
+      .rule .v { font-family: var(--display); font-size: 0.8rem; font-weight: 600; padding: 3px 9px; border-radius: 7px; background: var(--gray-soft); color: var(--ink); }
+      .rule.hit .v { background: var(--brand-soft); color: var(--brand-deep); }
+
+      .prio { display: flex; flex-direction: column; gap: 6px; }
+      .prio > div { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: center; font-size: 0.76rem; padding: 7px 9px; border-radius: 8px; background: #f6f8fb; }
+      .prio i { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-style: normal; font-size: 0.7rem; font-weight: 700; color: #fff; background: var(--ink-soft); }
+      .prio > div:nth-child(1) i { background: var(--purple); }
+      .prio > div:nth-child(2) i { background: var(--danger); }
+      .prio > div:nth-child(3) i { background: var(--warn); }
+      .prio > div.hit { background: var(--brand-soft); outline: 1px solid #c4d6f7; }
+
+      .anchors { display: flex; flex-direction: column; gap: 6px; }
+      .anchor { display: grid; grid-template-columns: 1fr auto; gap: 8px; font-size: 0.72rem; padding: 6px 8px; border-radius: 7px; background: #f6f8fb; }
+      .anchor code { font-size: 0.66rem; color: var(--ink-soft); }
+      .anchor .ok { color: var(--ok); font-weight: 600; }
+
+      .guards { display: flex; flex-direction: column; gap: 5px; }
+      .guard { display: grid; grid-template-columns: 16px 1fr; gap: 8px; align-items: start; font-size: 0.74rem; color: var(--ink-soft); line-height: 1.45; }
+      .guard i { width: 16px; height: 16px; border-radius: 4px; background: var(--ok-soft); color: var(--ok); font-style: normal; font-size: 0.66rem; display: grid; place-items: center; font-weight: 700; margin-top: 2px; }
+
+      /* 弹层 */
+      .overlay { position: absolute; inset: 0; background: rgba(20, 35, 60, 0.42); display: none; place-items: center; z-index: 10; }
+      .overlay.show { display: grid; }
+      .modal { width: 420px; background: #fff; border-radius: 16px; box-shadow: 0 24px 60px rgba(10, 25, 55, 0.3); overflow: hidden; animation: pop 0.2s ease; }
+      .modal-h { padding: 14px 18px; border-bottom: 1px solid var(--line); }
+      .modal-h h3 { margin: 0; font-size: 0.96rem; }
+      .modal-h p { margin: 4px 0 0; font-size: 0.76rem; color: var(--ink-soft); }
+      .modal-b { padding: 14px 18px; display: flex; flex-direction: column; gap: 8px; }
+      .opt { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-size: 0.84rem; }
+      .opt.sel { border-color: var(--brand); background: var(--brand-soft); }
+      .opt .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #b9c6d9; }
+      .opt.sel .radio { border-color: var(--brand); background: radial-gradient(circle, var(--brand) 45%, transparent 50%); }
+      .opt .sub { font-size: 0.7rem; color: var(--ink-faint); }
+      .modal-f { padding: 12px 18px 16px; display: flex; justify-content: flex-end; gap: 8px; }
+      .modal-f button { border-radius: 9px; padding: 8px 14px; font-size: 0.8rem; border: 1px solid var(--line); background: #fff; }
+      .modal-f button.primary { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
+      .center { position: relative; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark">AI</div>
+          <div>
+            <h1>询价单归并 · 报价版本 · 销售提醒</h1>
+            <p>一次沟通 = 一张可追加的询价单；每次报价 = 一个不可变版本；订单只认当前版本</p>
+          </div>
+        </div>
+        <nav class="scenarios" id="scenarioTabs"></nav>
+        <div class="stepper">
+          <button class="ctrl" id="btnPrev">上一步</button>
+          <div class="dots" id="dots"></div>
+          <button class="ctrl primary" id="btnNext">下一步 ›</button>
+          <button class="ctrl" id="btnReset">重置</button>
+        </div>
+      </header>
+
+      <div class="main">
+        <!-- 聊天 -->
+        <section class="col chat">
+          <div class="col-head">
+            <div>
+              <h2 id="chatTitle">企业微信 · 张工（宏发建材）</h2>
+              <div class="sub" id="chatSub">企业微信 · 会话存档入站 · 侧栏发报价卡片 · 归属销售：李明</div>
+            </div>
+          </div>
+          <div class="chat-body" id="chatBody"></div>
+          <div class="step-note" id="stepNote"></div>
+        </section>
+
+        <!-- 摘要卡 -->
+        <section class="col center">
+          <div class="col-head">
+            <div>
+              <h2>本单摘要卡</h2>
+              <div class="sub">挂在企微右侧栏「报价」页签顶部；所有 AI 结果均可点改，转订单前必须确认</div>
+            </div>
+            <div class="sub" id="clock"></div>
+          </div>
+          <div class="center-body" id="centerBody"></div>
+
+          <div class="overlay" id="overlay">
+            <div class="modal">
+              <div class="modal-h">
+                <h3 id="modalTitle">你回复的 3000 元/吨，报的是哪一项？</h3>
+                <p>本单有 2 条待报行且回复未带品名。确认前不会生成报价版本，避免配错。</p>
+              </div>
+              <div class="modal-b" id="modalOpts"></div>
+              <div class="modal-f">
+                <button id="modalCancel">稍后处理</button>
+                <button class="primary" id="modalOk">确认配对</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 规则与状态机 -->
+        <aside class="col right">
+          <div class="col-head">
+            <div>
+              <h2>规则与状态</h2>
+              <div class="sub">随步骤联动，展示当前命中的规则</div>
+            </div>
+          </div>
+          <div class="right-body">
+            <div class="sec">
+              <h4>询价单状态机 <span id="smHint"></span></h4>
+              <div class="sm" id="sm"></div>
+              <div class="sm-side" id="smSide"></div>
+            </div>
+
+            <div class="sec">
+              <h4>会话边界 · 三层规则 <span>优先级从高到低</span></h4>
+              <div class="prio" id="prio">
+                <div data-k="semantic"><i>1</i><span><b>语义边界</b> · 下单 / 另一个项目 / 算了</span></div>
+                <div data-k="price"><i>2</i><span><b>盘价硬边界</b> · 跨过 08:30 旧报价失效</span></div>
+                <div data-k="idle"><i>3</i><span><b>空闲时间</b> · 2h 待收口 · 48h 自动过期</span></div>
+              </div>
+            </div>
+
+            <div class="sec">
+              <h4>规则参数 <span>inquiry.*</span></h4>
+              <div id="rules">
+                <div class="rule" data-k="idle_gap"><div class="k">空闲提醒<small>idle_gap</small></div><div class="v">2h</div></div>
+                <div class="rule" data-k="auto_expire"><div class="k">自动收口<small>auto_expire</small></div><div class="v">48h</div></div>
+                <div class="rule" data-k="price_cutoff"><div class="k">盘价截止<small>price_cutoff_time</small></div><div class="v">08:30</div></div>
+                <div class="rule" data-k="intent"><div class="k">意图自动生效阈值<small>intent_confidence_min</small></div><div class="v">0.75</div></div>
+                <div class="rule" data-k="spec_match"><div class="k">配对相似度阈值<small>spec_match_min</small></div><div class="v">0.85</div></div>
+                <div class="rule" data-k="block"><div class="k">有未报行时阻断转单<small>block_order_on_pending</small></div><div class="v">开</div></div>
+              </div>
+            </div>
+
+            <div class="sec">
+              <h4>数据锚点 <span>msg_id 幂等</span></h4>
+              <div class="anchors" id="anchors"></div>
+            </div>
+
+            <div class="sec">
+              <h4>防错乱五道防线</h4>
+              <div class="guards">
+                <div class="guard"><i>1</i><div>行与报价都锚定 <code>source_msg_id</code>，唯一索引防重放</div></div>
+                <div class="guard"><i>2</i><div>规格归一化成 <code>spec_key</code>，同单同规格不重复建行</div></div>
+                <div class="guard"><i>3</i><div>报价必须配对到具体行，配不上就问人、不落库</div></div>
+                <div class="guard"><i>4</i><div>侧栏报价卡片链接携带 <code>quote_version_id</code>，存档回流即确定配对</div></div>
+                <div class="guard"><i>5</i><div>同客户同渠道仅一张活跃单（部分唯一索引）</div></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      // ------------------------------------------------------------
+      // 场景数据：每一步是一个完整快照（聊天增量 + 单据状态 + 提醒 + 时间线）
+      // ------------------------------------------------------------
+      const L = {
+        fg100: { spec: "方管 100×100", sub: "壁厚待补 · Q235B · 6m 定尺", key: "SQ-100x100-?-Q235B" },
+        fg100t: { spec: "方管 100×100×3.0", sub: "Q235B · 6m 定尺", key: "SQ-100x100-3.0-Q235B" },
+        jg: { spec: "矩管 100×200×2.75", sub: "Q235B · 6m 定尺", key: "RT-100x200-2.75-Q235B" },
+        fg80: { spec: "方管 80×80", sub: "壁厚待补 · Q235B · 6m 定尺", key: "SQ-80x80-?-Q235B" },
+        jiao: { spec: "角钢 50×50×5", sub: "Q235B · 6m 定尺", key: "AN-50x50-5-Q235B" },
+      };
+
+      const scenarios = [
+        {
+          id: "A",
+          name: "场景 A · 两次询价一单成交",
+          chatTitle: "企业微信 · 张工（宏发建材）",
+          steps: [
+            {
+              clock: "09-16 08:58",
+              note: "<b>初始状态。</b>客户尚未询价，该客户与销售李明之间没有活跃询价单。",
+              messages: [],
+              ticket: null,
+              alerts: [],
+              timeline: [],
+              smState: null,
+            },
+            {
+              clock: "09-16 09:00",
+              note: "<b>第 1 步。</b>客户首次询价。无活跃单 → 新建询价单；AI 抽取规格生成行 1，壁厚未提先留空，等销售补。",
+              messages: [
+                { role: "customer", t: "09:00", text: "100的方管多少钱一吨？", tag: "AI 识别 <b>INQUIRY</b> · 新建 <b>IQ-20260916-001</b> · 行1 方管 100×100（壁厚待补）· 置信度 0.92", tagCls: "" },
+              ],
+              ticket: {
+                no: "IQ-20260916-001", status: "OPEN", opened: "09:00", last: "09:00", owner: "李明", idle: "刚刚",
+                lines: [{ no: 1, ...L.fg100, qty: "—", status: "PENDING", price: null, ai: true, msg: "wc-7f3a…a1f3" }],
+                versions: [],
+              },
+              alerts: [
+                { lv: "info", ico: "询", title: "新询价单已创建 · 1 项待报价", body: "方管 100×100，客户未提壁厚。可先按常规 3.0 报，或先问壁厚。", ctas: [{ label: "手动报价", primary: true }, { label: "问客户壁厚" }] },
+              ],
+              timeline: [
+                { t: "09:00", who: "customer", txt: "询价：100的方管多少钱一吨 <code>wc-7f3a…a1f3</code>" },
+                { t: "09:00", who: "system", txt: "创建询价单 IQ-20260916-001 · 状态 OPEN" },
+                { t: "09:00", who: "ai", txt: "抽取行1：方管 100×100 · spec_key <code>SQ-100x100-?-Q235B</code>" },
+              ],
+              smState: "OPEN", prio: null, rules: [],
+            },
+            {
+              clock: "09-16 09:01",
+              note: "<b>第 2 步。</b>销售只回了「3000」。本单恰好只有 1 条待报行 → 确定性配对到行 1，生成报价 <b>v1</b>（当前版本）。",
+              messages: [
+                { role: "sales", t: "09:01", text: "3000", tag: "配对 → <b>行1</b>（唯一待报行）· 生成报价 <b>v1 CURRENT</b> · 有效至 09-17 08:30", tagCls: "ok" },
+              ],
+              ticket: {
+                no: "IQ-20260916-001", status: "QUOTED", opened: "09:00", last: "09:01", owner: "李明", idle: "刚刚",
+                lines: [{ no: 1, ...L.fg100, qty: "—", status: "QUOTED", price: 3000, ai: true, msg: "wc-7f3a…a1f3" }],
+                versions: [{ no: 1, status: "CURRENT", valid: "09-17 08:30", by: "李明 · 09:01", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-7f3a…b204" }],
+              },
+              alerts: [
+                { lv: "ok", ico: "✓", title: "全部已报，等待客户回复", body: "v1：方管 100×100 · 3000 元/吨。数量未明确，成交前需补。", ctas: [] },
+              ],
+              timeline: [
+                { t: "09:01", who: "sales", txt: "报价 3000 → 行1 <code>wc-7f3a…b204</code>" },
+                { t: "09:01", who: "system", txt: "生成 v1（CURRENT）· 单 OPEN → QUOTED" },
+              ],
+              smState: "QUOTED", prio: null, rules: ["spec_match"],
+            },
+            {
+              clock: "09-16 09:02",
+              note: "<b>第 3 步（核心）。</b>客户在已报价的单上又问一个规格。<b>不新开单</b>，追加为行 2；单从 QUOTED 退回 QUOTING，并<b>提醒销售</b>还有一项没报。",
+              messages: [
+                { role: "customer", t: "09:02", text: "100*200*2.75的矩管呢？", tag: "AI 识别 <b>INQUIRY</b> · 活跃单存在且在窗口内 → <b>追加行2</b> 矩管 100×200×2.75 · 置信度 0.95 · 单 QUOTED → <b>QUOTING</b>", tagCls: "warn" },
+              ],
+              ticket: {
+                no: "IQ-20260916-001", status: "QUOTING", opened: "09:00", last: "09:02", owner: "李明", idle: "刚刚",
+                lines: [
+                  { no: 1, ...L.fg100, qty: "—", status: "QUOTED", price: 3000, ai: true, msg: "wc-7f3a…a1f3" },
+                  { no: 2, ...L.jg, qty: "—", status: "PENDING", price: null, ai: true, msg: "wc-7f3a…c9e1" },
+                ],
+                versions: [{ no: 1, status: "CURRENT", valid: "09-17 08:30", by: "李明 · 09:01", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-7f3a…b204" }],
+              },
+              alerts: [
+                { lv: "warn", ico: "+1", title: "客户在已报价单上追加了 1 项", body: "矩管 100×200×2.75 待报价。本单已报：方管 100×100 · 3000 元/吨（v1）。报完后将生成 v2，v1 自动归档。", ctas: [{ label: "手动报价", primary: true }, { label: "按上次逻辑报价" }] },
+              ],
+              timeline: [
+                { t: "09:02", who: "customer", txt: "追加询价：矩管 100×200×2.75 <code>wc-7f3a…c9e1</code>" },
+                { t: "09:02", who: "system", txt: "追加行2 · 单 QUOTED → QUOTING · 事件 <code>LINE_ADDED_AFTER_QUOTE</code> → 推送销售" },
+              ],
+              smState: "QUOTING", prio: "idle", rules: ["idle_gap"],
+            },
+            {
+              clock: "09-16 09:03",
+              note: "<b>第 4 步。</b>销售回「矩管3150」，带品名 → 精确命中行 2。生成 <b>v2 全量快照</b>（含行 1 的 3000 和行 2 的 3150），v1 变为 SUPERSEDED，但不删除。",
+              messages: [
+                { role: "sales", t: "09:03", text: "矩管3150", tag: "品名命中 → <b>行2</b>（相似度 0.97）· 生成 <b>v2 CURRENT</b>（全量快照）· <b>v1 → SUPERSEDED</b>", tagCls: "ok" },
+              ],
+              ticket: {
+                no: "IQ-20260916-001", status: "QUOTED", opened: "09:00", last: "09:03", owner: "李明", idle: "刚刚",
+                lines: [
+                  { no: 1, ...L.fg100, qty: "—", status: "QUOTED", price: 3000, ai: true, msg: "wc-7f3a…a1f3" },
+                  { no: 2, ...L.jg, qty: "—", status: "QUOTED", price: 3150, ai: true, msg: "wc-7f3a…c9e1" },
+                ],
+                versions: [
+                  { no: 2, status: "CURRENT", valid: "09-17 08:30", by: "李明 · 09:03", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }, { no: 2, spec: "矩管 100×200×2.75", price: 3150 }], msg: "wc-7f3a…d3b8" },
+                  { no: 1, status: "SUPERSEDED", valid: "09-17 08:30", by: "李明 · 09:01", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-7f3a…b204" },
+                ],
+              },
+              alerts: [
+                { lv: "ok", ico: "✓", title: "全部已报（v2），等待客户确认", body: "方管 100×100 · 3000，矩管 100×200×2.75 · 3150。两项数量均未明确。", ctas: [{ label: "发报价卡片给客户" }] },
+              ],
+              timeline: [
+                { t: "09:03", who: "sales", txt: "报价 3150 → 行2 <code>wc-7f3a…d3b8</code>" },
+                { t: "09:03", who: "system", txt: "生成 v2（CURRENT）· v1 → SUPERSEDED · 单 QUOTING → QUOTED" },
+              ],
+              smState: "QUOTED", prio: null, rules: ["spec_match"],
+            },
+            {
+              clock: "09-16 09:05",
+              note: "<b>第 5 步。</b>客户说「下单」。意图 CONFIRM 置信度 0.91 ≥ 0.75 → 单进入 CONFIRMING。<b>不自动转单</b>，提醒销售按 v2 确认，并指出缺数量。",
+              messages: [
+                { role: "customer", t: "09:05", text: "行，下单吧", tag: "意图 <b>CONFIRM</b> · 置信度 0.91 ≥ 0.75 · 单 → <b>CONFIRMING</b> · 语义边界命中", tagCls: "purple" },
+              ],
+              ticket: {
+                no: "IQ-20260916-001", status: "CONFIRMING", opened: "09:00", last: "09:05", owner: "李明", idle: "刚刚",
+                lines: [
+                  { no: 1, ...L.fg100, qty: "—", status: "QUOTED", price: 3000, ai: true, msg: "wc-7f3a…a1f3" },
+                  { no: 2, ...L.jg, qty: "—", status: "QUOTED", price: 3150, ai: true, msg: "wc-7f3a…c9e1" },
+                ],
+                versions: [
+                  { no: 2, status: "CURRENT", valid: "09-17 08:30", by: "李明 · 09:03", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }, { no: 2, spec: "矩管 100×200×2.75", price: 3150 }], msg: "wc-7f3a…d3b8" },
+                  { no: 1, status: "SUPERSEDED", valid: "09-17 08:30", by: "李明 · 09:01", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-7f3a…b204" },
+                ],
+              },
+              alerts: [
+                { lv: "purple", ico: "单", title: "客户意向下单 · 按 v2 转订单？", body: "本单 2 项全部已报：方管 100×100 · 3000，矩管 100×200×2.75 · 3150。<b>两项数量均未明确</b>，转单前需补充；行 1 壁厚待补。", ctas: [{ label: "补数量并转订单", primary: true, action: "next" }, { label: "先问客户数量" }] },
+              ],
+              timeline: [
+                { t: "09:05", who: "customer", txt: "「行，下单吧」<code>wc-7f3a…e77c</code>" },
+                { t: "09:05", who: "ai", txt: "意图 CONFIRM 0.91 · 单 QUOTED → CONFIRMING · 事件 <code>CONFIRM_READY</code> → 推送销售" },
+              ],
+              smState: "CONFIRMING", prio: "semantic", rules: ["intent", "block"],
+            },
+            {
+              clock: "09-16 09:06",
+              note: "<b>第 6 步。</b>销售在侧栏补齐数量（方管 10 吨、矩管 5 吨）点「转订单」。结果：<b>1 张订单 2 行</b>，v2 冻结为 ACCEPTED，询价单收口 ORDERED。",
+              messages: [
+                { role: "system", t: "09:06", text: "销售在侧栏补数量：方管 10 吨 · 矩管 5 吨，点击「转订单」" },
+                { role: "sales", t: "09:06", text: "已为您下单：\n方管 100×100×3.0 · 10 吨 · 3000 元/吨\n矩管 100×200×2.75 · 5 吨 · 3150 元/吨\n合计 45,750 元，今天安排发货。", tag: "从侧栏发出「订单确认卡片」· 卡片链接携带 <b>quote_version_id = v2</b> · 会话存档回流后解析回填 · 订单 <b>SO-20260916-001</b>", tagCls: "ok" },
+              ],
+              ticket: {
+                no: "IQ-20260916-001", status: "ORDERED", opened: "09:00", last: "09:06", owner: "李明", idle: "已收口",
+                lines: [
+                  { no: 1, ...L.fg100t, qty: "10 吨", status: "ACCEPTED", price: 3000, ai: false, msg: "wc-7f3a…a1f3" },
+                  { no: 2, ...L.jg, qty: "5 吨", status: "ACCEPTED", price: 3150, ai: false, msg: "wc-7f3a…c9e1" },
+                ],
+                versions: [
+                  { no: 2, status: "ACCEPTED", valid: "已冻结", by: "李明 · 09:03", lines: [{ no: 1, spec: "方管 100×100×3.0", price: 3000 }, { no: 2, spec: "矩管 100×200×2.75", price: 3150 }], msg: "wc-7f3a…d3b8" },
+                  { no: 1, status: "SUPERSEDED", valid: "09-17 08:30", by: "李明 · 09:01", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-7f3a…b204" },
+                ],
+                order: { no: "SO-20260916-001", lines: 2, total: "¥45,750" },
+              },
+              alerts: [
+                { lv: "ok", ico: "✓", title: "已转订单 SO-20260916-001 · 本单收口", body: "2 行明细来自 v2。该客户后续新询价将自动开新单，不会混进本单。", ctas: [{ label: "查看订单" }] },
+              ],
+              timeline: [
+                { t: "09:06", who: "sales", txt: "补数量：行1 10 吨 · 行2 5 吨；确认 AI 识别的 2 行" },
+                { t: "09:06", who: "system", txt: "生成订单 SO-20260916-001（2 行）· v2 → ACCEPTED · 单 → ORDERED" },
+                { t: "09:06", who: "sales", txt: "发送订单确认卡片 <code>wc-7f3a…f012</code>（存档回流，回填 v2.sent_msg_id）" },
+              ],
+              smState: "ORDERED", prio: null, rules: [],
+            },
+            {
+              clock: "09-16 15:30",
+              note: "<b>第 7 步。</b>下午客户又问角钢。上一单已 ORDERED，<b>无活跃单 → 新建 IQ-…-002</b>。已成交的 001 折叠到「历史单据」，两单互不干扰。",
+              messages: [
+                { role: "system", t: "15:30", text: "—— 6 小时 24 分后 ——" },
+                { role: "customer", t: "15:30", text: "再要点50的角钢，有货吗", tag: "AI 识别 <b>INQUIRY</b> · 无活跃单（001 已 ORDERED）→ 新建 <b>IQ-20260916-002</b> · 行1 角钢 50×50×5 · <b>不并入 001</b>", tagCls: "" },
+              ],
+              ticket: {
+                no: "IQ-20260916-002", status: "OPEN", opened: "15:30", last: "15:30", owner: "李明", idle: "刚刚",
+                lines: [{ no: 1, ...L.jiao, qty: "—", status: "PENDING", price: null, ai: true, msg: "wc-7f3a…1a9d" }],
+                versions: [],
+                history: [{ no: "IQ-20260916-001", status: "ORDERED", sum: "2 项 · v2 · 订单 SO-20260916-001 · ¥45,750 · 09:06 收口" }],
+              },
+              alerts: [
+                { lv: "info", ico: "询", title: "新询价单 IQ-20260916-002 · 1 项待报价", body: "角钢 50×50×5。该客户今日已成交 1 单（¥45,750），可参考其付款习惯。", ctas: [{ label: "查库存并报价", primary: true }] },
+              ],
+              timeline: [
+                { t: "15:30", who: "customer", txt: "询价：50 角钢 <code>wc-7f3a…1a9d</code>" },
+                { t: "15:30", who: "system", txt: "无活跃单 → 创建 IQ-20260916-002 · 状态 OPEN" },
+              ],
+              smState: "OPEN", prio: null, rules: [],
+            },
+          ],
+        },
+
+        {
+          id: "B",
+          name: "场景 B · 报价配对歧义",
+          chatTitle: "企业微信 · 王总（腾达钢构）",
+          steps: [
+            {
+              clock: "09-16 09:09",
+              note: "<b>初始状态。</b>演示：销售回复只有一个数字、但本单有两条待报行时，系统<b>不猜</b>，而是弹层问销售。",
+              messages: [], ticket: null, alerts: [], timeline: [], smState: null,
+            },
+            {
+              clock: "09-16 09:10",
+              note: "<b>第 1 步。</b>客户一句话问了两个规格 → 同一条消息抽出 2 行，spec_key 不同，各自建行。",
+              messages: [
+                { role: "customer", t: "09:10", text: "100方管和80方管各多少钱", tag: "AI 识别 <b>INQUIRY</b> · 新建 <b>IQ-20260916-003</b> · 一条消息抽出 <b>2 行</b>：方管 100×100、方管 80×80", tagCls: "" },
+              ],
+              ticket: {
+                no: "IQ-20260916-003", status: "OPEN", opened: "09:10", last: "09:10", owner: "李明", idle: "刚刚",
+                lines: [
+                  { no: 1, ...L.fg100, qty: "—", status: "PENDING", price: null, ai: true, msg: "wc-92b1…4e02#1" },
+                  { no: 2, ...L.fg80, qty: "—", status: "PENDING", price: null, ai: true, msg: "wc-92b1…4e02#2" },
+                ],
+                versions: [],
+              },
+              alerts: [{ lv: "info", ico: "询", title: "新询价单 · 2 项待报价", body: "方管 100×100、方管 80×80，壁厚均未提。建议从侧栏用报价卡片一次报两项，系统可确定性配对。", ctas: [{ label: "用报价卡片报价", primary: true }] }],
+              timeline: [
+                { t: "09:10", who: "customer", txt: "询价：100 方管和 80 方管 <code>wc-92b1…4e02</code>" },
+                { t: "09:10", who: "system", txt: "创建 IQ-20260916-003 · 抽取行1、行2（同一 msg_id，后缀区分）" },
+              ],
+              smState: "OPEN", prio: null, rules: [],
+            },
+            {
+              clock: "09-16 09:11",
+              note: "<b>第 2 步（核心）。</b>销售在手机企微上只回「3000」（会话存档同样捕获）。无品名、2 条待报行 → 配对算法第 4d 分支：<b>不生成版本</b>，两行标「待确认配对」，弹层让销售选。",
+              messages: [
+                { role: "sales", t: "09:11", text: "3000", tag: "无品名 · 待报行 = 2 → <b>配对歧义</b> · 不生成报价版本 · 事件 <b>PAIRING_AMBIGUOUS</b>（仅侧栏，不推送）", tagCls: "danger" },
+              ],
+              ticket: {
+                no: "IQ-20260916-003", status: "OPEN", opened: "09:10", last: "09:11", owner: "李明", idle: "刚刚",
+                lines: [
+                  { no: 1, ...L.fg100, qty: "—", status: "PENDING", pairing: true, price: null, ai: true, msg: "wc-92b1…4e02#1" },
+                  { no: 2, ...L.fg80, qty: "—", status: "PENDING", pairing: true, price: null, ai: true, msg: "wc-92b1…4e02#2" },
+                ],
+                versions: [],
+              },
+              alerts: [{ lv: "danger", ico: "?", title: "报价配对待确认", body: "你回复的 <b>3000 元/吨</b> 报的是哪一项？确认前不会生成报价版本。宁可多问一次，不能配错一次。", ctas: [{ label: "选择对应规格", primary: true, action: "modal" }, { label: "稍后处理" }] }],
+              timeline: [
+                { t: "09:11", who: "sales", txt: "回复 3000 <code>wc-92b1…5f77</code>" },
+                { t: "09:11", who: "system", txt: "配对歧义 · 行1、行2 pairing_pending = true · 未生成版本" },
+              ],
+              smState: "OPEN", prio: null, rules: ["spec_match"],
+              modal: {
+                title: "你回复的 3000 元/吨，报的是哪一项？",
+                opts: [
+                  { label: "行1 · 方管 100×100", sub: "PENDING · 壁厚待补", sel: true },
+                  { label: "行2 · 方管 80×80", sub: "PENDING · 壁厚待补" },
+                  { label: "两项都是 3000", sub: "生成 v1 含 2 行" },
+                  { label: "都不是 · 忽略这条消息", sub: "记时间线，不配对" },
+                ],
+              },
+            },
+            {
+              clock: "09-16 09:11",
+              note: "<b>第 3 步。</b>销售选了行 1。生成 v1（仅含行 1），行 2 仍待报；单进入 QUOTING 并继续提醒「还有 1 项未报」。",
+              messages: [
+                { role: "system", t: "09:11", text: "销售确认：3000 → 行1 方管 100×100" },
+              ],
+              ticket: {
+                no: "IQ-20260916-003", status: "QUOTING", opened: "09:10", last: "09:11", owner: "李明", idle: "刚刚",
+                lines: [
+                  { no: 1, ...L.fg100, qty: "—", status: "QUOTED", price: 3000, ai: true, msg: "wc-92b1…4e02#1" },
+                  { no: 2, ...L.fg80, qty: "—", status: "PENDING", price: null, ai: true, msg: "wc-92b1…4e02#2" },
+                ],
+                versions: [{ no: 1, status: "CURRENT", valid: "09-17 08:30", by: "李明 · 09:11（人工配对）", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-92b1…5f77" }],
+              },
+              alerts: [{ lv: "warn", ico: "1", title: "还有 1 项未报：方管 80×80", body: "行1 已报 3000（v1）。报完行2 后生成 v2。", ctas: [{ label: "报价 方管 80×80", primary: true }] }],
+              timeline: [
+                { t: "09:11", who: "sales", txt: "人工配对：3000 → 行1 · 事件 <code>PAIRING_RESOLVED</code>" },
+                { t: "09:11", who: "system", txt: "生成 v1（CURRENT）· 单 OPEN → QUOTING" },
+              ],
+              smState: "QUOTING", prio: null, rules: [],
+            },
+          ],
+        },
+
+        {
+          id: "C",
+          name: "场景 C · 盘价过期 + 阻断转单",
+          chatTitle: "企业微信 · 刘经理（中建三局·项目部）",
+          chatSub: "企业微信 · 会话存档入站 · 侧栏发报价卡片 · 归属销售：李明",
+          steps: [
+            {
+              clock: "09-15 16:40",
+              note: "<b>第 0 步（昨天）。</b>客户下午询价，销售报了 3000。系统写入 v1，<b>有效期到明早 08:30 盘价更新</b>。",
+              messages: [
+                { role: "system", t: "09-15", text: "—— 昨天 ——" },
+                { role: "customer", t: "16:40", text: "100方管多少钱", tag: "新建 <b>IQ-20260915-018</b> · 行1 方管 100×100", tagCls: "" },
+                { role: "sales", t: "16:41", text: "3000", tag: "配对 → 行1 · <b>v1 CURRENT</b> · valid_until = <b>09-16 08:30</b>（下一个盘价截止）", tagCls: "ok" },
+              ],
+              ticket: {
+                no: "IQ-20260915-018", status: "QUOTED", opened: "09-15 16:40", last: "09-15 16:41", owner: "李明", idle: "16 小时",
+                lines: [{ no: 1, ...L.fg100, qty: "—", status: "QUOTED", price: 3000, ai: true, msg: "wc-3e0c…77a1" }],
+                versions: [{ no: 1, status: "CURRENT", valid: "09-16 08:30", by: "李明 · 09-15 16:41", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-3e0c…7802" }],
+              },
+              alerts: [{ lv: "ok", ico: "✓", title: "全部已报（v1），等待客户确认", body: "v1 有效至 09-16 08:30。", ctas: [] }],
+              timeline: [
+                { t: "16:40", who: "customer", txt: "询价：100 方管 <code>wc-3e0c…77a1</code>" },
+                { t: "16:41", who: "sales", txt: "报价 3000 → 行1 · 生成 v1 · valid_until 09-16 08:30" },
+              ],
+              smState: "QUOTED", prio: null, rules: ["price_cutoff"],
+            },
+            {
+              clock: "09-16 08:30",
+              note: "<b>第 1 步。</b>今早 08:30 盘价更新（方管 +80）。定时任务把所有 CURRENT 版本置为 <b>EXPIRED</b>；询价单本身不关闭，仍是 QUOTED，但提醒销售重报。",
+              messages: [
+                { role: "system", t: "08:30", text: "09-16 08:30 · 盘价更新 · 方管 +80 元/吨" },
+              ],
+              ticket: {
+                no: "IQ-20260915-018", status: "QUOTED", opened: "09-15 16:40", last: "09-15 16:41", owner: "李明", idle: "16 小时 · 报价已过期",
+                lines: [{ no: 1, ...L.fg100, qty: "—", status: "QUOTED", price: 3000, stale: true, ai: true, msg: "wc-3e0c…77a1" }],
+                versions: [{ no: 1, status: "EXPIRED", valid: "09-16 08:30 已过", by: "李明 · 09-15 16:41", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-3e0c…7802" }],
+              },
+              alerts: [{ lv: "warn", ico: "⏱", title: "本单 v1 报价已过期", body: "今日盘价已更新（08:30），客户未确认。方管当前挂牌 3080 元/吨。是否按新盘价重报？", ctas: [{ label: "按新盘价重报", primary: true }, { label: "维持旧价（需主管审批）" }] }],
+              timeline: [
+                { t: "08:30", who: "system", txt: "盘价截止 · v1 CURRENT → EXPIRED · 事件 <code>QUOTE_EXPIRED</code> → 推送销售" },
+              ],
+              smState: "QUOTED", prio: "price", rules: ["price_cutoff"],
+            },
+            {
+              clock: "09-16 09:12",
+              note: "<b>第 2 步（核心）。</b>客户按昨天的价说「来 10 吨」。意图 CONFIRM → CONFIRMING，但本单<b>没有 CURRENT 版本</b>，<code>block_order_on_pending</code> 生效：<b>阻断转单</b>，必须先重报。",
+              messages: [
+                { role: "customer", t: "09:12", text: "那就来10吨", tag: "意图 <b>CONFIRM</b> 0.88 · 数量 10 吨 → 行1 · 单 → <b>CONFIRMING</b> · 但无有效报价 → <b>阻断转单</b>", tagCls: "danger" },
+              ],
+              ticket: {
+                no: "IQ-20260915-018", status: "CONFIRMING", opened: "09-15 16:40", last: "09:12", owner: "李明", idle: "刚刚 · 报价已过期",
+                lines: [{ no: 1, ...L.fg100, qty: "10 吨", status: "QUOTED", price: 3000, stale: true, ai: true, msg: "wc-3e0c…77a1" }],
+                versions: [{ no: 1, status: "EXPIRED", valid: "09-16 08:30 已过", by: "李明 · 09-15 16:41", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-3e0c…7802" }],
+              },
+              alerts: [{ lv: "danger", ico: "!", title: "转订单被阻断：无有效报价版本", body: "客户按 v1（3000，已过期）表达下单，今日挂牌 3080。按旧价成交每吨亏 80、10 吨亏 800。请先重报生成 v2，再转订单。", ctas: [{ label: "按新盘价重报 3080", primary: true, action: "next" }, { label: "按旧价强制转单（主管审批）" }] }],
+              timeline: [
+                { t: "09:12", who: "customer", txt: "「那就来 10 吨」<code>wc-3e0c…9c40</code>" },
+                { t: "09:12", who: "ai", txt: "意图 CONFIRM 0.88 · 行1 qty = 10 吨 · 单 QUOTED → CONFIRMING" },
+                { t: "09:12", who: "system", txt: "无 CURRENT 版本 · 事件 <code>CONFIRM_WITH_PENDING</code> · 阻断转单" },
+              ],
+              smState: "CONFIRMING", prio: "semantic", rules: ["intent", "block", "price_cutoff"],
+            },
+            {
+              clock: "09-16 09:13",
+              note: "<b>第 3 步。</b>销售按新盘价重报 3080。生成 v2 CURRENT，v1 保持 EXPIRED 留档。阻断解除，可以转订单。",
+              messages: [
+                { role: "sales", t: "09:13", text: "刘经理，方管今天盘价涨了，3080一吨，10吨可以马上安排。", tag: "配对 → 行1 · 生成 <b>v2 CURRENT</b> · 有效至 09-17 08:30 · 阻断解除", tagCls: "ok" },
+              ],
+              ticket: {
+                no: "IQ-20260915-018", status: "CONFIRMING", opened: "09-15 16:40", last: "09:13", owner: "李明", idle: "刚刚",
+                lines: [{ no: 1, ...L.fg100, qty: "10 吨", status: "QUOTED", price: 3080, ai: true, msg: "wc-3e0c…77a1" }],
+                versions: [
+                  { no: 2, status: "CURRENT", valid: "09-17 08:30", by: "李明 · 09:13", lines: [{ no: 1, spec: "方管 100×100", price: 3080 }], msg: "wc-3e0c…a115" },
+                  { no: 1, status: "EXPIRED", valid: "09-16 08:30 已过", by: "李明 · 09-15 16:41", lines: [{ no: 1, spec: "方管 100×100", price: 3000 }], msg: "wc-3e0c…7802" },
+                ],
+              },
+              alerts: [{ lv: "purple", ico: "单", title: "可以转订单了 · 按 v2", body: "方管 100×100 · 10 吨 · 3080 元/吨，合计 30,800 元。行1 壁厚待补，请确认后转单。", ctas: [{ label: "补壁厚并转订单", primary: true }, { label: "等客户确认新价" }] }],
+              timeline: [
+                { t: "09:13", who: "sales", txt: "重报 3080 → 行1 <code>wc-3e0c…a115</code>" },
+                { t: "09:13", who: "system", txt: "生成 v2（CURRENT）· 事件 <code>CONFIRM_READY</code> · 阻断解除" },
+              ],
+              smState: "CONFIRMING", prio: null, rules: ["price_cutoff"],
+            },
+          ],
+        },
+      ];
+
+      // ------------------------------------------------------------
+      // 渲染
+      // ------------------------------------------------------------
+      const $ = (id) => document.getElementById(id);
+      let si = 0, stepIdx = 0;
+
+      const TICKET_STATES = [
+        { k: "OPEN", n: "OPEN · 收集中", d: "首个询价行创建，尚无报价" },
+        { k: "QUOTING", n: "QUOTING · 部分已报", d: "已有报价，但仍有待报行；追加规格会退回此态" },
+        { k: "QUOTED", n: "QUOTED · 全部已报", d: "无待报行，等待客户确认" },
+        { k: "CONFIRMING", n: "CONFIRMING · 客户表意向", d: "意图 ≥ 阈值；不自动转单，等销售确认" },
+        { k: "ORDERED", n: "ORDERED · 已转订单", d: "≤1 张订单；后续询价开新单" },
+      ];
+
+      function renderTabs() {
+        $("scenarioTabs").innerHTML = scenarios.map((s, i) =>
+          `<button class="${i === si ? "active" : ""}" data-i="${i}">${s.name}</button>`).join("");
+        $("scenarioTabs").querySelectorAll("button").forEach(b => b.onclick = () => { si = +b.dataset.i; stepIdx = 0; render(); });
+      }
+
+      function esc(s) { return s.replace(/\n/g, "<br>"); }
+
+      function renderChat(sc, upto) {
+        const body = $("chatBody");
+        body.innerHTML = "";
+        for (let i = 0; i <= upto; i++) {
+          (sc.steps[i].messages || []).forEach(m => {
+            const el = document.createElement("div");
+            el.className = `msg ${m.role}`;
+            const who = m.role === "customer" ? "客户" : m.role === "sales" ? "李明（销售）" : "";
+            el.innerHTML = `
+              ${m.role !== "system" ? `<div class="meta">${who} · ${m.t}</div>` : ""}
+              <div class="bubble">${esc(m.text)}</div>
+              ${m.tag ? `<div class="tag ${m.tagCls || ""}">${m.tag}</div>` : ""}`;
+            body.appendChild(el);
+          });
+        }
+        body.scrollTop = body.scrollHeight;
+      }
+
+      function priceCell(l) {
+        if (l.price == null) return `<span class="muted">—</span>`;
+        return `<span class="price" style="${l.stale ? "color:var(--danger);text-decoration:line-through" : ""}">${l.price.toLocaleString()}<small>元/吨</small></span>${l.stale ? `<div class="sub" style="color:var(--danger)">已过盘价截止</div>` : ""}`;
+      }
+
+      function renderCenter(step, sc) {
+        const c = $("centerBody");
+        const t = step.ticket;
+        if (!t) {
+          c.innerHTML = `<div class="card"><div class="empty">该客户暂无活跃询价单<br><small>客户发起询价后，系统会在这里自动创建并归并</small></div></div>`;
+          return;
+        }
+        const linesHtml = t.lines.map(l => `
+          <tr>
+            <td class="muted">${l.no}</td>
+            <td><div class="spec">${l.spec}${l.ai ? `<span class="ai-badge">AI 识别</span>` : ""}</div><div class="sub">${l.sub} · <code style="font-size:.66rem">${l.key}</code></div></td>
+            <td>${l.qty}</td>
+            <td>${l.pairing ? `<span class="lstat PAIRING">待确认配对</span>` : `<span class="lstat ${l.status}">${l.status}</span>`}</td>
+            <td>${priceCell(l)}</td>
+          </tr>`).join("");
+
+        const versionsHtml = t.versions.length ? t.versions.map(v => `
+          <div class="ver ${v.status}">
+            <div class="ver-no">v${v.no}</div>
+            <div class="ver-lines">${v.lines.map(x => `<b>${x.spec}</b> ${x.price.toLocaleString()} 元/吨`).join("<br>")}</div>
+            <div class="ver-meta"><span class="vstat ${v.status}">${v.status}</span><br>有效至 ${v.valid}<br>${v.by}<br><code style="font-size:.64rem">${v.msg}</code></div>
+          </div>`).join("") : `<div class="empty" style="padding:14px">尚无报价版本</div>`;
+
+        const alertsHtml = step.alerts.length ? step.alerts.map((a, i) => `
+          <div class="alert ${a.lv}">
+            <div class="ico">${a.ico}</div>
+            <div>
+              <h4>${a.title}</h4>
+              <p>${a.body}</p>
+              ${a.ctas.length ? `<div class="ctas">${a.ctas.map((c, j) => `<button class="${c.primary ? "primary" : ""}" data-a="${c.action || ""}">${c.label}</button>`).join("")}</div>` : ""}
+            </div>
+          </div>`).join("") : "";
+
+        const allTimeline = [];
+        for (let i = 0; i <= stepIdx; i++) allTimeline.push(...(sc.steps[i].timeline || []));
+        const tlHtml = allTimeline.length ? allTimeline.slice().reverse().map(e => `
+          <div class="tl"><div class="t">${e.t}</div><div class="dot ${e.who}"></div>
+          <div class="txt"><span class="who">${{ customer: "客户", sales: "销售", system: "系统", ai: "AI" }[e.who]}</span>${e.txt}</div></div>`).join("") : `<div class="empty" style="padding:10px">暂无事件</div>`;
+
+        c.innerHTML = `
+          <div class="card">
+            <div class="card-b">
+              <div class="ticket-head">
+                <div>
+                  <div class="ticket-no">${t.no}</div>
+                  <div class="ticket-kv">
+                    <span>开始 <b>${t.opened}</b></span>
+                    <span>最近动态 <b>${t.last}</b></span>
+                    <span>空闲 <b>${t.idle}</b></span>
+                    <span>归属 <b>${t.owner}</b></span>
+                    <span>规格 <b>${t.lines.length} 项</b></span>
+                    <span>待报 <b>${t.lines.filter(l => l.status === "PENDING").length} 项</b></span>
+                  </div>
+                </div>
+                <span class="pill big ${t.status}">${t.status}</span>
+              </div>
+              ${t.order ? `<div class="order" style="margin-top:14px"><div>已生成订单 <b>${t.order.no}</b> · ${t.order.lines} 行明细 · 来自 v${t.versions[0].no}</div><div class="total">${t.order.total}</div></div>` : ""}
+            </div>
+          </div>
+
+          ${alertsHtml ? `<div class="alerts">${alertsHtml}</div>` : ""}
+
+          <div class="card">
+            <div class="card-h"><h3>询价行 <span class="hint">同单内 spec_key 唯一 · 再问同规格视为催价</span></h3><button class="ctrl" style="border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 10px;font-size:.74rem">+ 手动追加行</button></div>
+            <div class="card-b" style="padding-top:10px">
+              <table class="lines">
+                <thead><tr><th style="width:28px">#</th><th>规格</th><th style="width:70px">数量</th><th style="width:110px">状态</th><th style="width:130px">当前价</th></tr></thead>
+                <tbody>${linesHtml}</tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><h3>报价版本 <span class="hint">每次报价生成全量快照 · 旧版本只改状态不删除</span></h3></div>
+            <div class="card-b"><div class="versions">${versionsHtml}</div></div>
+          </div>
+
+          ${t.history ? `<div class="card"><div class="card-h"><h3>历史单据 <span class="hint">已收口，不参与归并</span></h3></div><div class="card-b"><div class="history">${t.history.map(h => `<div class="hist"><span class="no">${h.no}</span><span class="sum">${h.sum}</span><span class="pill ${h.status}">${h.status}</span></div>`).join("")}</div></div></div>` : ""}
+
+          <div class="card">
+            <div class="card-h"><h3>时间线 <span class="hint">ticket_event · 含人工拆合、配对、过期</span></h3></div>
+            <div class="card-b"><div class="timeline">${tlHtml}</div></div>
+          </div>`;
+
+        c.querySelectorAll(".alert .ctas button").forEach(b => {
+          b.onclick = () => {
+            const a = b.dataset.a;
+            if (a === "next") next();
+            else if (a === "modal") openModal(step.modal);
+          };
+        });
+      }
+
+      function renderRight(step) {
+        const cur = step.smState;
+        const order = TICKET_STATES.map(s => s.k);
+        const idx = cur ? order.indexOf(cur) : -1;
+        $("sm").innerHTML = TICKET_STATES.map((s, i) => `
+          <div class="sm-row ${i === idx ? "now" : i < idx ? "done" : ""}">
+            <div class="sm-rail"></div>
+            <div class="sm-node"><div class="n">${s.n}${i === idx ? `<span class="pill ${s.k}" style="font-size:.64rem;padding:2px 7px">当前</span>` : ""}</div><div class="d">${s.d}</div></div>
+          </div>`).join("");
+        $("smSide").innerHTML = ["PARTIAL_ORDERED · 部分成交", "EXPIRED · 空闲过期（可复活）", "LOST · 流失"].map(x => `<span>${x}</span>`).join("");
+        $("smHint").textContent = cur ? `当前：${cur}` : "无活跃单";
+
+        document.querySelectorAll("#prio > div").forEach(d => d.classList.toggle("hit", d.dataset.k === step.prio));
+        document.querySelectorAll("#rules .rule").forEach(r => r.classList.toggle("hit", (step.rules || []).includes(r.dataset.k)));
+
+        const t = step.ticket;
+        const anchors = [];
+        if (t) {
+          t.lines.forEach(l => anchors.push(`<div class="anchor"><div>行${l.no} · ${l.spec}<br><code>${l.msg}</code></div><div class="ok">UNIQUE ✓</div></div>`));
+          t.versions.forEach(v => anchors.push(`<div class="anchor"><div>v${v.no} · ${v.status}<br><code>${v.msg}</code></div><div class="ok">${v.status === "ACCEPTED" ? "冻结" : "锚定"}</div></div>`));
+        }
+        $("anchors").innerHTML = anchors.length ? anchors.join("") : `<div class="empty" style="padding:8px">暂无</div>`;
+      }
+
+      function renderStepper(sc) {
+        $("dots").innerHTML = sc.steps.map((_, i) => `<i class="${i < stepIdx ? "done" : i === stepIdx ? "now" : ""}"></i>`).join("");
+        $("btnPrev").disabled = stepIdx === 0;
+        $("btnNext").disabled = stepIdx === sc.steps.length - 1;
+        $("btnNext").textContent = stepIdx === sc.steps.length - 1 ? "已到最后一步" : "下一步 ›";
+      }
+
+      function render() {
+        const sc = scenarios[si];
+        const step = sc.steps[stepIdx];
+        renderTabs();
+        $("chatTitle").textContent = sc.chatTitle;
+        $("chatSub").textContent = sc.chatSub || "企业微信 · 会话存档入站 · 侧栏发报价卡片 · 归属销售：李明";
+        $("clock").textContent = "系统时间 " + step.clock;
+        $("stepNote").innerHTML = step.note;
+        renderChat(sc, stepIdx);
+        renderCenter(step, sc);
+        renderRight(step);
+        renderStepper(sc);
+        closeModal();
+      }
+
+      function next() { const sc = scenarios[si]; if (stepIdx < sc.steps.length - 1) { stepIdx++; render(); } }
+      function prev() { if (stepIdx > 0) { stepIdx--; render(); } }
+
+      // 弹层
+      let modalSel = 0;
+      function openModal(m) {
+        if (!m) return;
+        $("modalTitle").textContent = m.title;
+        modalSel = m.opts.findIndex(o => o.sel); if (modalSel < 0) modalSel = 0;
+        const draw = () => {
+          $("modalOpts").innerHTML = m.opts.map((o, i) => `
+            <div class="opt ${i === modalSel ? "sel" : ""}" data-i="${i}"><span class="radio"></span><div>${o.label}<div class="sub">${o.sub}</div></div></div>`).join("");
+          $("modalOpts").querySelectorAll(".opt").forEach(el => el.onclick = () => { modalSel = +el.dataset.i; draw(); });
+        };
+        draw();
+        $("overlay").classList.add("show");
+      }
+      function closeModal() { $("overlay").classList.remove("show"); }
+
+      $("btnNext").onclick = next;
+      $("btnPrev").onclick = prev;
+      $("btnReset").onclick = () => { stepIdx = 0; render(); };
+      $("modalCancel").onclick = closeModal;
+      $("modalOk").onclick = () => { closeModal(); next(); };
+      document.addEventListener("keydown", e => { if (e.key === "ArrowRight") next(); if (e.key === "ArrowLeft") prev(); });
+
+      render();
+    </script>
+  </body>
+</html>

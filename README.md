@@ -10,6 +10,7 @@
 - 右侧栏：`docs/mockups/puxun-ai-sales-sidebar-hifi.html`
 - 客服推送销售员：`docs/mockups/puxun-sales-push-notify-hifi.html`
 - 销售聊天台：`docs/mockups/puxun-sales-desk-hifi.html`
+- 询价单归并与报价版本：`docs/mockups/puxun-inquiry-quote-hifi.html`（配套 PRD：`docs/prd/inquiry-quote-session-prd.md`）
 
 ## 企微右侧栏模块
 
